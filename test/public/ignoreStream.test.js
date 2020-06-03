@@ -1,5 +1,5 @@
 const { doesNotThrow, strictEqual } = require("assert");
-const ignoreStream = require("../../public/ignoreStream");
+const ignoreStream = require("../../public/ignore-stream");
 const CountReadableStream = require("../CountReadableStream");
 
 describe("ignoreStream", () => {

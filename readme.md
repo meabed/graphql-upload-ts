@@ -4,7 +4,18 @@
 
 Middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
 
-⚠️ Previously published as [`apollo-upload-server`](https://npm.im/apollo-upload-server).
+⚠️ Forked from [`graphql-upload`](https://npm.im/graphql-upload). Differences:
+
+- Single production dependency.
+  - Results in 9 less production dependencies.
+  - And 6 less MB in your `node_modules`.
+  - And using a bit less memory.
+  - And a bit faster.
+- More standard and developer friendly exception messages.
+- **Does not create any temporary files on disk.** Thus works faster.
+- API changes comparing to the original `graphql-upload`:
+  - Does not accept any arguments to `createReadStream()`.
+  - The `createReadStream()` must not be called twice for the same file.
 
 ## Support
 
@@ -48,7 +59,7 @@ See the [example API and client](https://github.com/jaydenseric/apollo-upload-ex
 - Promisify and await file upload streams in resolvers or the server will send a response to the client before uploads are complete, causing a disconnect.
 - Handle file upload promise rejection and stream errors; uploads sometimes fail due to network connectivity issues or impatient users disconnecting.
 - Process multiple uploads asynchronously with [`Promise.all`](https://developer.mozilla.org/en-US/docs/web/javascript/reference/global_objects/promise/all) or a more flexible solution such as [`Promise.allSettled`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled) where an error in one does not reject them all.
-- Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error. Existing streams can still be used after a response is sent, although there are few valid reasons for not awaiting their completion.
+- Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
 - Use [`stream.destroy()`](https://nodejs.org/api/stream.html#stream_readable_destroy_error) when an incomplete stream is no longer needed, or temporary files may not get cleaned up.
 
 ## Architecture
@@ -364,7 +375,7 @@ _Ways to `import`._
 > ```
 >
 > ```js
-> import processRequest from 'graphql-upload-minimal/public/processRequest.js';
+> import processRequest from 'graphql-upload-minimal/public/process-request.js';
 > ```
 
 _Ways to `require`._

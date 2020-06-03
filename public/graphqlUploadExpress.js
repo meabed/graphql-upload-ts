@@ -1,4 +1,4 @@
-const defaultProcessRequest = require("./processRequest");
+const defaultProcessRequest = require("./process-request");
 
 /**
  * Creates [Express](https://expressjs.com) middleware that processes

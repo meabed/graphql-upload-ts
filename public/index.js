@@ -1,5 +1,5 @@
 exports.GraphQLUpload = require("./GraphQLUpload");
-exports.processRequest = require("./processRequest");
+exports.processRequest = require("./process-request");
 exports.graphqlUploadKoa = require("./graphqlUploadKoa");
 exports.graphqlUploadExpress = require("./graphqlUploadExpress");
 exports.Upload = require("./Upload");

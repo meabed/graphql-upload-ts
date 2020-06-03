@@ -4,7 +4,7 @@ const FormData = require("form-data");
 const { Readable } = require("stream");
 const fetch = require("node-fetch");
 const Upload = require("../../public/Upload");
-const processRequest = require("../../public/processRequest");
+const processRequest = require("../../public/process-request");
 const abortingMultipartRequest = require("../abortingMultipartRequest");
 const listen = require("../listen");
 const streamToString = require("../streamToString");
@@ -947,10 +947,10 @@ describe("processRequest", () => {
     const server = http.createServer(async (request, response) => {
       try {
         await rejects(processRequest(request, response), {
-          name: "BadRequestError",
+          name: "InternalError",
           message:
-            "Missing multipart field 'operations' (https://github.com/jaydenseric/graphql-multipart-request-spec).",
-          status: 400,
+            "graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then help us adding support.",
+          status: 500,
           expose: true,
         });
       } catch (error) {

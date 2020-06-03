@@ -1,4 +1,4 @@
-const defaultProcessRequest = require("./processRequest");
+const defaultProcessRequest = require("./process-request");
 
 /**
  * Creates [Koa](https://koajs.com) middleware that processes

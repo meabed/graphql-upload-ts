@@ -1,7 +1,7 @@
 "use strict";
 
 const Busboy = require("busboy");
-const ignoreStream = require("./ignoreStream");
+const ignoreStream = require("./ignore-stream");
 const Upload = require("./Upload");
 
 /**
@@ -23,6 +23,7 @@ const errorNames = new Map([
   [400, "BadRequestError"],
   [413, "PayloadTooLargeError"],
   [499, "BadRequestError"],
+  [500, "InternalError"],
 ]);
 class HttpError extends Error {
   constructor(status, message) {
@@ -54,7 +55,7 @@ class HttpError extends Error {
  * ```
  *
  * ```js
- * import processRequest from 'graphql-upload-minimal/public/processRequest.js';
+ * import processRequest from 'graphql-upload-minimal/public/process-request.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
@@ -75,12 +76,6 @@ module.exports = function processRequest(
   } = {}
 ) {
   return new Promise((resolve, reject) => {
-    let released;
-    let exitError;
-    let currentStream;
-    let operations;
-    let map;
-
     const parser = new Busboy({
       headers: request.headers,
       limits: {
@@ -91,6 +86,8 @@ module.exports = function processRequest(
       },
     });
 
+    let exitError;
+    let currentStream;
     /**
      * Exits request processing with an error. Successive calls have no effect.
      * @kind function
@@ -123,6 +120,7 @@ module.exports = function processRequest(
       });
     };
 
+    let released;
     /**
      * Successive calls have no effect.
      * @kind function
@@ -148,6 +146,8 @@ module.exports = function processRequest(
       );
     };
 
+    let operations;
+    let map;
     parser.on(
       "field",
       (fieldName, value, fieldNameTruncated, valueTruncated) => {
@@ -330,6 +330,15 @@ module.exports = function processRequest(
     parser.once("finish", () => {
       request.unpipe(parser);
       request.resume();
+
+      if (!operations && !map) {
+        return exit(
+          new HttpError(
+            500,
+            `graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then help us adding support.`
+          )
+        );
+      }
 
       if (!operations)
         return exit(

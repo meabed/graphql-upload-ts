@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const Koa = require("koa");
 const fetch = require("node-fetch");
 const graphqlUploadKoa = require("../../public/graphqlUploadKoa");
-const processRequest = require("../../public/processRequest");
+const processRequest = require("../../public/process-request");
 const listen = require("../listen");
 
 describe("graphqlUploadKoa", () => {
