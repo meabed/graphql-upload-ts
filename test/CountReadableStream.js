@@ -1,6 +1,4 @@
-'use strict';
-
-const { Readable } = require('stream');
+const { Readable } = require("stream");
 
 /**
  * A count readable stream, for testing purposes.
@@ -18,6 +16,6 @@ module.exports = class CountReadableStream extends Readable {
 
   _read() {
     const i = this._index++;
-    this.push(i > this._max ? null : Buffer.from(String(i), 'ascii'));
+    this.push(i > this._max ? null : Buffer.from(String(i), "ascii"));
   }
 };

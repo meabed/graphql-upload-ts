@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Converts a Node.js readable stream to a string.
  * @kind function
@@ -10,12 +8,12 @@
  */
 module.exports = function streamToString(stream) {
   return new Promise((resolve, reject) => {
-    let data = '';
+    let data = "";
     stream
-      .on('error', reject)
-      .on('data', (chunk) => {
+      .on("error", reject)
+      .on("data", (chunk) => {
         data += chunk;
       })
-      .on('end', () => resolve(data));
+      .on("end", () => resolve(data));
   });
 };

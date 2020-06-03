@@ -1,6 +1,4 @@
-'use strict';
-
-const defaultProcessRequest = require('./processRequest');
+const defaultProcessRequest = require("./processRequest");
 
 /**
  * Creates [Express](https://expressjs.com) middleware that processes
@@ -16,25 +14,25 @@ const defaultProcessRequest = require('./processRequest');
  * @returns {Function} Express middleware.
  * @example <caption>Ways to `import`.</caption>
  * ```js
- * import { graphqlUploadExpress } from 'graphql-upload';
+ * import { graphqlUploadExpress } from 'graphql-upload-minimal';
  * ```
  *
  * ```js
- * import graphqlUploadExpress from 'graphql-upload/public/graphqlUploadExpress.js';
+ * import graphqlUploadExpress from 'graphql-upload-minimal/public/graphqlUploadExpress.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
- * const { graphqlUploadExpress } = require('graphql-upload');
+ * const { graphqlUploadExpress } = require('graphql-upload-minimal');
  * ```
  *
  * ```js
- * const graphqlUploadExpress = require('graphql-upload/public/graphqlUploadExpress');
+ * const graphqlUploadExpress = require('graphql-upload-minimal/public/graphqlUploadExpress');
  * ```
  * @example <caption>Basic [`express-graphql`](https://npm.im/express-graphql) setup.</caption>
  * ```js
  * const express = require('express');
  * const graphqlHTTP = require('express-graphql');
- * const { graphqlUploadExpress } = require('graphql-upload');
+ * const { graphqlUploadExpress } = require('graphql-upload-minimal');
  * const schema = require('./schema');
  *
  * express()
@@ -51,9 +49,9 @@ module.exports = function graphqlUploadExpress({
   ...processRequestOptions
 } = {}) {
   return function graphqlUploadExpressMiddleware(request, response, next) {
-    if (!request.is('multipart/form-data')) return next();
+    if (!request.is("multipart/form-data")) return next();
 
-    const finished = new Promise((resolve) => request.on('end', resolve));
+    const finished = new Promise((resolve) => request.on("end", resolve));
     const { send } = response;
 
     response.send = (...args) => {

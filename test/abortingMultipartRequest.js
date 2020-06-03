@@ -1,7 +1,5 @@
-'use strict';
-
-const http = require('http');
-const { Transform } = require('stream');
+const http = require("http");
+const { Transform } = require("stream");
 
 /**
  * Sends a multipart request that deliberately aborts after a certain amount of
@@ -23,22 +21,22 @@ module.exports = function abortingMultipartRequest(
 ) {
   return new Promise((resolve, reject) => {
     const request = http.request(url, {
-      method: 'POST',
+      method: "POST",
       headers: formData.getHeaders(),
     });
 
-    request.on('error', (error) => {
+    request.on("error", (error) => {
       // Error expected when the connection is aborted.
-      if (error.code !== 'ECONNRESET') reject(error);
+      if (error.code !== "ECONNRESET") reject(error);
     });
 
-    request.on('close', resolve);
+    request.on("close", resolve);
 
     const transform = new Transform({
       transform(chunk, encoding, callback) {
         if (this._aborted) return;
 
-        const chunkString = chunk.toString('utf8');
+        const chunkString = chunk.toString("utf8");
         const chunkAbortIndex = chunkString.indexOf(abortMarker);
 
         // Check if the chunk has the abort marker character in it.
@@ -50,7 +48,7 @@ module.exports = function abortingMultipartRequest(
             callback(null, chunkString.substr(0, chunkAbortIndex));
 
           // Abort the request after it has been received by the server request
-          // handler, or else Node.js won’t run the handler.
+          // handler, or else Node.js won't run the handler.
           requestReceived.then(() => request.abort());
 
           return;

@@ -1,13 +1,37 @@
-'use strict';
+"use strict";
 
-const Busboy = require('busboy');
-const { WriteStream } = require('fs-capacitor');
-const createError = require('http-errors');
-const isObject = require('isobject');
-const objectPath = require('object-path');
-const { SPEC_URL } = require('../private/constants');
-const ignoreStream = require('../private/ignoreStream');
-const Upload = require('./Upload');
+const Busboy = require("busboy");
+const ignoreStream = require("./ignoreStream");
+const Upload = require("./Upload");
+
+/**
+ * Official [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
+ * URL. Useful for error messages, etc.
+ * @kind constant
+ * @name SPEC_URL
+ * @type {string}
+ * @ignore
+ */
+const SPEC_URL =
+  "https://github.com/jaydenseric/graphql-multipart-request-spec";
+
+function isObject(val) {
+  return val != null && typeof val === "object" && Array.isArray(val) === false;
+}
+
+const errorNames = new Map([
+  [400, "BadRequestError"],
+  [413, "PayloadTooLargeError"],
+  [499, "BadRequestError"],
+]);
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+    this.expose = true;
+    this.name = errorNames.get(status);
+  }
+}
 
 /**
  * Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
@@ -15,7 +39,7 @@ const Upload = require('./Upload');
  * [`Upload`]{@link Upload} instance for each expected file upload, placing
  * references wherever the file is expected in the
  * [GraphQL operation]{@link GraphQLOperation} for the
- * [`Upload` scalar]{@link GraphQLUpload} to derive it’s value. Errors are
+ * [`Upload` scalar]{@link GraphQLUpload} to derive it's value. Errors are
  * created with [`http-errors`](https://npm.im/http-errors) to assist in
  * sending responses with appropriate HTTP status codes. Used in
  * [`graphqlUploadExpress`]{@link graphqlUploadExpress} and
@@ -26,19 +50,19 @@ const Upload = require('./Upload');
  * @type {ProcessRequestFunction}
  * @example <caption>Ways to `import`.</caption>
  * ```js
- * import { processRequest } from 'graphql-upload';
+ * import { processRequest } from 'graphql-upload-minimal';
  * ```
  *
  * ```js
- * import processRequest from 'graphql-upload/public/processRequest.js';
+ * import processRequest from 'graphql-upload-minimal/public/processRequest.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
- * const { processRequest } = require('graphql-upload');
+ * const { processRequest } = require('graphql-upload-minimal');
  * ```
  *
  * ```js
- * const processRequest = require('graphql-upload/public/processRequest');
+ * const processRequest = require('graphql-upload-minimal/public/processRequest');
  * ```
  */
 module.exports = function processRequest(
@@ -55,7 +79,6 @@ module.exports = function processRequest(
     let exitError;
     let currentStream;
     let operations;
-    let operationsPath;
     let map;
 
     const parser = new Busboy({
@@ -101,19 +124,13 @@ module.exports = function processRequest(
     };
 
     /**
-     * Releases resources and cleans up Capacitor temporary files. Successive
-     * calls have no effect.
+     * Successive calls have no effect.
      * @kind function
      * @name processRequest~release
      * @ignore
      */
     const release = () => {
-      if (released) return;
       released = true;
-
-      if (map)
-        for (const upload of map.values())
-          if (upload.file) upload.file.capacitor.release();
     };
 
     /**
@@ -124,56 +141,54 @@ module.exports = function processRequest(
      */
     const abort = () => {
       exit(
-        createError(
+        new HttpError(
           499,
-          'Request disconnected during file upload stream parsing.'
+          "Request disconnected during file upload stream parsing."
         )
       );
     };
 
     parser.on(
-      'field',
+      "field",
       (fieldName, value, fieldNameTruncated, valueTruncated) => {
         if (exitError) return;
 
         if (valueTruncated)
           return exit(
-            createError(
+            new HttpError(
               413,
-              `The ‘${fieldName}’ multipart field value exceeds the ${maxFieldSize} byte size limit.`
+              `The '${fieldName}' multipart field value exceeds the ${maxFieldSize} byte size limit.`
             )
           );
 
         switch (fieldName) {
-          case 'operations':
+          case "operations":
             try {
               operations = JSON.parse(value);
             } catch (error) {
               return exit(
-                createError(
+                new HttpError(
                   400,
-                  `Invalid JSON in the ‘operations’ multipart field (${SPEC_URL}).`
+                  `Invalid JSON in the 'operations' multipart field (${SPEC_URL}).`
                 )
               );
             }
 
             if (!isObject(operations) && !Array.isArray(operations))
               return exit(
-                createError(
+                new HttpError(
                   400,
-                  `Invalid type for the ‘operations’ multipart field (${SPEC_URL}).`
+                  `Invalid type for the 'operations' multipart field (${SPEC_URL}).`
                 )
               );
 
-            operationsPath = objectPath(operations);
-
             break;
-          case 'map': {
+          case "map": {
             if (!operations)
               return exit(
-                createError(
+                new HttpError(
                   400,
-                  `Misordered multipart fields; ‘map’ should follow ‘operations’ (${SPEC_URL}).`
+                  `Misordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`
                 )
               );
 
@@ -182,18 +197,18 @@ module.exports = function processRequest(
               parsedMap = JSON.parse(value);
             } catch (error) {
               return exit(
-                createError(
+                new HttpError(
                   400,
-                  `Invalid JSON in the ‘map’ multipart field (${SPEC_URL}).`
+                  `Invalid JSON in the 'map' multipart field (${SPEC_URL}).`
                 )
               );
             }
 
             if (!isObject(parsedMap))
               return exit(
-                createError(
+                new HttpError(
                   400,
-                  `Invalid type for the ‘map’ multipart field (${SPEC_URL}).`
+                  `Invalid type for the 'map' multipart field (${SPEC_URL}).`
                 )
               );
 
@@ -203,37 +218,40 @@ module.exports = function processRequest(
             // parse might not match th(e map provided by the client.
             if (mapEntries.length > maxFiles)
               return exit(
-                createError(413, `${maxFiles} max file uploads exceeded.`)
+                new HttpError(413, `${maxFiles} max file uploads exceeded.`)
               );
 
             map = new Map();
             for (const [fieldName, paths] of mapEntries) {
               if (!Array.isArray(paths))
                 return exit(
-                  createError(
+                  new HttpError(
                     400,
-                    `Invalid type for the ‘map’ multipart field entry key ‘${fieldName}’ array (${SPEC_URL}).`
+                    `Invalid type for the 'map' multipart field entry key '${fieldName}' array (${SPEC_URL}).`
                   )
                 );
 
               map.set(fieldName, new Upload());
 
               for (const [index, path] of paths.entries()) {
-                if (typeof path !== 'string')
+                if (typeof path !== "string" || !path.trim())
                   return exit(
-                    createError(
+                    new HttpError(
                       400,
-                      `Invalid type for the ‘map’ multipart field entry key ‘${fieldName}’ array index ‘${index}’ value (${SPEC_URL}).`
+                      `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`
                     )
                   );
 
                 try {
-                  operationsPath.set(path, map.get(fieldName));
+                  const propNames = path.split(".");
+                  let o = operations;
+                  while (propNames.length !== 1) o = o[propNames.shift()];
+                  o[propNames[0]] = map.get(fieldName);
                 } catch (error) {
                   return exit(
-                    createError(
+                    new HttpError(
                       400,
-                      `Invalid object path for the ‘map’ multipart field entry key ‘${fieldName}’ array index ‘${index}’ value ‘${path}’ (${SPEC_URL}).`
+                      `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`
                     )
                   );
                 }
@@ -246,7 +264,7 @@ module.exports = function processRequest(
       }
     );
 
-    parser.on('file', (fieldName, stream, filename, encoding, mimetype) => {
+    parser.on("file", (fieldName, stream, filename, encoding, mimetype) => {
       if (exitError) {
         ignoreStream(stream);
         return;
@@ -255,15 +273,15 @@ module.exports = function processRequest(
       if (!map) {
         ignoreStream(stream);
         return exit(
-          createError(
+          new HttpError(
             400,
-            `Misordered multipart fields; files should follow ‘map’ (${SPEC_URL}).`
+            `Misordered multipart fields; files should follow 'map' (${SPEC_URL}).`
           )
         );
       }
 
       currentStream = stream;
-      stream.on('end', () => {
+      stream.on("end", () => {
         currentStream = null;
       });
 
@@ -271,85 +289,74 @@ module.exports = function processRequest(
 
       if (!upload) {
         // The file is extraneous. As the rest can still be processed, just
-        // ignore it and don’t exit with an error.
+        // ignore it and don't exit with an error.
         ignoreStream(stream);
         return;
       }
 
       let fileError;
-      const capacitor = new WriteStream();
 
-      capacitor.on('error', () => {
-        stream.unpipe();
-        stream.resume();
-      });
-
-      stream.on('limit', () => {
-        fileError = createError(
+      stream.on("limit", () => {
+        fileError = new HttpError(
           413,
           `File truncated as it exceeds the ${maxFileSize} byte size limit.`
         );
         stream.unpipe();
-        capacitor.destroy(fileError);
       });
 
-      stream.on('error', (error) => {
+      stream.on("error", (error) => {
         fileError = error;
         stream.unpipe();
-        capacitor.destroy(exitError);
       });
 
       const file = {
         filename,
         mimetype,
         encoding,
-        createReadStream(options) {
+        createReadStream() {
           const error = fileError || (released ? exitError : null);
           if (error) throw error;
-          return capacitor.createReadStream(options);
+          return stream;
         },
       };
 
-      Object.defineProperty(file, 'capacitor', { value: capacitor });
-
-      stream.pipe(capacitor);
       upload.resolve(file);
     });
 
-    parser.once('filesLimit', () =>
-      exit(createError(413, `${maxFiles} max file uploads exceeded.`))
+    parser.once("filesLimit", () =>
+      exit(new HttpError(413, `${maxFiles} max file uploads exceeded.`))
     );
 
-    parser.once('finish', () => {
+    parser.once("finish", () => {
       request.unpipe(parser);
       request.resume();
 
       if (!operations)
         return exit(
-          createError(
+          new HttpError(
             400,
-            `Missing multipart field ‘operations’ (${SPEC_URL}).`
+            `Missing multipart field 'operations' (${SPEC_URL}).`
           )
         );
 
       if (!map)
         return exit(
-          createError(400, `Missing multipart field ‘map’ (${SPEC_URL}).`)
+          new HttpError(400, `Missing multipart field 'map' (${SPEC_URL}).`)
         );
 
       for (const upload of map.values())
         if (!upload.file)
-          upload.reject(createError(400, 'File missing in the request.'));
+          upload.reject(new HttpError(400, "File missing in the request."));
     });
 
-    parser.once('error', exit);
+    parser.once("error", exit);
 
-    response.once('finish', release);
-    response.once('close', release);
+    response.once("finish", release);
+    response.once("close", release);
 
-    request.once('close', abort);
-    request.once('end', () => {
-      request.removeListener('close', abort);
+    request.once("close", abort);
+    request.once("end", () => {
+      request.removeListener("close", abort);
     });
 
     request.pipe(parser);

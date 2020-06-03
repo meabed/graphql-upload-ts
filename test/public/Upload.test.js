@@ -1,14 +1,12 @@
-'use strict';
+const { ok, rejects, strictEqual } = require("assert");
+const Upload = require("../../public/Upload");
 
-const { ok, rejects, strictEqual } = require('assert');
-const Upload = require('../../public/Upload');
-
-module.exports = (tests) => {
-  tests.add('`Upload` class resolving a file.', async () => {
+describe("Upload", () => {
+  it("`Upload` class resolving a file.", async () => {
     const upload = new Upload();
 
     ok(upload.promise instanceof Promise);
-    strictEqual(typeof upload.resolve, 'function');
+    strictEqual(typeof upload.resolve, "function");
 
     const file = {};
 
@@ -20,13 +18,13 @@ module.exports = (tests) => {
     strictEqual(upload.file, file);
   });
 
-  tests.add('`Upload` class with a handled rejection.', async () => {
+  it("`Upload` class with a handled rejection.", async () => {
     const upload = new Upload();
 
     ok(upload.promise instanceof Promise);
-    strictEqual(typeof upload.reject, 'function');
+    strictEqual(typeof upload.reject, "function");
 
-    const error = new Error('Message.');
+    const error = new Error("Message.");
 
     upload.reject(error);
 
@@ -35,18 +33,19 @@ module.exports = (tests) => {
     await rejects(Promise.race([upload.promise, Promise.resolve()]), error);
   });
 
-  tests.add('`Upload` class with an unhandled rejection.', async () => {
+  it("`Upload` class with an unhandled rejection.", async () => {
     const upload = new Upload();
 
     ok(upload.promise instanceof Promise);
-    strictEqual(typeof upload.reject, 'function');
+    strictEqual(typeof upload.reject, "function");
 
-    const error = new Error('Message.');
+    const error = new Error("Message.");
 
     upload.reject(error);
 
-    // Rely on the fact that `-r hard-rejection/register` is used when these
-    // tests are run via the Node.js CLI. The process won’t exit with an error
+    // Rely on the fact that node.js and default mocha behaviour is used.
+    // The process won't exit with an error
     // if the unhandled rejection is silenced as intended.
+    await new Promise((r) => setTimeout(r, 10));
   });
-};
+});
