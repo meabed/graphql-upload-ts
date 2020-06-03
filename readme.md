@@ -2,9 +2,13 @@
 
 [![npm version](https://badgen.net/npm/v/graphql-upload-minimal)](https://npm.im/graphql-upload-minimal)
 
-Middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
+Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
 
-⚠️ Forked from [`graphql-upload`](https://npm.im/graphql-upload). Differences:
+## Acknowledgements
+
+This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im/graphql-upload). The original module is exceptionally well documented and well written. However, there are no JavaScript alternative modules for GraphQL file uploads. Also, I needed something simpler which won't do any disk I/O. Thus, this fork was born.
+
+Differences:
 
 - Single production dependency.
   - Results in 9 less production dependencies.
