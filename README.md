@@ -25,7 +25,7 @@ Differences:
 - API changes comparing to the original `graphql-upload`:
   - Does not accept any arguments to `createReadStream()`.
   - The `createReadStream()` must not be called twice for the same file.
-  
+
 Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
 ## Support
