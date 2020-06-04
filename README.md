@@ -6,7 +6,9 @@ Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-g
 
 ## Acknowledgements
 
-This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im/graphql-upload). The original module is exceptionally well documented and well written. However, there are no JavaScript alternative modules for GraphQL file uploads. Also, I needed something simpler which won't do any disk I/O. Thus, this fork was born.
+This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im/graphql-upload). The original module is exceptionally well documented and well written. It was very easy to fork and amend. Thanks Jayden!
+
+However, there are no JavaScript alternative modules for GraphQL file uploads. Also, I needed something simpler which won't do any disk I/O. Thus, this fork was born.
 
 Differences:
 
@@ -16,7 +18,10 @@ Differences:
   - And using a bit less memory.
   - And a bit faster.
 - More standard and developer friendly exception messages.
-- **Does not create any temporary files on disk.** Thus works faster.
+- **Does not create any temporary files on disk.**
+  - Thus works faster and does not load Node runtime as much.
+  - Have fewer corner cases.
+  - No need to manually destroy programmatically aborted streams.
 - API changes comparing to the original `graphql-upload`:
   - Does not accept any arguments to `createReadStream()`.
   - The `createReadStream()` must not be called twice for the same file.
@@ -58,17 +63,11 @@ See the [example API and client](https://github.com/jaydenseric/apollo-upload-ex
 
 ### Tips
 
-- The process must have both read and write access to the directory identified by [`os.tmpdir()`](https://nodejs.org/api/os.html#os_os_tmpdir).
-- The device requires sufficient disk space to buffer the expected number of concurrent upload requests.
-- Promisify and await file upload streams in resolvers or the server will send a response to the client before uploads are complete, causing a disconnect.
-- Handle file upload promise rejection and stream errors; uploads sometimes fail due to network connectivity issues or impatient users disconnecting.
-- Process multiple uploads asynchronously with [`Promise.all`](https://developer.mozilla.org/en-US/docs/web/javascript/reference/global_objects/promise/all) or a more flexible solution such as [`Promise.allSettled`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled) where an error in one does not reject them all.
 - Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
-- Use [`stream.destroy()`](https://nodejs.org/api/stream.html#stream_readable_destroy_error) when an incomplete stream is no longer needed, or temporary files may not get cleaned up.
 
 ## Architecture
 
-The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places. GraphQL resolvers need to be able to manage independent file streams. As resolvers are executed asynchronously, it's possible they will try to process files in a different order than received in the multipart request.
+The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places. GraphQL resolvers need to be able to manage independent file streams.
 
 [`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the operations are passed down the middleware chain to GraphQL resolvers.
 
