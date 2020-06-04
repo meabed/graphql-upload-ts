@@ -8,11 +8,11 @@ Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-g
 
 This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im/graphql-upload). The original module is exceptionally well documented and well written. It was very easy to fork and amend. Thanks Jayden!
 
-However, there are no JavaScript alternative modules for GraphQL file uploads. Also, I needed something simpler which won't do any disk I/O. Thus, this fork was born.
+I needed something simpler which won't do any disk I/O. However, there were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
 
 Differences:
 
-- Single production dependency.
+- Single production dependency - `busboy`.
   - Results in 9 less production dependencies.
   - And 6 less MB in your `node_modules`.
   - And using a bit less memory.
@@ -21,10 +21,12 @@ Differences:
 - **Does not create any temporary files on disk.**
   - Thus works faster and does not load Node runtime as much.
   - Have fewer corner cases.
-  - No need to manually destroy programmatically aborted streams.
+  - No need to manually destroy the programmatically aborted streams.
 - API changes comparing to the original `graphql-upload`:
   - Does not accept any arguments to `createReadStream()`.
   - The `createReadStream()` must not be called twice for the same file.
+  
+Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
 ## Support
 
@@ -32,9 +34,9 @@ The following environments are known to be compatible:
 
 - [Node.js](https://nodejs.org) `^10.13.0 || ^12.0.0 || >= 13.7.0`
 - [Koa](https://koajs.com)
-  - [`graphql-api-koa`](https://npm.im/graphql-api-koa)
   - [`koa-graphql`](https://npm.im/koa-graphql)
   - [`apollo-server-koa`](https://npm.im/apollo-server-koa) (inbuilt)
+  - [`graphql-api-koa`](https://npm.im/graphql-api-koa)
 - [Express](https://expressjs.com)
   - [`express-graphql`](https://npm.im/express-graphql)
   - [`apollo-server-express`](https://npm.im/apollo-server-express) (inbuilt)
@@ -59,7 +61,61 @@ A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchem
 
 [Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
 
-See the [example API and client](https://github.com/jaydenseric/apollo-upload-examples).
+### Express
+
+Minimalistic code example showing how to bring arbitrary GraphQL data along with the file stream and save it to an S3 bucket.
+
+Express.js middleware. You must put it before the main GraphQL sever middleware. Also, **make sure there is no other Express.js middleware which parses "multipart/form-data"** HTTP requests before the `graphqlUploadExpress` middleware!
+
+```js
+const express = require("express");
+const expressGraphql = require("express-graphql"); // this can be "apollo-server-express", etc
+const { graphqlUploadExpress } = require("graphql-upload-minimal");
+express()
+  .use(
+    '/graphql',
+    graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }),
+    expressGraphql({ schema: require('./my-schema') })
+  )
+  .listen(3000);
+```
+
+GraphQL schema:
+
+```graphql
+scalar Upload
+input DocumentUploadInput {
+  docType: String!
+  file: Upload
+}
+
+type SuccessResult { success: Boolean! message: String }
+type Mutations {
+  uploadDocuments(docs: [DocumentUploadInput!]!): SuccessResult
+}
+```
+
+GraphQL resolver:
+
+```js
+async function uploadDocuments(root, { docs }, ctx) {
+  try { 
+      const s3 = new (require("aws-sdk").S3)({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
+      for (const doc of docs) {
+        const { createReadStream, filename /*, mimetype, encoding */ } = await doc.file;
+        await s3.upload({ Key: `${ctx.user.id}/${doc.docType}-${filename}`, Body: createReadStream() }).promise();
+      }
+      return { success: true };
+  } catch (error) {
+      console.log("File upload failed", error);
+      return { success: false, message: error.message };  
+  }
+}
+```
+
+### Koa
+
+See the [example Koa server and client](https://github.com/jaydenseric/apollo-upload-examples).
 
 ### Tips
 
