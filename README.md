@@ -8,7 +8,7 @@ Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-g
 
 This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im/graphql-upload). The original module is exceptionally well documented and well written. It was very easy to fork and amend. Thanks Jayden!
 
-I needed something simpler which won't do any disk I/O. However, there were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
+I needed something simpler which won't attempt doing any disk I/O. There were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
 
 Differences:
 
@@ -19,12 +19,12 @@ Differences:
   - And a bit faster.
 - More standard and developer friendly exception messages.
 - **Does not create any temporary files on disk.**
-  - Thus works faster and does not load Node runtime as much.
-  - Have fewer corner cases.
+  - Thus works faster.
+  - Does not have a risk of clogging your file system.
   - No need to manually destroy the programmatically aborted streams.
 - API changes comparing to the original `graphql-upload`:
   - Does not accept any arguments to `createReadStream()`.
-  - The `createReadStream()` must not be called twice for the same file.
+  - Calling `createReadStream()` more than once does not create new streams but return same stream each time.
 
 Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
@@ -32,7 +32,7 @@ Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
 The following environments are known to be compatible:
 
-- [Node.js](https://nodejs.org) versions 10, 12 and 14. However, should still work in Node 8 for some time even though the unit tests fail in Node 8.
+- [Node.js](https://nodejs.org) versions 10, 12, 13 and 14. It works in Node 8 even though the unit tests fail.
 - [Koa](https://koajs.com)
   - [`koa-graphql`](https://npm.im/koa-graphql)
   - [`apollo-server-koa`](https://npm.im/apollo-server-koa) (inbuilt)
