@@ -60,7 +60,7 @@
   },
   "scripts": {
     "prepare": "npm run prepare:jsdoc",
-    "prepare:jsdoc": "jsdoc-md",
+    "prepare:jsdoc": "jsdoc-md --markdown-path README.md",
     "ci": "npm run lint && npm t",
     "test": "mocha test --recursive",
     "lint": "eslint .",
