@@ -95,22 +95,27 @@ type Mutations {
 }
 ```
 
-GraphQL resolver:
+GraphQL resolvers:
 
 ```js
-async function uploadDocuments(root, { docs }, ctx) {
-  try { 
-      const s3 = new (require("aws-sdk").S3)({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
-      for (const doc of docs) {
-        const { createReadStream, filename /*, mimetype, encoding */ } = await doc.file;
-        await s3.upload({ Key: `${ctx.user.id}/${doc.docType}-${filename}`, Body: createReadStream() }).promise();
+const resolvers = {
+  Upload: require("graphql-upload-minimal").GraphQLUpload,
+  Mutations: {
+    async uploadDocuments(root, { docs }, ctx) {
+      try { 
+        const s3 = new (require("aws-sdk").S3)({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
+        for (const doc of docs) {
+          const { createReadStream, filename /*, mimetype, encoding */ } = await doc.file;
+          await s3.upload({ Key: `${ctx.user.id}/${doc.docType}-${filename}`, Body: createReadStream() }).promise();
+        }
+        return { success: true };
+      } catch (error) {
+        console.log("File upload failed", error);
+        return { success: false, message: error.message };  
       }
-      return { success: true };
-  } catch (error) {
-      console.log("File upload failed", error);
-      return { success: false, message: error.message };  
+    }
   }
-}
+};
 ```
 
 ### Koa
