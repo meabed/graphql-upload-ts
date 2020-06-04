@@ -45,8 +45,6 @@ See also [GraphQL multipart request spec server implementations](https://github.
 
 ## Setup
 
-Setup is necessary if your environment doesn't feature this package inbuilt (see **_[Support](#support)_**).
-
 To install [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal) and the [`graphql`](https://npm.im/graphql) peer dependency from [npm](https://npmjs.com) run:
 
 ```shell
