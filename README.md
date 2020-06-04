@@ -69,7 +69,7 @@ Express.js middleware. You must put it before the main GraphQL sever middleware.
 
 ```js
 const express = require("express");
-const expressGraphql = require("express-graphql"); // this can be "apollo-server-express", etc
+const expressGraphql = require("express-graphql");
 const { graphqlUploadExpress } = require("graphql-upload-minimal");
 express()
   .use(
