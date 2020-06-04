@@ -32,7 +32,7 @@ Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
 The following environments are known to be compatible:
 
-- [Node.js](https://nodejs.org) versions 10, 12 and 14. However, should still work in Node 8 for some time.
+- [Node.js](https://nodejs.org) versions 10, 12 and 14. However, should still work in Node 8 for some time even though the unit tests fail in Node 8.
 - [Koa](https://koajs.com)
   - [`koa-graphql`](https://npm.im/koa-graphql)
   - [`apollo-server-koa`](https://npm.im/apollo-server-koa) (inbuilt)
