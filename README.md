@@ -26,7 +26,7 @@ Differences:
   - You can't have same file referenced twice in a GraphQL query/mutation.
 - API changes comparing to the original `graphql-upload`:
   - Does not accept any arguments to `createReadStream()`. Will **throw** if any provided.
-  - Calling `createReadStream()` more than once is not allowed. Will **throw**.
+  - Calling `createReadStream()` more than once per file is not allowed. Will **throw**.
 
 Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
