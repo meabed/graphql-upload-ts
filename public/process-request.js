@@ -264,6 +264,7 @@ module.exports = function processRequest(
       }
     );
 
+    let returnedStreams = new Set();
     parser.on("file", (fieldName, stream, filename, encoding, mimetype) => {
       if (exitError) {
         ignoreStream(stream);
@@ -313,10 +314,24 @@ module.exports = function processRequest(
         filename,
         mimetype,
         encoding,
-        createReadStream() {
+        createReadStream(...args) {
+          if (args && args.some(Boolean)) {
+            throw new Error(
+              "graphql-upload-minimal does not support createReadStream() arguments. Use graphql-upload NPM module if you need this feature."
+            );
+          }
+
           const error = fileError || (released ? exitError : null);
           if (error) throw error;
-          return stream;
+
+          if (returnedStreams.has(stream)) {
+            throw new Error(
+              "graphql-upload-minimal does not allow calling createReadStream() multiple times. Please, consume the previously returned stream. Make sure you're not referencing same file twice in your query."
+            );
+          } else {
+            returnedStreams.add(stream);
+            return stream;
+          }
         },
       };
 

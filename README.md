@@ -22,9 +22,11 @@ Differences:
   - Thus works faster.
   - Does not have a risk of clogging your file system.
   - No need to manually destroy the programmatically aborted streams.
+- Does not follow strict [specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
+  - You can't have same file referenced twice in a GraphQL query/mutation.
 - API changes comparing to the original `graphql-upload`:
-  - Does not accept any arguments to `createReadStream()`.
-  - Calling `createReadStream()` more than once does not create new streams but return same stream each time.
+  - Does not accept any arguments to `createReadStream()`. Will **throw** if any provided.
+  - Calling `createReadStream()` more than once is not allowed. Will **throw**.
 
 Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 
@@ -59,11 +61,11 @@ A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchem
 
 [Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
 
-### Express
+### Express.js
 
-Minimalistic code example showing how to bring arbitrary GraphQL data along with the file stream and save it to an S3 bucket.
+Minimalistic code example showing how to upload a file along with arbitrary GraphQL data and save it to an S3 bucket.
 
-Express.js middleware. You must put it before the main GraphQL sever middleware. Also, **make sure there is no other Express.js middleware which parses "multipart/form-data"** HTTP requests before the `graphqlUploadExpress` middleware!
+Express.js middleware. You must put it before the main GraphQL sever middleware. Also, **make sure there is no other Express.js middleware which parses `multipart/form-data`** HTTP requests before the `graphqlUploadExpress` middleware!
 
 ```js
 const express = require("express");
@@ -84,7 +86,7 @@ GraphQL schema:
 scalar Upload
 input DocumentUploadInput {
   docType: String!
-  file: Upload
+  file: Upload!
 }
 
 type SuccessResult { success: Boolean! message: String }

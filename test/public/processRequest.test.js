@@ -1,4 +1,4 @@
-const { notStrictEqual, ok, strictEqual, rejects, throws } = require("assert");
+const { ok, strictEqual, rejects, throws } = require("assert");
 const http = require("http");
 const FormData = require("form-data");
 const { Readable } = require("stream");
@@ -55,7 +55,7 @@ describe("processRequest", () => {
     }
   });
 
-  it.skip("`processRequest` with a single file and custom `createReadStream` options.", async () => {
+  it("`processRequest` with a single file and custom `createReadStream` options.", async () => {
     let serverError;
 
     const server = http.createServer(async (request, response) => {
@@ -72,15 +72,10 @@ describe("processRequest", () => {
 
         const encoding = "base64";
         const highWaterMark = 100;
-        const stream = upload.createReadStream({ encoding, highWaterMark });
-
-        ok(stream instanceof Readable);
-        // strictEqual(stream._readableState.encoding, encoding);
-        // strictEqual(stream.readableHighWaterMark, highWaterMark);
-        strictEqual(
-          await streamToString(stream),
-          Buffer.from("a").toString(encoding)
-        );
+        throws(() => upload.createReadStream({ encoding, highWaterMark }), {
+          message:
+            "graphql-upload-minimal does not support createReadStream() arguments. Use graphql-upload NPM module if you need this feature.",
+        });
       } catch (error) {
         serverError = error;
       } finally {
@@ -171,7 +166,7 @@ describe("processRequest", () => {
     }
   });
 
-  it.skip("`processRequest` with deduped files.", async () => {
+  it("`processRequest` with deduped files.", async () => {
     let serverError;
 
     const server = http.createServer(async (request, response) => {
@@ -193,19 +188,16 @@ describe("processRequest", () => {
         strictEqual(upload1.encoding, "7bit");
 
         const stream1 = upload1.createReadStream();
-        const stream2 = upload2.createReadStream();
+        throws(() => upload2.createReadStream(), {
+          message:
+            "graphql-upload-minimal does not allow calling createReadStream() multiple times. Please, consume the previously returned stream. Make sure you're not referencing same file twice in your query.",
+        });
 
-        notStrictEqual(stream1, stream2);
         ok(stream1 instanceof Readable);
-        ok(stream2 instanceof Readable);
 
-        const [content1, content2] = await Promise.all([
-          streamToString(stream1),
-          streamToString(stream2),
-        ]);
+        const content1 = await streamToString(stream1);
 
         strictEqual(content1, "a");
-        strictEqual(content2, "a");
       } catch (error) {
         serverError = error;
       } finally {
