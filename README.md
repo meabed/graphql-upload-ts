@@ -443,7 +443,7 @@ _Ways to `import`._
 > ```
 >
 > ```js
-> import processRequest from 'graphql-upload-minimal/public/process-request.js';
+> import processRequest from 'graphql-upload-minimal/public/processRequest.js';
 > ```
 
 _Ways to `require`._

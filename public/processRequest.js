@@ -3,6 +3,7 @@
 const Busboy = require("busboy");
 const ignoreStream = require("./ignore-stream");
 const Upload = require("./Upload");
+const HttpError = require("./HttpError");
 
 /**
  * Official [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
@@ -19,20 +20,7 @@ function isObject(val) {
   return val != null && typeof val === "object" && Array.isArray(val) === false;
 }
 
-const errorNames = new Map([
-  [400, "BadRequestError"],
-  [413, "PayloadTooLargeError"],
-  [499, "BadRequestError"],
-  [500, "InternalError"],
-]);
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-    this.expose = true;
-    this.name = errorNames.get(status);
-  }
-}
+const noop = () => {};
 
 /**
  * Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
@@ -55,7 +43,7 @@ class HttpError extends Error {
  * ```
  *
  * ```js
- * import processRequest from 'graphql-upload-minimal/public/process-request.js';
+ * import processRequest from 'graphql-upload-minimal/public/processRequest.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
@@ -73,8 +61,48 @@ module.exports = function processRequest(
     maxFieldSize = 1000000, // 1 MB
     maxFileSize = Infinity,
     maxFiles = Infinity,
+    environment, // "lambda", "gcp"
   } = {}
 ) {
+  const contentType =
+    request && request.headers && request.headers["content-type"];
+  if (
+    !contentType ||
+    typeof contentType !== "string" ||
+    !contentType.includes("multipart/form-data;")
+  ) {
+    new HttpError(
+      `Invalid content-type ${contentType}, should be multipart/form-data;`,
+      400
+    );
+  }
+
+  if (environment === "gcf") {
+    // Google Cloud Functions compatibility.
+    if (!request.rawBody)
+      new HttpError(
+        "GCF request.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
+      );
+  } else if (environment === "lambda") {
+    // AWS Lambda compatibility
+    if (!request.body)
+      new HttpError(
+        "AWS Lambda request.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
+      );
+  } else {
+    // Regular node.js environment where request is a ReadableStream instance.
+    if (!request.pipe || !request.unpipe || !request.once || !request.resume)
+      new HttpError(
+        "The request doesn't look like a ReadableStream. Use `environment` option to enable serverless function support."
+      );
+  }
+
+  // ReadalbeStream mocking
+  if (!request.pipe) request.pipe = noop;
+  if (!request.unpipe) request.unpipe = noop;
+  if (!request.once) request.once = noop;
+  if (!request.resume) request.resume = noop;
+
   return new Promise((resolve, reject) => {
     const parser = new Busboy({
       headers: request.headers,
@@ -118,32 +146,6 @@ module.exports = function processRequest(
       setImmediate(() => {
         request.resume();
       });
-    };
-
-    let released;
-    /**
-     * Successive calls have no effect.
-     * @kind function
-     * @name processRequest~release
-     * @ignore
-     */
-    const release = () => {
-      released = true;
-    };
-
-    /**
-     * Handles when the request is closed before it properly ended.
-     * @kind function
-     * @name processRequest~abort
-     * @ignore
-     */
-    const abort = () => {
-      exit(
-        new HttpError(
-          499,
-          "Request disconnected during file upload stream parsing."
-        )
-      );
     };
 
     let operations;
@@ -375,14 +377,50 @@ module.exports = function processRequest(
 
     parser.once("error", exit);
 
-    response.once("finish", release);
-    response.once("close", release);
+    let released;
+    /**
+     * Successive calls have no effect.
+     * @kind function
+     * @name processRequest~release
+     * @ignore
+     */
+    const release = () => {
+      released = true;
+    };
+
+    if (response && response.once) {
+      response.once("finish", release);
+      response.once("close", release);
+    }
+
+    /**
+     * Handles when the request is closed before it properly ended.
+     * @kind function
+     * @name processRequest~abort
+     * @ignore
+     */
+    const abort = () => {
+      exit(
+        new HttpError(
+          499,
+          "Request disconnected during file upload stream parsing."
+        )
+      );
+    };
 
     request.once("close", abort);
     request.once("end", () => {
       request.removeListener("close", abort);
     });
 
-    request.pipe(parser);
+    if (environment === "gcf") {
+      parser.end(request.rawBody);
+      release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
+    } else if (environment === "lambda") {
+      parser.end(request.body);
+      release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
+    } else {
+      request.pipe(parser);
+    }
   });
 };
