@@ -54,7 +54,7 @@ const noop = () => {};
  * const processRequest = require('graphql-upload-minimal/public/processRequest');
  * ```
  */
-module.exports = function processRequest(
+module.exports = async function processRequest(
   request,
   response,
   {
@@ -71,33 +71,36 @@ module.exports = function processRequest(
     typeof contentType !== "string" ||
     !contentType.includes("multipart/form-data;")
   ) {
-    new HttpError(
-      `Invalid content-type ${contentType}, should be multipart/form-data;`,
-      400
+    throw new HttpError(
+      400,
+      `Invalid content-type ${contentType}, should be multipart/form-data;`
     );
   }
 
   if (environment === "gcf") {
     // Google Cloud Functions compatibility.
     if (!request.rawBody)
-      new HttpError(
+      throw new HttpError(
+        400,
         "GCF request.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
       );
   } else if (environment === "lambda") {
     // AWS Lambda compatibility
     if (!request.body)
-      new HttpError(
+      throw new HttpError(
+        400,
         "AWS Lambda request.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
       );
   } else {
     // Regular node.js environment where request is a ReadableStream instance.
     if (!request.pipe || !request.unpipe || !request.once || !request.resume)
-      new HttpError(
+      throw new HttpError(
+        400,
         "The request doesn't look like a ReadableStream. Use `environment` option to enable serverless function support."
       );
   }
 
-  // ReadalbeStream mocking
+  // ReadableStream mocking
   if (!request.pipe) request.pipe = noop;
   if (!request.unpipe) request.unpipe = noop;
   if (!request.once) request.once = noop;
