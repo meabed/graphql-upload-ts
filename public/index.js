@@ -54,24 +54,12 @@ exports.Upload = require("./Upload");
  */
 
 /**
- * Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec) within AWS Lambda. This is a wrapper around `processRequest`.
- * @kind typedef
- * @name ProcessRequestLambdaFunction
- * @type {Function}
- * @param {IncomingMessage} event [Node.js HTTP server request instance](https://nodejs.org/api/http.html#http_class_http_incomingmessage).
- * @param {ServerResponse} response [Node.js HTTP server response instance](https://nodejs.org/api/http.html#http_class_http_serverresponse).
- * @param {ProcessRequestOptions} [options] Options for processing the request.
- * @returns {Promise<GraphQLOperation | Array<GraphQLOperation>>} GraphQL operation or batch of operations for a GraphQL server to consume (usually as the request body).
- * @see [`processRequest`]{@link processRequest}.
- */
-
-/**
- * Options for processing a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec);
- * mostly relating to security, performance and limits.
+ * Options for processing a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
  * @kind typedef
  * @name ProcessRequestOptions
  * @type {object}
  * @prop {number} [maxFieldSize=1000000] Maximum allowed non-file multipart form field size in bytes; enough for your queries.
  * @prop {number} [maxFileSize=Infinity] Maximum allowed file size in bytes.
  * @prop {number} [maxFiles=Infinity] Maximum allowed number of files.
+ * @prop {string} [environment] Valid value are "lambda" (AWS Lambda) and "gcf" (Google Cloud Function). Set this if you are running the file uploads in serverless environment.
  */

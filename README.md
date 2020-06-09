@@ -1,6 +1,6 @@
 # graphql-upload-minimal
 
-[![npm version](https://badgen.net/npm/v/graphql-upload-minimal)](https://npm.im/graphql-upload-minimal)  [![CI status](https://github.com/koresar/graphql-upload-minimal/workflows/CI/badge.svg)](https://github.com/koresar/graphql-upload-minimal/actions)
+[![npm version](https://badgen.net/npm/v/graphql-upload-minimal)](https://npm.im/graphql-upload-minimal) [![CI status](https://github.com/koresar/graphql-upload-minimal/workflows/CI/badge.svg)](https://github.com/koresar/graphql-upload-minimal/actions)
 
 Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
 
@@ -35,13 +35,10 @@ Otherwise, this module is a drop-in replacement for the `graphql-upload`.
 The following environments are known to be compatible:
 
 - [Node.js](https://nodejs.org) versions 10, 12, 13 and 14. It works in Node 8 even though the unit tests fail.
+- [AWS Lambda](https://aws.amazon.com/lambda/)
+- [Google Cloud Functions (GCF)](https://cloud.google.com/functions)
 - [Koa](https://koajs.com)
-  - [`koa-graphql`](https://npm.im/koa-graphql)
-  - [`apollo-server-koa`](https://npm.im/apollo-server-koa) (inbuilt)
-  - [`graphql-api-koa`](https://npm.im/graphql-api-koa)
-- [Express](https://expressjs.com)
-  - [`express-graphql`](https://npm.im/express-graphql)
-  - [`apollo-server-express`](https://npm.im/apollo-server-express) (inbuilt)
+- [Express.js](https://expressjs.com)
 
 See also [GraphQL multipart request spec server implementations](https://github.com/jaydenseric/graphql-multipart-request-spec#server).
 
@@ -76,7 +73,7 @@ express()
   .use(
     "/graphql",
     graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }),
-    expressGraphql({ schema: require('./my-schema') })
+    expressGraphql({ schema: require("./my-schema") })
   )
   .listen(3000);
 ```
@@ -126,7 +123,31 @@ const resolvers = {
 
 See the [example Koa server and client](https://github.com/jaydenseric/apollo-upload-examples).
 
-### Tips
+### AWS Lambda
+
+Possible example.
+
+```js
+const { processRequest } = require("graphql-upload-minimal");
+
+module.exports.processRequest = function (event) {
+  return processRequest(event, null, { environment: "lambda" });
+};
+```
+
+### Google Cloud Functions (GCF)
+
+Possible example.
+
+```js
+const { processRequest } = require("graphql-upload-minimal");
+
+exports.uploadFile = function (req, res) {
+  return processRequest(req, res, { environment: "gcf" });
+};
+```
+
+## Tips
 
 - Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
 
@@ -532,13 +553,13 @@ Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-m
 
 ### type ProcessRequestOptions
 
-Options for processing a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec);
-mostly relating to security, performance and limits.
+Options for processing a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
 
 **Type:** object
 
-| Property       | Type                | Description                                                                           |
-| :------------- | :------------------ | :------------------------------------------------------------------------------------ |
-| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries. |
-| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                   |
-| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                      |
+| Property       | Type                | Description                                                                                                                                      |
+| :------------- | :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries.                                                            |
+| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                                                                              |
+| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                                                                                 |
+| `environment`  | string?             | Valid value are "lambda" (AWS Lambda) and "gcf" (Google Cloud Function). Set this if you are running the file uploads in serverless environment. |
