@@ -20,6 +20,22 @@ function isObject(val) {
   return val != null && typeof val === "object" && Array.isArray(val) === false;
 }
 
+/**
+ * Deep set value using dot separated `path` of the object.
+ * @param object {Object} Any JS object.
+ * @param path {String} String like "input.docs.0.file"
+ * @param value {*} The value we set.
+ * @ignore
+ * @private
+ */
+function deepSet(object, path, value) {
+  const props = path.split("."); // E.g. "input.docs.0.file" -> ["input", "docs", "0", "file"]
+  while (props.length !== 1) object = object[props.shift()];
+  if (!object)
+    throw new Error(`The path ${path} was not found in the GraphQL query.`);
+  object[props[0]] = value;
+}
+
 const noop = () => {};
 
 /**
@@ -225,10 +241,7 @@ module.exports = async function processRequest(
                   );
 
                 try {
-                  const propNames = path.split(".");
-                  let o = operations;
-                  while (propNames.length !== 1) o = o[propNames.shift()];
-                  o[propNames[0]] = map.get(fieldName);
+                  deepSet(operations, path, map.get(fieldName));
                 } catch (error) {
                   return exit(
                     `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`

@@ -17,9 +17,10 @@ describe("processRequest", () => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
+        ok(operation.variables.input.docs[0].file instanceof Upload);
+        strictEqual(operation.variables.input.docs[0].type, "manual");
 
-        const upload = await operation.variables.file.promise;
+        const upload = await operation.variables.input.docs[0].file.promise;
 
         strictEqual(upload.filename, "a.txt");
         strictEqual(upload.mimetype, "text/plain");
@@ -43,8 +44,16 @@ describe("processRequest", () => {
     try {
       const body = new FormData();
 
-      body.append("operations", JSON.stringify({ variables: { file: null } }));
-      body.append("map", JSON.stringify({ "1": ["variables.file"] }));
+      body.append(
+        "operations",
+        JSON.stringify({
+          variables: { input: { docs: [{ type: "manual", file: null }] } },
+        })
+      );
+      body.append(
+        "map",
+        JSON.stringify({ "1": ["variables.input.docs.0.file"] })
+      );
       body.append("1", "a", { filename: "a.txt" });
 
       await fetch(`http://localhost:${port}`, { method: "POST", body });
