@@ -10,25 +10,35 @@ This module was ⚠️ forked from the amazing [`graphql-upload`](https://npm.im
 
 I needed something simpler which won't attempt doing any disk I/O. There were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
 
-Differences:
+### Differences to [`graphql-upload`](https://npm.im/graphql-upload)
 
-- Single production dependency - `busboy`.
-  - Results in 9 less production dependencies.
-  - And 6 less MB in your `node_modules`.
-  - And using a bit less memory.
-  - And a bit faster.
-- More standard and developer friendly exception messages.
-- **Does not create any temporary files on disk.**
-  - Thus works faster.
-  - Does not have a risk of clogging your file system.
-  - No need to manually destroy the programmatically aborted streams.
-- Does not follow strict [specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
-  - You can't have same file referenced twice in a GraphQL query/mutation.
-- API changes comparing to the original `graphql-upload`:
-  - Does not accept any arguments to `createReadStream()`. Will **throw** if any provided.
-  - Calling `createReadStream()` more than once per file is not allowed. Will **throw**.
+#### Single production dependency - `busboy`
 
-Otherwise, this module is a drop-in replacement for the `graphql-upload`.
+- Results in 9 less production dependencies.
+- And 6 less MB in your `node_modules`.
+- And using a bit less memory.
+- And a bit faster.
+
+#### More standard and developer friendly exception messages
+
+Using ASCII-only text. Direct developers to resolve common mistakes. 
+
+#### **Does not create any temporary files on disk**
+
+- Thus works faster.
+- Does not have a risk of clogging your file system. Even on high load.
+- No need to manually destroy the programmatically aborted streams.
+
+#### Does not follow strict [specification](https://github.com/jaydenseric/graphql-multipart-request-spec)
+
+You can't have same file referenced twice in a GraphQL query/mutation.
+
+#### API changes comparing to the original `graphql-upload`
+
+- Does not accept any arguments to `createReadStream()`. Will **throw** if any provided.
+- Calling `createReadStream()` more than once per file is not allowed. Will **throw**.
+
+Otherwise, **this module is a drop-in replacement for the `graphql-upload`**.
 
 ## Support
 

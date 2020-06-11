@@ -941,7 +941,7 @@ describe("processRequest", () => {
         await rejects(processRequest(request, response), {
           name: "InternalError",
           message:
-            "graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then help us adding support.",
+            "graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then see README.md.",
           status: 500,
           expose: true,
         });

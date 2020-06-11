@@ -123,12 +123,14 @@ module.exports = async function processRequest(
      * Exits request processing with an error. Successive calls have no effect.
      * @kind function
      * @name processRequest~exit
-     * @param {object} error Error instance.
+     * @param {string} message Error message.
+     * @param {number} [status=400] HTTP status code.
+     * @private
      * @ignore
      */
-    const exit = (error) => {
+    const exit = (message, status = 400) => {
       if (exitError) return;
-      exitError = error;
+      exitError = new HttpError(status, message);
 
       reject(exitError);
 
@@ -160,10 +162,8 @@ module.exports = async function processRequest(
 
         if (valueTruncated)
           return exit(
-            new HttpError(
-              413,
-              `The '${fieldName}' multipart field value exceeds the ${maxFieldSize} byte size limit.`
-            )
+            `The '${fieldName}' multipart field value exceeds the ${maxFieldSize} byte size limit.`,
+            413
           );
 
         switch (fieldName) {
@@ -172,29 +172,20 @@ module.exports = async function processRequest(
               operations = JSON.parse(value);
             } catch (error) {
               return exit(
-                new HttpError(
-                  400,
-                  `Invalid JSON in the 'operations' multipart field (${SPEC_URL}).`
-                )
+                `Invalid JSON in the 'operations' multipart field (${SPEC_URL}).`
               );
             }
 
             if (!isObject(operations) && !Array.isArray(operations))
               return exit(
-                new HttpError(
-                  400,
-                  `Invalid type for the 'operations' multipart field (${SPEC_URL}).`
-                )
+                `Invalid type for the 'operations' multipart field (${SPEC_URL}).`
               );
 
             break;
           case "map": {
             if (!operations)
               return exit(
-                new HttpError(
-                  400,
-                  `Misordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`
-                )
+                `Misordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`
               );
 
             let parsedMap;
@@ -202,19 +193,13 @@ module.exports = async function processRequest(
               parsedMap = JSON.parse(value);
             } catch (error) {
               return exit(
-                new HttpError(
-                  400,
-                  `Invalid JSON in the 'map' multipart field (${SPEC_URL}).`
-                )
+                `Invalid JSON in the 'map' multipart field (${SPEC_URL}).`
               );
             }
 
             if (!isObject(parsedMap))
               return exit(
-                new HttpError(
-                  400,
-                  `Invalid type for the 'map' multipart field (${SPEC_URL}).`
-                )
+                `Invalid type for the 'map' multipart field (${SPEC_URL}).`
               );
 
             const mapEntries = Object.entries(parsedMap);
@@ -222,18 +207,13 @@ module.exports = async function processRequest(
             // Check max files is not exceeded, even though the number of files to
             // parse might not match th(e map provided by the client.
             if (mapEntries.length > maxFiles)
-              return exit(
-                new HttpError(413, `${maxFiles} max file uploads exceeded.`)
-              );
+              return exit(`${maxFiles} max file uploads exceeded.`, 413);
 
             map = new Map();
             for (const [fieldName, paths] of mapEntries) {
               if (!Array.isArray(paths))
                 return exit(
-                  new HttpError(
-                    400,
-                    `Invalid type for the 'map' multipart field entry key '${fieldName}' array (${SPEC_URL}).`
-                  )
+                  `Invalid type for the 'map' multipart field entry key '${fieldName}' array (${SPEC_URL}).`
                 );
 
               map.set(fieldName, new Upload());
@@ -241,10 +221,7 @@ module.exports = async function processRequest(
               for (const [index, path] of paths.entries()) {
                 if (typeof path !== "string" || !path.trim())
                   return exit(
-                    new HttpError(
-                      400,
-                      `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`
-                    )
+                    `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`
                   );
 
                 try {
@@ -254,10 +231,7 @@ module.exports = async function processRequest(
                   o[propNames[0]] = map.get(fieldName);
                 } catch (error) {
                   return exit(
-                    new HttpError(
-                      400,
-                      `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`
-                    )
+                    `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`
                   );
                 }
               }
@@ -279,10 +253,7 @@ module.exports = async function processRequest(
       if (!map) {
         ignoreStream(stream);
         return exit(
-          new HttpError(
-            400,
-            `Misordered multipart fields; files should follow 'map' (${SPEC_URL}).`
-          )
+          `Misordered multipart fields; files should follow 'map' (${SPEC_URL}).`
         );
       }
 
@@ -344,7 +315,7 @@ module.exports = async function processRequest(
     });
 
     parser.once("filesLimit", () =>
-      exit(new HttpError(413, `${maxFiles} max file uploads exceeded.`))
+      exit(`${maxFiles} max file uploads exceeded.`, 413)
     );
 
     parser.once("finish", () => {
@@ -353,25 +324,15 @@ module.exports = async function processRequest(
 
       if (!operations && !map) {
         return exit(
-          new HttpError(
-            500,
-            `graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then help us adding support.`
-          )
+          `graphql-upload-minimal couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then see README.md.`,
+          500
         );
       }
 
       if (!operations)
-        return exit(
-          new HttpError(
-            400,
-            `Missing multipart field 'operations' (${SPEC_URL}).`
-          )
-        );
+        return exit(`Missing multipart field 'operations' (${SPEC_URL}).`);
 
-      if (!map)
-        return exit(
-          new HttpError(400, `Missing multipart field 'map' (${SPEC_URL}).`)
-        );
+      if (!map) return exit(`Missing multipart field 'map' (${SPEC_URL}).`);
 
       for (const upload of map.values())
         if (!upload.file)
@@ -403,12 +364,7 @@ module.exports = async function processRequest(
      * @ignore
      */
     const abort = () => {
-      exit(
-        new HttpError(
-          499,
-          "Request disconnected during file upload stream parsing."
-        )
-      );
+      exit("Request disconnected during file upload stream parsing.", 499);
     };
 
     request.once("close", abort);
