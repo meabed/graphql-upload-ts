@@ -128,13 +128,10 @@ describe("processRequest serverless", () => {
     body.append("map", JSON.stringify({ "1": ["variables.file"] }));
     body.append("1", "a", { filename: "a.txt" });
 
-    const headers = body.getHeaders();
-    const values = body.getBuffer().toString();
-
     // Create a fake Lambda event
     const event = {
-      body: values,
-      headers,
+      body: body.getBuffer().toString(),
+      headers: body.getHeaders(),
     };
 
     const operation = await processRequest(event, null, {
@@ -164,13 +161,10 @@ describe("processRequest serverless", () => {
     body.append("map", JSON.stringify({ "1": ["variables.file"] }));
     body.append("1", "a", { filename: "a.txt" });
 
-    const headers = body.getHeaders();
-    const values = body.getBuffer().toString();
-
     // Create a fake Lambda event
     const event = {
-      rawBody: values,
-      headers,
+      rawBody: body.getBuffer(),
+      headers: body.getHeaders(),
     };
 
     const operation = await processRequest(event, null, {
