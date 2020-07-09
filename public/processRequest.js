@@ -44,12 +44,8 @@ const noop = () => {};
  * [`Upload`]{@link Upload} instance for each expected file upload, placing
  * references wherever the file is expected in the
  * [GraphQL operation]{@link GraphQLOperation} for the
- * [`Upload` scalar]{@link GraphQLUpload} to derive it's value. Errors are
- * created with [`http-errors`](https://npm.im/http-errors) to assist in
- * sending responses with appropriate HTTP status codes. Used in
- * [`graphqlUploadExpress`]{@link graphqlUploadExpress} and
- * [`graphqlUploadKoa`]{@link graphqlUploadKoa} and can be used to create
- * custom middleware.
+ * [`Upload` scalar]{@link GraphQLUpload} to derive its value. Error objects
+ * have HTTP `status` property and an appropriate HTTP error `name` property.
  * @kind function
  * @name processRequest
  * @type {ProcessRequestFunction}
@@ -71,8 +67,8 @@ const noop = () => {};
  * ```
  */
 module.exports = async function processRequest(
-  request,
-  response,
+  req,
+  res,
   {
     maxFieldSize = 1000000, // 1 MB
     maxFileSize = Infinity,
@@ -80,10 +76,39 @@ module.exports = async function processRequest(
     environment, // "lambda", "gcp"
   } = {}
 ) {
-  const contentType =
-    request && request.headers && request.headers["content-type"];
+  if (environment === "gcf") {
+    // Google Cloud Functions compatibility.
+    if (!req.rawBody)
+      throw new HttpError(
+        400,
+        "GCF request.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
+      );
+  } else if (environment === "lambda") {
+    // AWS Lambda compatibility
+    if (!req.body)
+      throw new HttpError(
+        400,
+        "AWS Lambda request.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
+      );
+  } else if (environment === "azure") {
+    // Azure Functions compatibility
+    req = req.req || res;
+    if (!req || !req.rawBody)
+      throw new HttpError(
+        400,
+        "Azure Function req.rawBody is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
+      );
+  } else {
+    // Regular node.js environment where request is a ReadableStream instance.
+    if (!req || !req.pipe || !req.unpipe || !req.once || !req.resume)
+      throw new HttpError(
+        400,
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
+      );
+  }
+
+  const contentType = req && req.headers && req.headers["content-type"];
   if (
-    !contentType ||
     typeof contentType !== "string" ||
     !contentType.includes("multipart/form-data;")
   ) {
@@ -93,38 +118,15 @@ module.exports = async function processRequest(
     );
   }
 
-  if (environment === "gcf") {
-    // Google Cloud Functions compatibility.
-    if (!request.rawBody)
-      throw new HttpError(
-        400,
-        "GCF request.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
-      );
-  } else if (environment === "lambda") {
-    // AWS Lambda compatibility
-    if (!request.body)
-      throw new HttpError(
-        400,
-        "AWS Lambda request.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
-      );
-  } else {
-    // Regular node.js environment where request is a ReadableStream instance.
-    if (!request.pipe || !request.unpipe || !request.once || !request.resume)
-      throw new HttpError(
-        400,
-        "The request doesn't look like a ReadableStream. Use `environment` option to enable serverless function support."
-      );
-  }
-
   // ReadableStream mocking
-  if (!request.pipe) request.pipe = noop;
-  if (!request.unpipe) request.unpipe = noop;
-  if (!request.once) request.once = noop;
-  if (!request.resume) request.resume = noop;
+  if (!req.pipe) req.pipe = noop;
+  if (!req.unpipe) req.unpipe = noop;
+  if (!req.once) req.once = noop;
+  if (!req.resume) req.resume = noop;
 
   return new Promise((resolve, reject) => {
     const parser = new Busboy({
-      headers: request.headers,
+      headers: req.headers,
       limits: {
         fieldSize: maxFieldSize,
         fields: 2, // Only operations and map.
@@ -158,14 +160,14 @@ module.exports = async function processRequest(
         for (const upload of map.values())
           if (!upload.file) upload.reject(exitError);
 
-      request.unpipe(parser);
+      req.unpipe(parser);
 
       // With a sufficiently large request body, subsequent events in the same
       // event frame cause the stream to pause after the parser is destroyed. To
       // ensure that the request resumes, the call to .resume() is scheduled for
       // later in the event loop.
       setImmediate(() => {
-        request.resume();
+        req.resume();
       });
     };
 
@@ -332,8 +334,8 @@ module.exports = async function processRequest(
     );
 
     parser.once("finish", () => {
-      request.unpipe(parser);
-      request.resume();
+      req.unpipe(parser);
+      req.resume();
 
       if (!operations && !map) {
         return exit(
@@ -365,9 +367,9 @@ module.exports = async function processRequest(
       released = true;
     };
 
-    if (response && response.once) {
-      response.once("finish", release);
-      response.once("close", release);
+    if (res && res.once) {
+      res.once("finish", release);
+      res.once("close", release);
     }
 
     /**
@@ -380,19 +382,19 @@ module.exports = async function processRequest(
       exit("Request disconnected during file upload stream parsing.", 499);
     };
 
-    request.once("close", abort);
-    request.once("end", () => {
-      request.removeListener("close", abort);
+    req.once("close", abort);
+    req.once("end", () => {
+      req.removeListener("close", abort);
     });
 
-    if (environment === "gcf") {
-      parser.end(request.rawBody);
+    if (environment === "gcf" || environment === "azure") {
+      parser.end(req.rawBody);
       release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
     } else if (environment === "lambda") {
-      parser.end(request.body);
+      parser.end(req.body);
       release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
     } else {
-      request.pipe(parser);
+      req.pipe(parser);
     }
   });
 };

@@ -157,6 +157,18 @@ exports.uploadFile = function (req, res) {
 };
 ```
 
+### Azure Functions
+
+Possible example.
+
+```js
+const { processRequest } = require("graphql-upload-minimal");
+
+exports.uploadFile = function (context, req) {
+  return processRequest(context, req, { environment: "azure" });
+};
+```
+
 ## Tips
 
 - Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
@@ -456,12 +468,8 @@ It parses the `operations` and `map` fields to create an
 [`Upload`](#class-upload) instance for each expected file upload, placing
 references wherever the file is expected in the
 [GraphQL operation](#type-graphqloperation) for the
-[`Upload` scalar](#class-graphqlupload) to derive it's value. Errors are
-created with [`http-errors`](https://npm.im/http-errors) to assist in
-sending responses with appropriate HTTP status codes. Used in
-[`graphqlUploadExpress`](#function-graphqluploadexpress) and
-[`graphqlUploadKoa`](#function-graphqluploadkoa) and can be used to create
-custom middleware.
+[`Upload` scalar](#class-graphqlupload) to derive its value. Error objects
+have HTTP `status` property and an appropriate HTTP error `name` property.
 
 **Type:** [ProcessRequestFunction](#type-processrequestfunction)
 
@@ -567,9 +575,9 @@ Options for processing a [GraphQL multipart request](https://github.com/jaydense
 
 **Type:** object
 
-| Property       | Type                | Description                                                                                                                                      |
-| :------------- | :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries.                                                            |
-| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                                                                              |
-| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                                                                                 |
-| `environment`  | string?             | Valid value are "lambda" (AWS Lambda) and "gcf" (Google Cloud Function). Set this if you are running the file uploads in serverless environment. |
+| Property       | Type                | Description                                                                                                                                                             |
+| :------------- | :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries.                                                                                   |
+| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                                                                                                     |
+| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                                                                                                        |
+| `environment`  | string?             | Valid value are: "lambda" (AWS Lambda), "gcf" (Google Cloud Function), "azure": Azure Function. Set this if you are running the file uploads in serverless environment. |

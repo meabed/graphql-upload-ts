@@ -7,6 +7,22 @@ const { Upload, processRequest } = require("../..");
 const streamToString = require("../streamToString");
 
 describe("processRequest serverless", () => {
+  it("should throw if request is not a ReadableStream", async () => {
+    const badRequest = {
+      name: "BadRequestError",
+      message:
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
+      status: 400,
+      expose: true,
+    };
+
+    await rejects(processRequest(), badRequest);
+    await rejects(
+      processRequest({ headers: { "content-type": "plain/text" } }),
+      badRequest
+    );
+  });
+
   it("should throw if headers do not have right content-type", async () => {
     const badContentType = (headerValue) => ({
       name: "BadRequestError",
@@ -15,18 +31,16 @@ describe("processRequest serverless", () => {
       expose: true,
     });
 
-    await rejects(processRequest(), badContentType(undefined));
-    await rejects(processRequest({}), badContentType(undefined));
-    await rejects(processRequest({ headers: null }), badContentType(null));
-    await rejects(processRequest({ headers: {} }), badContentType(undefined));
-    await rejects(
-      processRequest({ headers: { "content-type": null } }),
-      badContentType(null)
-    );
-    await rejects(
-      processRequest({ headers: { "content-type": "plain/text" } }),
-      badContentType("plain/text")
-    );
+    const stream = new Readable();
+    await rejects(processRequest(stream), badContentType(undefined));
+    stream.headers = null;
+    await rejects(processRequest(stream), badContentType(null));
+    stream.headers = {};
+    await rejects(processRequest(stream), badContentType(undefined));
+    stream.headers = { "content-type": null };
+    await rejects(processRequest(stream), badContentType(null));
+    stream.headers = { "content-type": "plain/text" };
+    await rejects(processRequest(stream), badContentType("plain/text"));
   });
 
   it("should throw if GCF request has no .rawBody", async () => {
@@ -106,7 +120,7 @@ describe("processRequest serverless", () => {
     await rejects(
       processRequest({ headers: { "content-type": "multipart/form-data;" } }),
       badContentType(
-        "The request doesn't look like a ReadableStream. Use `environment` option to enable serverless function support."
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
       )
     );
     await rejects(
@@ -115,7 +129,7 @@ describe("processRequest serverless", () => {
         rawBody: null,
       }),
       badContentType(
-        "The request doesn't look like a ReadableStream. Use `environment` option to enable serverless function support."
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
       )
     );
   });
@@ -160,7 +174,7 @@ describe("processRequest serverless", () => {
     body.append("map", JSON.stringify({ "1": ["variables.file"] }));
     body.append("1", "a", { filename: "a.txt" });
 
-    // Create a fake Lambda event
+    // Create a fake request
     const event = {
       rawBody: body.getBuffer(),
       headers: body.getHeaders(),
@@ -168,6 +182,74 @@ describe("processRequest serverless", () => {
 
     const operation = await processRequest(event, null, {
       environment: "gcf",
+    });
+
+    ok(operation.variables.file instanceof Upload);
+
+    const upload = await operation.variables.file.promise;
+
+    strictEqual(upload.filename, "a.txt");
+    strictEqual(upload.mimetype, "text/plain");
+    strictEqual(upload.encoding, "7bit");
+
+    const stream = upload.createReadStream();
+
+    ok(stream instanceof Readable);
+    strictEqual(stream._readableState.encoding, null);
+    strictEqual(stream.readableHighWaterMark, 16384);
+    strictEqual(await streamToString(stream), "a");
+  });
+
+  it('`processRequest` with environment="azure" (context)', async () => {
+    const body = new FormData();
+
+    body.append("operations", JSON.stringify({ variables: { file: null } }));
+    body.append("map", JSON.stringify({ "1": ["variables.file"] }));
+    body.append("1", "a", { filename: "a.txt" });
+
+    // Create a fake request
+    const req = {
+      rawBody: body.getBuffer(),
+      headers: body.getHeaders(),
+    };
+    const context = { req };
+
+    const operation = await processRequest(context, null, {
+      environment: "azure",
+    });
+
+    ok(operation.variables.file instanceof Upload);
+
+    const upload = await operation.variables.file.promise;
+
+    strictEqual(upload.filename, "a.txt");
+    strictEqual(upload.mimetype, "text/plain");
+    strictEqual(upload.encoding, "7bit");
+
+    const stream = upload.createReadStream();
+
+    ok(stream instanceof Readable);
+    strictEqual(stream._readableState.encoding, null);
+    strictEqual(stream.readableHighWaterMark, 16384);
+    strictEqual(await streamToString(stream), "a");
+  });
+
+  it('`processRequest` with environment="azure" (return)', async () => {
+    const body = new FormData();
+
+    body.append("operations", JSON.stringify({ variables: { file: null } }));
+    body.append("map", JSON.stringify({ "1": ["variables.file"] }));
+    body.append("1", "a", { filename: "a.txt" });
+
+    // Create a fake request
+    const req = {
+      rawBody: body.getBuffer(),
+      headers: body.getHeaders(),
+    };
+    const context = {};
+
+    const operation = await processRequest(context, req, {
+      environment: "azure",
     });
 
     ok(operation.variables.file instanceof Upload);

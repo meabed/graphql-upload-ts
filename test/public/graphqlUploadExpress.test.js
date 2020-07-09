@@ -1,7 +1,7 @@
 const { deepStrictEqual, ok, strictEqual } = require("assert");
 const express = require("express");
 const FormData = require("form-data");
-const createError = require("http-errors");
+const HttpError = require("../../public/HttpError");
 const fetch = require("node-fetch");
 const { graphqlUploadExpress, processRequest } = require("../..");
 const listen = require("../listen");
@@ -100,7 +100,7 @@ describe("graphqlUploadExpress", () => {
     let requestCompleted;
     let responseStatusCode;
 
-    const error = createError(400, "Message.");
+    const error = new HttpError(400, "Message.");
     const app = express()
       .use((request, response, next) => {
         const { send } = response;
