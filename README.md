@@ -47,6 +47,7 @@ The following environments are known to be compatible:
 - [Node.js](https://nodejs.org) versions 10, 12, 13 and 14. It works in Node 8 even though the unit tests fail.
 - [AWS Lambda](https://aws.amazon.com/lambda/)
 - [Google Cloud Functions (GCF)](https://cloud.google.com/functions)
+- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/)
 - [Koa](https://koajs.com)
 - [Express.js](https://expressjs.com)
 

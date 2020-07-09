@@ -60,5 +60,5 @@ exports.Upload = require("./Upload");
  * @prop {number} [maxFieldSize=1000000] Maximum allowed non-file multipart form field size in bytes; enough for your queries.
  * @prop {number} [maxFileSize=Infinity] Maximum allowed file size in bytes.
  * @prop {number} [maxFiles=Infinity] Maximum allowed number of files.
- * @prop {string} [environment] Valid value are: "lambda" (AWS Lambda), "gcf" (Google Cloud Function), "azure": Azure Function. Set this if you are running the file uploads in serverless environment.
+ * @prop {string} [environment] Valid value are: "lambda" (AWS Lambda), "gcf" (Google Cloud Functions), "azure" (Azure Functions). Set this if you are running the file uploads in serverless environment.
  */

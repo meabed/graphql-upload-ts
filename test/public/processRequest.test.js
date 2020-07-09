@@ -9,6 +9,22 @@ const listen = require("../listen");
 const streamToString = require("../streamToString");
 
 describe("processRequest", () => {
+  it("should throw if request is not a ReadableStream", async () => {
+    const badRequest = {
+      name: "BadRequestError",
+      message:
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
+      status: 400,
+      expose: true,
+    };
+
+    await rejects(processRequest(), badRequest);
+    await rejects(
+      processRequest({ headers: { "content-type": "plain/text" } }),
+      badRequest
+    );
+  });
+
   it("`processRequest` with a single file and default `createReadStream` options.", async () => {
     let serverError;
 

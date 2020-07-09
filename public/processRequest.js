@@ -81,14 +81,14 @@ module.exports = async function processRequest(
     if (!req.rawBody)
       throw new HttpError(
         400,
-        "GCF request.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
+        "GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data"
       );
   } else if (environment === "lambda") {
     // AWS Lambda compatibility
     if (!req.body)
       throw new HttpError(
         400,
-        "AWS Lambda request.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
+        "AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md"
       );
   } else if (environment === "azure") {
     // Azure Functions compatibility
