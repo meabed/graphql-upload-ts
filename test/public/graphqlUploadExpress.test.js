@@ -3,8 +3,7 @@ const express = require("express");
 const FormData = require("form-data");
 const createError = require("http-errors");
 const fetch = require("node-fetch");
-const graphqlUploadExpress = require("../../public/graphqlUploadExpress");
-const processRequest = require("../../public/processRequest");
+const { graphqlUploadExpress, processRequest } = require("../..");
 const listen = require("../listen");
 
 describe("graphqlUploadExpress", () => {

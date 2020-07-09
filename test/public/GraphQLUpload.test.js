@@ -1,7 +1,6 @@
 const { doesNotThrow, throws } = require("assert");
 const { parseValue } = require("graphql");
-const GraphQLUpload = require("../../public/GraphQLUpload");
-const Upload = require("../../public/Upload");
+const { GraphQLUpload, Upload } = require("../..");
 
 describe("GraphQLUpload", () => {
   it("`GraphQLUpload` scalar `parseValue` with a valid value.", () => {

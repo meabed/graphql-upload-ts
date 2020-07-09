@@ -1,5 +1,5 @@
 const { ok, rejects, strictEqual } = require("assert");
-const Upload = require("../../public/Upload");
+const { Upload } = require("../..");
 
 describe("Upload", () => {
   it("`Upload` class resolving a file.", async () => {

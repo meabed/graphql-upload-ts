@@ -3,8 +3,7 @@
 const { ok, strictEqual, rejects } = require("assert");
 const { Readable } = require("stream");
 const FormData = require("form-data");
-const Upload = require("../../public/Upload");
-const processRequest = require("../../public/processRequest");
+const { Upload, processRequest } = require("../..");
 const streamToString = require("../streamToString");
 
 describe("processRequest serverless", () => {
