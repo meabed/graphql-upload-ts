@@ -576,9 +576,9 @@ Options for processing a [GraphQL multipart request](https://github.com/jaydense
 
 **Type:** object
 
-| Property       | Type                | Description                                                                                                                                                             |
-| :------------- | :------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries.                                                                                   |
-| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                                                                                                     |
-| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                                                                                                        |
-| `environment`  | string?             | Valid value are: "lambda" (AWS Lambda), "gcf" (Google Cloud Function), "azure": Azure Function. Set this if you are running the file uploads in serverless environment. |
+| Property       | Type                | Description                                                                                                                                                                |
+| :------------- | :------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxFieldSize` | number? = `1000000` | Maximum allowed non-file multipart form field size in bytes; enough for your queries.                                                                                      |
+| `maxFileSize`  | number? = Infinity  | Maximum allowed file size in bytes.                                                                                                                                        |
+| `maxFiles`     | number? = Infinity  | Maximum allowed number of files.                                                                                                                                           |
+| `environment`  | string?             | Valid value are: "lambda" (AWS Lambda), "gcf" (Google Cloud Functions), "azure" (Azure Functions). Set this if you are running the file uploads in serverless environment. |
