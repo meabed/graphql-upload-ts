@@ -1,6 +1,6 @@
 # graphql-upload-minimal
 
-[![npm version](https://badgen.net/npm/v/graphql-upload-minimal)](https://npm.im/graphql-upload-minimal) [![CI status](https://github.com/koresar/graphql-upload-minimal/workflows/CI/badge.svg)](https://github.com/koresar/graphql-upload-minimal/actions)
+[![npm version](https://badgen.net/npm/v/graphql-upload-minimal)](https://npm.im/graphql-upload-minimal) [![CI status](https://github.com/flash-oss/graphql-upload-minimal/workflows/CI/badge.svg)](https://github.com/flash-oss/graphql-upload-minimal/actions)
 
 Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
 

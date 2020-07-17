@@ -8,9 +8,9 @@
     "email": "me@jaydenseric.com",
     "url": "https://jaydenseric.com"
   },
-  "repository": "github:koresar/graphql-upload-minimal",
-  "homepage": "https://github.com/koresar/graphql-upload-minimal#readme",
-  "bugs": "https://github.com/koresar/graphql-upload-minimal/issues",
+  "repository": "github:flash-oss/graphql-upload-minimal",
+  "homepage": "https://github.com/flash-oss/graphql-upload-minimal#readme",
+  "bugs": "https://github.com/flash-oss/graphql-upload-minimal/issues",
   "keywords": [
     "graphql",
     "upload",
