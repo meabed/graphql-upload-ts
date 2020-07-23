@@ -21,7 +21,7 @@ I needed something simpler which won't attempt doing any disk I/O. There were no
 
 #### More standard and developer friendly exception messages
 
-Using ASCII-only text. Direct developers to resolve common mistakes. 
+Using ASCII-only text. Direct developers to resolve common mistakes.
 
 #### **Does not create any temporary files on disk**
 
@@ -98,7 +98,10 @@ input DocumentUploadInput {
   file: Upload!
 }
 
-type SuccessResult { success: Boolean! message: String }
+type SuccessResult {
+  success: Boolean!
+  message: String
+}
 type Mutations {
   uploadDocuments(docs: [DocumentUploadInput!]!): SuccessResult
 }
@@ -112,7 +115,7 @@ const resolvers = {
 
   Mutations: {
     async uploadDocuments(root, { docs }, ctx) {
-      try { 
+      try {
         const s3 = new (require("aws-sdk").S3)({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
 
         for (const doc of docs) {
@@ -123,7 +126,7 @@ const resolvers = {
         return { success: true };
       } catch (error) {
         console.log("File upload failed", error);
-        return { success: false, message: error.message };  
+        return { success: false, message: error.message };
       }
     }
   }
@@ -556,11 +559,11 @@ Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-m
 
 **Type:** Function
 
-| Parameter  | Type                                                  | Description                                                                                               |
-| :--------- | :---------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
-| `request`  | IncomingMessage                                       | [Node.js HTTP server request instance](https://nodejs.org/api/http.html#http_class_http_incomingmessage). |
-| `response` | ServerResponse                                        | [Node.js HTTP server response instance](https://nodejs.org/api/http.html#http_class_http_serverresponse). |
-| `options`  | [ProcessRequestOptions](#type-processrequestoptions)? | Options for processing the request.                                                                       |
+| Parameter | Type                                                  | Description                                                                                               |
+| :-------- | :---------------------------------------------------- | :-------------------------------------------------------------------------------------------------------- |
+| `req`     | IncomingMessage                                       | [Node.js HTTP server request instance](https://nodejs.org/api/http.html#http_class_http_incomingmessage). |
+| `res`     | ServerResponse                                        | [Node.js HTTP server response instance](https://nodejs.org/api/http.html#http_class_http_serverresponse). |
+| `options` | [ProcessRequestOptions](#type-processrequestoptions)? | Options for processing the request.                                                                       |
 
 **Returns:** Promise&lt;[GraphQLOperation](#type-graphqloperation) | Array&lt;[GraphQLOperation](#type-graphqloperation)>> — GraphQL operation or batch of operations for a GraphQL server to consume (usually as the request body).
 

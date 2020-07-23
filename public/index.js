@@ -45,8 +45,8 @@ exports.Upload = require("./Upload");
  * @kind typedef
  * @name ProcessRequestFunction
  * @type {Function}
- * @param {IncomingMessage} request [Node.js HTTP server request instance](https://nodejs.org/api/http.html#http_class_http_incomingmessage).
- * @param {ServerResponse} response [Node.js HTTP server response instance](https://nodejs.org/api/http.html#http_class_http_serverresponse).
+ * @param {IncomingMessage} req [Node.js HTTP server request instance](https://nodejs.org/api/http.html#http_class_http_incomingmessage).
+ * @param {ServerResponse} res [Node.js HTTP server response instance](https://nodejs.org/api/http.html#http_class_http_serverresponse).
  * @param {ProcessRequestOptions} [options] Options for processing the request.
  * @returns {Promise<GraphQLOperation | Array<GraphQLOperation>>} GraphQL operation or batch of operations for a GraphQL server to consume (usually as the request body).
  * @see [`processRequest`]{@link processRequest}.
