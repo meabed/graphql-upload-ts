@@ -18,6 +18,7 @@ I needed something simpler which won't attempt doing any disk I/O. There were no
 - And 6 less MB in your `node_modules`.
 - And using a bit less memory.
 - And a bit faster.
+- Most importantly, less risk that one of the dependencies would break your server.
 
 #### More standard and developer friendly exception messages
 
@@ -45,9 +46,9 @@ Otherwise, **this module is a drop-in replacement for the `graphql-upload`**.
 The following environments are known to be compatible:
 
 - [Node.js](https://nodejs.org) versions 10, 12, 13 and 14. It works in Node 8 even though the unit tests fail.
-- [AWS Lambda](https://aws.amazon.com/lambda/)
-- [Google Cloud Functions (GCF)](https://cloud.google.com/functions)
-- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/)
+- [AWS Lambda](https://aws.amazon.com/lambda/). [Reported](https://github.com/flash-oss/graphql-upload-minimal/issues/4#issuecomment-664234726) to be working.
+- [Google Cloud Functions (GCF)](https://cloud.google.com/functions) Experimental. Untested.
+- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) Experimental. Untested.
 - [Koa](https://koajs.com)
 - [Express.js](https://expressjs.com)
 
@@ -61,7 +62,7 @@ To install [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal) and
 npm install graphql-upload-minimal graphql
 ```
 
-Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create custom middleware.
+Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create a custom middleware.
 
 A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema)) requires the [`Upload` scalar](#class-graphqlupload) to be setup.
 
@@ -139,7 +140,7 @@ See the [example Koa server and client](https://github.com/jaydenseric/apollo-up
 
 ### AWS Lambda
 
-Possible example.
+[Reported](https://github.com/flash-oss/graphql-upload-minimal/issues/4#issuecomment-664234726) to be working.
 
 ```js
 const { processRequest } = require("graphql-upload-minimal");
@@ -151,7 +152,7 @@ module.exports.processRequest = function (event) {
 
 ### Google Cloud Functions (GCF)
 
-Possible example.
+Possible example. Experimental. Untested.
 
 ```js
 const { processRequest } = require("graphql-upload-minimal");
@@ -163,7 +164,7 @@ exports.uploadFile = function (req, res) {
 
 ### Azure Functions
 
-Possible example.
+Possible example. Experimental. Untested.
 
 ```js
 const { processRequest } = require("graphql-upload-minimal");
