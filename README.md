@@ -111,17 +111,20 @@ type Mutations {
 GraphQL resolvers:
 
 ```js
+const { S3 } = require("aws-sdk"); 
+
 const resolvers = {
   Upload: require("graphql-upload-minimal").GraphQLUpload,
 
   Mutations: {
     async uploadDocuments(root, { docs }, ctx) {
       try {
-        const s3 = new (require("aws-sdk").S3)({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
+        const s3 = new S3({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
 
         for (const doc of docs) {
           const { createReadStream, filename /*, mimetype, encoding */ } = await doc.file;
-          await s3.upload({ Key: `${ctx.user.id}/${doc.docType}-${filename}`, Body: createReadStream() }).promise();
+            const Key = `${ctx.user.id}/${doc.docType}-${filename}`;
+          await s3.upload({ Key, Body: createReadStream() }).promise();
         }
 
         return { success: true };
