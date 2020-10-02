@@ -123,7 +123,7 @@ const resolvers = {
 
         for (const doc of docs) {
           const { createReadStream, filename /*, mimetype, encoding */ } = await doc.file;
-            const Key = `${ctx.user.id}/${doc.docType}-${filename}`;
+          const Key = `${ctx.user.id}/${doc.docType}-${filename}`;
           await s3.upload({ Key, Body: createReadStream() }).promise();
         }
 
