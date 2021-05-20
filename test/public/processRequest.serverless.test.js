@@ -61,7 +61,7 @@ describe("processRequest serverless", () => {
       );
     });
 
-    it("should throw if Azure request has no .rawBody", async () => {
+    it("should throw if Azure request has no .body", async () => {
       const badRequest = (message) => ({
         name: "BadRequestError",
         message,
@@ -76,7 +76,7 @@ describe("processRequest serverless", () => {
           { environment: "azure" }
         ),
         badRequest(
-          "Azure Function req.rawBody is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
+          "Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
         )
       );
       await rejects(
@@ -84,14 +84,14 @@ describe("processRequest serverless", () => {
           {
             req: {
               headers: { "content-type": "multipart/form-data;" },
-              rawBody: null,
+              body: null,
             },
           },
           {},
           { environment: "azure" }
         ),
         badRequest(
-          "Azure Function req.rawBody is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
+          "Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
         )
       );
     });
@@ -231,7 +231,7 @@ describe("processRequest serverless", () => {
 
       // Create a fake request
       const req = {
-        rawBody: body.getBuffer(),
+        body: body.getBuffer(),
         headers: body.getHeaders(),
       };
       const context = { req };
@@ -265,7 +265,7 @@ describe("processRequest serverless", () => {
 
       // Create a fake request
       const req = {
-        rawBody: body.getBuffer(),
+        body: body.getBuffer(),
         headers: body.getHeaders(),
       };
       const context = {};

@@ -93,10 +93,10 @@ module.exports = async function processRequest(
   } else if (environment === "azure") {
     // Azure Functions compatibility
     req = req.req || res;
-    if (!req || !req.rawBody)
+    if (!req || !req.body)
       throw new HttpError(
         400,
-        "Azure Function req.rawBody is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
+        "Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node"
       );
   } else {
     // Regular node.js environment where request is a ReadableStream instance.
@@ -387,10 +387,10 @@ module.exports = async function processRequest(
       req.removeListener("close", abort);
     });
 
-    if (environment === "gcf" || environment === "azure") {
+    if (environment === "gcf") {
       parser.end(req.rawBody);
       release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
-    } else if (environment === "lambda") {
+    } else if (environment === "lambda" || environment === "azure") {
       parser.end(req.body);
       release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
     } else {
