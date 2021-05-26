@@ -48,7 +48,7 @@ The following environments are known to be compatible:
 - [Node.js](https://nodejs.org) versions 10, 12, 13 and 14. It works in Node 8 even though the unit tests fail.
 - [AWS Lambda](https://aws.amazon.com/lambda/). [Reported](https://github.com/flash-oss/graphql-upload-minimal/issues/4#issuecomment-664234726) to be working.
 - [Google Cloud Functions (GCF)](https://cloud.google.com/functions) Experimental. Untested.
-- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) Experimental. Untested.
+- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) Working.
 - [Koa](https://koajs.com)
 - [Express.js](https://expressjs.com)
 
@@ -167,7 +167,7 @@ exports.uploadFile = function (req, res) {
 
 ### Azure Functions
 
-Possible example. Experimental. Untested.
+Possible example. Working.
 
 ```js
 const { processRequest } = require("graphql-upload-minimal");
