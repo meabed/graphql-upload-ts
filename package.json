@@ -37,7 +37,7 @@
     "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "peerDependencies": {
     "graphql": "0.13.1 - 15"
