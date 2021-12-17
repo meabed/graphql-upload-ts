@@ -38,6 +38,7 @@ describe("processRequest", () => {
         const upload = await operation.variables.input.docs[0].file.promise;
 
         strictEqual(upload.filename, "a.txt");
+        strictEqual(upload.fieldName, "1");
         strictEqual(upload.mimetype, "text/plain");
         strictEqual(upload.encoding, "7bit");
 
@@ -91,6 +92,7 @@ describe("processRequest", () => {
         const upload = await operation.variables.file.promise;
 
         strictEqual(upload.filename, "a.txt");
+        strictEqual(upload.fieldName, "1");
         strictEqual(upload.mimetype, "text/plain");
         strictEqual(upload.encoding, "7bit");
 
@@ -136,6 +138,7 @@ describe("processRequest", () => {
         const uploadA = await operations[0].variables.file.promise;
 
         strictEqual(uploadA.filename, "a.txt");
+        strictEqual(uploadA.fieldName, "1");
         strictEqual(uploadA.mimetype, "text/plain");
         strictEqual(uploadA.encoding, "7bit");
 
@@ -149,6 +152,7 @@ describe("processRequest", () => {
         const uploadB = await operations[1].variables.file.promise;
 
         strictEqual(uploadB.filename, "b.txt");
+        strictEqual(uploadB.fieldName, "2");
         strictEqual(uploadB.mimetype, "text/plain");
         strictEqual(uploadB.encoding, "7bit");
 
@@ -208,6 +212,7 @@ describe("processRequest", () => {
 
         strictEqual(upload1, upload2);
         strictEqual(upload1.filename, "a.txt");
+        strictEqual(upload1.fieldName, "1");
         strictEqual(upload1.mimetype, "text/plain");
         strictEqual(upload1.encoding, "7bit");
 
@@ -308,6 +313,7 @@ describe("processRequest", () => {
         const upload = await operation.variables.file.promise;
 
         strictEqual(upload.filename, "a.txt");
+        strictEqual(upload.fieldName, "1");
         strictEqual(upload.mimetype, "text/plain");
         strictEqual(upload.encoding, "7bit");
 
@@ -436,6 +442,7 @@ describe("processRequest", () => {
         const uploadA = await operation.variables.files[0].promise;
 
         strictEqual(uploadA.filename, "a.txt");
+        strictEqual(uploadA.fieldName, "1");
         strictEqual(uploadA.mimetype, "text/plain");
         strictEqual(uploadA.encoding, "7bit");
 
@@ -515,6 +522,7 @@ describe("processRequest", () => {
         const uploadB = await operation.variables.files[1].promise;
 
         strictEqual(uploadB.filename, "b.txt");
+        strictEqual(uploadB.fieldName, "2");
         strictEqual(uploadB.mimetype, "text/plain");
         strictEqual(uploadB.encoding, "7bit");
 
@@ -624,6 +632,7 @@ describe("processRequest", () => {
           const upload = await operation.variables.fileA.promise;
 
           strictEqual(upload.filename, "a.txt");
+          strictEqual(upload.fieldName, "1");
           strictEqual(upload.mimetype, "text/plain");
           strictEqual(upload.encoding, "7bit");
 
@@ -639,6 +648,7 @@ describe("processRequest", () => {
           const upload = await operation.variables.fileB.promise;
 
           strictEqual(upload.filename, "b.txt");
+          strictEqual(upload.fieldName, "2");
           strictEqual(upload.mimetype, "text/plain");
           strictEqual(upload.encoding, "7bit");
 
@@ -760,6 +770,7 @@ describe("processRequest", () => {
           const upload = await operation.variables.fileA.promise;
 
           strictEqual(upload.filename, "a.txt");
+          strictEqual(upload.fieldName, "1");
           strictEqual(upload.mimetype, "text/plain");
           strictEqual(upload.encoding, "7bit");
 
@@ -777,6 +788,7 @@ describe("processRequest", () => {
           const upload = await operation.variables.fileB.promise;
 
           strictEqual(upload.filename, "b.txt");
+          strictEqual(upload.fieldName, "2");
           strictEqual(upload.mimetype, "text/plain");
           strictEqual(upload.encoding, "7bit");
           throws(() => upload.createReadStream(), {

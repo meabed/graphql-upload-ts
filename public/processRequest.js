@@ -302,6 +302,7 @@ module.exports = async function processRequest(
       });
 
       const file = {
+        fieldName,
         filename,
         mimetype,
         encoding,
