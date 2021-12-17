@@ -61,7 +61,7 @@ const Upload = require("./Upload");
  *           },
  *         },
  *         async resolve(parent, { image }) {
- *           const { filename, mimetype, createReadStream } = await image;
+ *           const { filename, fieldName, mimetype, createReadStream } = await image;
  *           const stream = createReadStream();
  *           // Promisify the stream and store the file, then…
  *           return true;

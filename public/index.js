@@ -12,6 +12,7 @@ exports.Upload = require("./Upload");
  * @name FileUpload
  * @type {object}
  * @prop {string} filename File name.
+ * @prop {string} fieldName The name of the field passed to the multipart/form-data request.
  * @prop {string} mimetype File MIME type. Provided by the client and can't be trusted.
  * @prop {string} encoding File stream transfer encoding.
  * @prop {FileUploadCreateReadStream} createReadStream Creates a [Node.js readable stream](https://nodejs.org/api/stream.html#stream_readable_streams) of the file's contents, for processing and storage.
