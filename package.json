@@ -25,7 +25,8 @@
     "mjs"
   ],
   "files": [
-    "public"
+    "public",
+    "index.d.ts"
   ],
   "main": "public",
   "exports": {
