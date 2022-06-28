@@ -79,8 +79,8 @@ module.exports = new GraphQLScalarType({
         if (value instanceof Upload) return value.promise;
         throw new GraphQLError("Upload value invalid.");
     },
-    parseLiteral(ast) {
-        throw new GraphQLError("Upload literal unsupported.", ast);
+    parseLiteral(node) {
+        throw new GraphQLError("Upload literal unsupported.", { nodes: node });
     },
     serialize() {
         throw new GraphQLError("Upload serialization unsupported.");

@@ -178,7 +178,7 @@ describe("processRequest serverless", () => {
             const stream = upload.createReadStream();
 
             ok(stream instanceof Readable);
-            strictEqual(stream._readableState.encoding, null);
+            strictEqual(stream.readableEncoding, null);
             strictEqual(stream.readableHighWaterMark, 16384);
             strictEqual(await streamToString(stream), "a");
         });
@@ -211,7 +211,7 @@ describe("processRequest serverless", () => {
             const stream = upload.createReadStream();
 
             ok(stream instanceof Readable);
-            strictEqual(stream._readableState.encoding, null);
+            strictEqual(stream.readableEncoding, null);
             strictEqual(stream.readableHighWaterMark, 16384);
             strictEqual(await streamToString(stream), "a");
         });
@@ -245,7 +245,7 @@ describe("processRequest serverless", () => {
             const stream = upload.createReadStream();
 
             ok(stream instanceof Readable);
-            strictEqual(stream._readableState.encoding, null);
+            strictEqual(stream.readableEncoding, null);
             strictEqual(stream.readableHighWaterMark, 16384);
             strictEqual(await streamToString(stream), "a");
         });
@@ -279,7 +279,7 @@ describe("processRequest serverless", () => {
             const stream = upload.createReadStream();
 
             ok(stream instanceof Readable);
-            strictEqual(stream._readableState.encoding, null);
+            strictEqual(stream.readableEncoding, null);
             strictEqual(stream.readableHighWaterMark, 16384);
             strictEqual(await streamToString(stream), "a");
         });

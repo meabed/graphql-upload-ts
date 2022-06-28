@@ -42,7 +42,7 @@ describe("processRequest", () => {
                 const stream = upload.createReadStream();
 
                 ok(stream instanceof Readable);
-                strictEqual(stream._readableState.encoding, null);
+                strictEqual(stream.readableEncoding, null);
                 strictEqual(stream.readableHighWaterMark, 16384);
                 strictEqual(await streamToString(stream), "a");
             } catch (error) {
@@ -465,7 +465,7 @@ describe("processRequest", () => {
         const server = http.createServer(async (request, response) => {
             try {
                 const operation = await processRequest(request, response, {
-                    maxFileSize: 1,
+                    maxFileSize: 2,
                 });
 
                 ok(operation.variables.files[0] instanceof Upload);
@@ -478,7 +478,7 @@ describe("processRequest", () => {
                     },
                     {
                         name: "PayloadTooLargeError",
-                        message: "File truncated as it exceeds the 1 byte size limit.",
+                        message: "File truncated as it exceeds the 2 byte size limit.",
                         status: 413,
                         expose: true,
                     }
@@ -943,9 +943,12 @@ describe("processRequest", () => {
         const { port, close } = await listen(server);
 
         try {
+            const body = new FormData();
+            body.append("WRONG", "null");
+
             await fetch(`http://localhost:${port}`, {
                 method: "POST",
-                body: new FormData(),
+                body,
             });
 
             if (serverError) throw serverError;

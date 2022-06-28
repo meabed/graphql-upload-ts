@@ -1,6 +1,6 @@
 "use strict";
 
-const Busboy = require("busboy");
+const busboy = require("busboy");
 const ignoreStream = require("./ignore-stream");
 const Upload = require("./Upload");
 const HttpError = require("./HttpError");
@@ -117,7 +117,7 @@ module.exports = async function processRequest(
     if (!req.resume) req.resume = noop;
 
     return new Promise((resolve, reject) => {
-        const parser = new Busboy({
+        const parser = busboy({
             headers: req.headers,
             limits: {
                 fieldSize: maxFieldSize,
@@ -133,23 +133,30 @@ module.exports = async function processRequest(
          * Exits request processing with an error. Successive calls have no effect.
          * @kind function
          * @name processRequest~exit
-         * @param {string} message Error message.
+         * @param {string|Error} message Error message or error object.
          * @param {number} [status=400] HTTP status code.
          * @private
          * @ignore
          */
         const exit = (message, status = 400) => {
             // None of the tested scenarios cause multiple calls of this function, but
-            // it’t still good to guard against it happening in case it’s possible now
+            // it’s still good to guard against it happening in case it’s possible now
             // or in the future.
             // coverage ignore next line
             if (exitError) return;
 
-            exitError = new HttpError(status, message);
+            let isParserError = false;
+            if (message instanceof Error) {
+                isParserError = true;
+                exitError = message;
+            } else {
+                exitError = new HttpError(status, message);
+            }
 
             reject(exitError);
 
-            parser.destroy();
+            // If the error came from the parser, don’t cause it to be emitted again.
+            isParserError ? parser.destroy() : parser.destroy(exitError);
 
             if (lastFileStream && !lastFileStream.readableEnded && !lastFileStream.destroyed) {
                 lastFileStream.destroy(exitError);
@@ -170,7 +177,7 @@ module.exports = async function processRequest(
 
         let operations;
         let map;
-        parser.on("field", (fieldName, value, fieldNameTruncated, valueTruncated) => {
+        parser.on("field", (fieldName, value, { valueTruncated /*, nameTruncated, encoding, mimeType */ }) => {
             if (valueTruncated)
                 return exit(
                     `The '${fieldName}' multipart field value exceeds the ${maxFieldSize} byte size limit.`,
@@ -239,7 +246,7 @@ module.exports = async function processRequest(
         });
 
         let returnedStreams = new Set();
-        parser.on("file", (fieldName, stream, filename, encoding, mimetype) => {
+        parser.on("file", (fieldName, stream, { filename, encoding, mimeType: mimetype }) => {
             lastFileStream = stream;
 
             if (!map) {
@@ -299,7 +306,7 @@ module.exports = async function processRequest(
 
         parser.once("filesLimit", () => exit(`${maxFiles} max file uploads exceeded.`, 413));
 
-        parser.once("finish", () => {
+        parser.once("close", () => {
             req.unpipe(parser);
             req.resume();
 
