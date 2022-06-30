@@ -1,7 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { GraphQLScalarType } from "graphql";
-import { RequestHandler } from "express";
-import { DefaultContext, DefaultState, Middleware } from "koa";
 import { ReadStream } from "fs";
 
 export interface UploadOptions {
@@ -22,15 +20,6 @@ export function processRequest(
   response: ServerResponse,
   uploadOptions?: UploadOptions
 ): Promise<GraphQLOperation | GraphQLOperation[]>;
-
-export function graphqlUploadExpress(
-  uploadOptions?: UploadOptions
-): RequestHandler;
-
-export function graphqlUploadKoa<
-  StateT = DefaultState,
-  ContextT = DefaultContext
->(uploadOptions?: UploadOptions): Middleware<StateT, ContextT>;
 
 export const GraphQLUpload: GraphQLScalarType;
 
