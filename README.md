@@ -2,23 +2,24 @@
 
 [![npm version](https://badgen.net/npm/v/graphql-upload-ts)](https://npm.im/graphql-upload-ts) [![CI status](https://github.com/meabed/graphql-upload-ts/workflows/CI/badge.svg)](https://github.com/meabed/graphql-upload-ts/actions)
 
-Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
+Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and
+mutations) to various Node.js GraphQL servers.
 
 #### Acknowledgements
 
-This module was ⚠️ forked from the amazing [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal). The original module is exceptionally well documented and well written. It was very easy to fork and amend.
+This module was forked from the amazing [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal). The original module is exceptionally well documented and well written. It was very easy to fork and amend.
 
-I needed something simpler which won't attempt doing any disk I/O. There were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
+I needed to support typescript to use it properly in typescript projects.
 
 #### This project is written in typescript
 
+- TypeScript support.
 - Single production dependency - `busboy`
 - Results in 9 less production dependencies.
 - And 6 less MB in your `node_modules`.
 - And using a bit less memory.
 - And a bit faster.
 - Most importantly, less risk that one of the dependencies would break your server.
-- Fully typed
 - More Examples and documentation
 
 #### More standard and developer friendly exception messages
@@ -65,13 +66,15 @@ npm install graphql-upload-ts graphql
 yarn add graphql-upload-ts graphql
 ```
 
-Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create a custom middleware.
+Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create a
+custom middleware.
 
 A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema)) requires the [`Upload` scalar](#class-graphqlupload) to be setup.
 
 ## Usage
 
-[Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
+[Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are
+promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
 
 ### Express.js
 
@@ -182,7 +185,8 @@ exports.uploadFile = function (context, req) {
 
 ### Uploading multiple files
 
-When uploading multiple files you can make use of the `fieldName` property to keep track of an identifier of the uploaded files. The fieldName is equal to the passed `name` property of the file in the `multipart/form-data` request. This can be modified to contain an identifier (like a UUID), for example using the `formDataAppendFile` in the commonly used [`apollo-upload-link`](https://github.com/jaydenseric/apollo-upload-client#function-formdataappendfile) library.
+When uploading multiple files you can make use of the `fieldName` property to keep track of an identifier of the uploaded files. The fieldName is equal to the passed `name` property of the file in the `multipart/form-data` request. This can
+be modified to contain an identifier (like a UUID), for example using the `formDataAppendFile` in the commonly used [`apollo-upload-link`](https://github.com/jaydenseric/apollo-upload-client#function-formdataappendfile) library.
 
 GraphQL schema:
 
@@ -239,6 +243,8 @@ const resolvers = {
 
 ## Architecture
 
-The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places. GraphQL resolvers need to be able to manage independent file streams.
+The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places.
+GraphQL resolvers need to be able to manage independent file streams.
 
-[`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the operations are passed down the middleware chain to GraphQL resolvers.
+[`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the
+operations are passed down the middleware chain to GraphQL resolvers.
