@@ -11,14 +11,15 @@ This module was ⚠️ forked from the amazing [`graphql-upload-minimal`](https:
 I needed something simpler which won't attempt doing any disk I/O. There were no server-side JavaScript alternative modules for GraphQL file uploads. Thus, this fork was born.
 
 #### This project is written in typescript
--  Single production dependency - `busboy`
+
+- Single production dependency - `busboy`
 - Results in 9 less production dependencies.
 - And 6 less MB in your `node_modules`.
 - And using a bit less memory.
 - And a bit faster.
 - Most importantly, less risk that one of the dependencies would break your server.
 - Fully typed
-- More Examples and documentation 
+- More Examples and documentation
 
 #### More standard and developer friendly exception messages
 
@@ -77,15 +78,15 @@ Minimalistic code example showing how to upload a file along with arbitrary Grap
 Express.js middleware. You must put it before the main GraphQL sever middleware. Also, **make sure there is no other Express.js middleware which parses `multipart/form-data`** HTTP requests before the `graphqlUploadExpress` middleware!
 
 ```js
-const express = require("express");
-const expressGraphql = require("express-graphql");
-const { graphqlUploadExpress } = require("graphql-upload-ts");
+const express = require('express');
+const expressGraphql = require('express-graphql');
+const { graphqlUploadExpress } = require('graphql-upload-ts');
 
 express()
   .use(
-    "/graphql",
+    '/graphql',
     graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }),
-    expressGraphql({ schema: require("./my-schema") })
+    expressGraphql({ schema: require('./my-schema') })
   )
   .listen(3000);
 ```
@@ -111,15 +112,15 @@ type Mutations {
 GraphQL resolvers:
 
 ```js
-const { S3 } = require("aws-sdk");
+const { S3 } = require('aws-sdk');
 
 const resolvers = {
-  Upload: require("graphql-upload-ts").GraphQLUpload,
+  Upload: require('graphql-upload-ts').GraphQLUpload,
 
   Mutations: {
     async uploadDocuments(root, { docs }, ctx) {
       try {
-        const s3 = new S3({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
+        const s3 = new S3({ apiVersion: '2006-03-01', params: { Bucket: 'my-bucket' } });
 
         for (const doc of docs) {
           const { createReadStream, filename /*, fieldName, mimetype, encoding */ } = await doc.file;
@@ -129,7 +130,7 @@ const resolvers = {
 
         return { success: true };
       } catch (error) {
-        console.log("File upload failed", error);
+        console.log('File upload failed', error);
         return { success: false, message: error.message };
       }
     },
@@ -146,10 +147,10 @@ See the [example Koa server and client](https://github.com/jaydenseric/apollo-up
 [Reported](https://github.com/meabed/graphql-upload-ts/issues/4#issuecomment-664234726) to be working.
 
 ```js
-const { processRequest } = require("graphql-upload-ts");
+const { processRequest } = require('graphql-upload-ts');
 
 module.exports.processRequest = function (event) {
-  return processRequest(event, null, { environment: "lambda" });
+  return processRequest(event, null, { environment: 'lambda' });
 };
 ```
 
@@ -158,10 +159,10 @@ module.exports.processRequest = function (event) {
 Possible example. Experimental. Untested.
 
 ```js
-const { processRequest } = require("graphql-upload-ts");
+const { processRequest } = require('graphql-upload-ts');
 
 exports.uploadFile = function (req, res) {
-  return processRequest(req, res, { environment: "gcf" });
+  return processRequest(req, res, { environment: 'gcf' });
 };
 ```
 
@@ -170,10 +171,10 @@ exports.uploadFile = function (req, res) {
 Possible example. Working.
 
 ```js
-const { processRequest } = require("graphql-upload-ts");
+const { processRequest } = require('graphql-upload-ts');
 
 exports.uploadFile = function (context, req) {
-  return processRequest(context, req, { environment: "azure" });
+  return processRequest(context, req, { environment: 'azure' });
 };
 ```
 
@@ -202,15 +203,15 @@ type Mutations {
 GraphQL resolvers:
 
 ```js
-const { S3 } = require("aws-sdk");
+const { S3 } = require('aws-sdk');
 
 const resolvers = {
-  Upload: require("graphql-upload-ts").GraphQLUpload,
+  Upload: require('graphql-upload-ts').GraphQLUpload,
 
   Mutations: {
     async uploadDocuments(root, { docs }, ctx) {
       try {
-        const s3 = new S3({ apiVersion: "2006-03-01", params: { Bucket: "my-bucket" } });
+        const s3 = new S3({ apiVersion: '2006-03-01', params: { Bucket: 'my-bucket' } });
 
         for (const doc of docs) {
           // fieldName contains the "name" property from the multipart/form-data request.
@@ -222,7 +223,7 @@ const resolvers = {
 
         return { success: true };
       } catch (error) {
-        console.log("File upload failed", error);
+        console.log('File upload failed', error);
         return { success: false, message: error.message };
       }
     },
