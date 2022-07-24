@@ -2,8 +2,8 @@ name: CI
 on:
   push:
     paths:
-      - 'lib/**'
-      - 'test/**'
+      - 'src/**'
+      - '__tests__/**'
       - 'package.json'
       - 'package-lock.json'
       - 'yarn.lock'
