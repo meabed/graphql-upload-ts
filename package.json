@@ -23,10 +23,6 @@
     "email": "mo@meabed.com",
     "url": "https://meabed.com"
   },
-  "types": "src/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p . --skipLibCheck",
     "ci": "npm run lint && npm t",

@@ -10,15 +10,12 @@
 config.gypi
 CVS
 npm-debug.log
-test
+__tests__
 scripts
 example
 docs
 .github
-lib
+src
 .nyc_output
 .idea
 .husky
-.mocharc.js
-docker-compose.yaml
-docker-compose-7.yaml

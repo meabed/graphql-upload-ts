@@ -4,7 +4,7 @@
 
 Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and mutations) to various Node.js GraphQL servers.
 
-## Acknowledgements
+#### Acknowledgements
 
 This module was ⚠️ forked from the amazing [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal). The original module is exceptionally well documented and well written. It was very easy to fork and amend.
 
@@ -61,6 +61,8 @@ To install [`graphql-upload-ts`](https://npm.im/graphql-upload-ts) and the [`gra
 
 ```shell
 npm install graphql-upload-ts graphql
+# or
+yarn add graphql-upload-ts graphql
 ```
 
 Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create a custom middleware.
