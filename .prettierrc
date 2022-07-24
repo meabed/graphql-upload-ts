@@ -1,0 +1,12 @@
+{
+  "semi": true,
+  "singleQuote": true,
+  "useTabs": false,
+  "tabWidth": 2,
+  "jsxSingleQuote": true,
+  "htmlWhitespaceSensitivity": "strict",
+  "bracketSameLine": false,
+  "printWidth": 120,
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
+}

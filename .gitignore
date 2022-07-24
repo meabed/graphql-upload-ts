@@ -1,6 +1,9 @@
-node_modules
-npm-debug.log
 .DS_Store
-.npmrc
-.nyc_output
+node_modules
 .idea
+coverage
+.coveralls.yml
+*.swp
+.nyc_output/
+dist
+yarn-error.log

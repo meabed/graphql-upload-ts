@@ -1,0 +1,2 @@
+node_modules/.bin/pretty-quick
+node_modules/.bin/lint-staged
