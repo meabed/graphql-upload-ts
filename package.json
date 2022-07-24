@@ -1,8 +1,10 @@
 {
   "name": "graphql-upload-ts",
   "version": "2.0.2",
-  "description": "Minimalistic and developer friendly middleware and an Upload scalar to add support for GraphQL multipart requests (file uploads via queries and mutations) to various Node.js GraphQL servers.",
+  "description": "Typescript minimalistic and developer friendly middleware and an Upload scalar to add support for GraphQL multipart requests (file uploads via queries and mutations) to various Node.js GraphQL servers.",
   "keywords": [
+    "typescript",
+    "graphql-upload-typescript",
     "graphql",
     "upload",
     "file",
@@ -26,7 +28,6 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p . --skipLibCheck",
     "ci": "npm run lint && npm t",
-    "cov": "nyc npm run test",
     "lint": "eslint src __tests__",
     "lint-fix": "yarn lint -- --fix",
     "prepare": "yarn husky install",
@@ -44,7 +45,6 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "3.3.0",
     "@types/busboy": "1.5.0",
-    "@types/eslint-plugin-prettier": "3.1.0",
     "@types/express": "4.17.13",
     "@types/jest": "28.1.6",
     "@types/koa": "2.13.5",
@@ -52,9 +52,7 @@
     "@typescript-eslint/parser": "5.30.7",
     "eslint": "8.20.0",
     "eslint-config-prettier": "8.5.0",
-    "eslint-plugin-import": "2.26.0",
     "eslint-plugin-prettier": "4.2.1",
-    "eslint-plugin-promise": "6.0.0",
     "express": "4.18.1",
     "form-data": "4.0.0",
     "graphql": "16.5.0",
