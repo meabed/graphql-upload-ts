@@ -35,13 +35,19 @@
       "url": "https://meabed.com"
     }
   ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p . --skipLibCheck",
     "ci": "npm run lint && npm t",
     "lint": "eslint src __tests__",
     "lint-fix": "yarn lint -- --fix",
     "prepare": "yarn husky install",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "yarn build",
     "prettier": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\" \"__tests__/**/*.{ts,tsx,js,jsx}\"",
     "test": "jest --config jest.config.js"
   },
