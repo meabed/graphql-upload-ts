@@ -35,6 +35,11 @@
       "url": "https://meabed.com"
     }
   ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p . --skipLibCheck",
     "ci": "npm run lint && npm t",
