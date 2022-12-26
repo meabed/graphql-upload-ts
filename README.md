@@ -1,6 +1,6 @@
 # graphql upload typescript (graphql-upload-ts)
 
-[![NPM version](https://badgen.net/npm/v/graphql-upload-ts)](https://npm.im/graphql-upload-ts) 
+[![NPM version](https://badgen.net/npm/v/graphql-upload-ts)](https://npm.im/graphql-upload-ts)
 [![Build Status](https://github.com/meabed/graphql-upload-ts/workflows/CI/badge.svg)](https://github.com/meabed/graphql-upload-ts/actions)
 [![Downloads](https://img.shields.io/npm/dm/graphql-upload-ts.svg)](https://www.npmjs.com/package/graphql-upload-ts)
 [![UNPKG](https://img.shields.io/badge/UNPKG-OK-179BD7.svg)](https://unpkg.com/browse/graphql-upload-ts@latest/)
