@@ -41,7 +41,7 @@
     "lint": "eslint src __tests__",
     "lint-fix": "yarn lint -- --fix",
     "prepare": "yarn husky install",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "yarn build",
     "prettier": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\" \"__tests__/**/*.{ts,tsx,js,jsx}\"",
     "test": "jest --config jest.config.js"
   },
