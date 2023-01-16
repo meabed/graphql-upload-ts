@@ -1,11 +1,37 @@
 import { ReadStream } from 'fs';
 
+/**
+ * A file expected to be uploaded as it has been declared in the `map` field of
+ * a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
+ * The [`processRequest`]{@link processRequest} function places references to an
+ * instance of this class wherever the file is expected in the
+ * [GraphQL operation]{@link GraphQLOperation}. The
+ * [`Upload` scalar]{@link GraphQLUpload} derives it's value from the
+ * [`promise`]{@link Upload#promise} property.
+ * @kind class
+ * @name Upload
+ * @example <caption>Ways to `import`.</caption>
+ * ```js
+ * import { Upload } from 'graphql-upload-minimal';
+ * ```
+ *
+ * ```js
+ * import Upload from 'graphql-upload-minimal/public/Upload.js';
+ * ```
+ * @example <caption>Ways to `require`.</caption>
+ * ```js
+ * const { Upload } = require('graphql-upload-minimal');
+ * ```
+ *
+ * ```js
+ * const Upload = require('graphql-upload-minimal/public/Upload');
+ * ```
+ */
 export interface FileUpload {
   filename: string;
   fieldName: string;
   mimetype: string;
   encoding: string;
-
   createReadStream(): ReadStream;
 }
 
@@ -14,6 +40,7 @@ export class Upload {
   resolve: (file?: FileUpload) => void;
   reject: (error?: Error | string) => void;
   file?: FileUpload;
+  onPromiseCatch?: (e: unknown) => void;
 
   constructor() {
     /**
@@ -59,8 +86,10 @@ export class Upload {
 
     // Prevent errors crashing Node.js, see:
     // https://github.com/nodejs/node/issues/20392
-    this.promise.catch(() => {
-      return;
+    this.promise.catch((e) => {
+      if (this.onPromiseCatch) {
+        return this.onPromiseCatch(e);
+      }
     });
   }
 }

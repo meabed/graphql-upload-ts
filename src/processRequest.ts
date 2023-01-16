@@ -61,6 +61,34 @@ export type IncomingReq = Partial<IncomingMessage> & {
   resume?: any;
 };
 
+/**
+ * Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
+ * It parses the `operations` and `map` fields to create an
+ * [`Upload`]{@link Upload} instance for each expected file upload, placing
+ * references wherever the file is expected in the
+ * [GraphQL operation]{@link GraphQLOperation} for the
+ * [`Upload` scalar]{@link GraphQLUpload} to derive its value. Error objects
+ * have HTTP `status` property and an appropriate HTTP error `name` property.
+ * @kind function
+ * @name processRequest
+ * @type {ProcessRequestOptions.processRequest}
+ * @example <caption>Ways to `import`.</caption>
+ * ```js
+ * import { processRequest } from 'graphql-upload-minimal';
+ * ```
+ *
+ * ```js
+ * import processRequest from 'graphql-upload-minimal/public/processRequest.js';
+ * ```
+ * @example <caption>Ways to `require`.</caption>
+ * ```js
+ * const { processRequest } = require('graphql-upload-minimal');
+ * ```
+ *
+ * ```js
+ * const processRequest = require('graphql-upload-minimal/public/processRequest');
+ * ```
+ */
 export async function processRequest<T = any>(
   req?: IncomingReq | Readable,
   res?: Partial<ServerResponse>,
@@ -118,6 +146,7 @@ export async function processRequest<T = any>(
   return new Promise((resolve, reject) => {
     const parser = busboy({
       headers: (req as IncomingReq).headers,
+      defParamCharset: 'utf8',
       limits: {
         fieldSize: maxFieldSize,
         fields: 2, // Only operations and map.
@@ -193,7 +222,7 @@ export async function processRequest<T = any>(
 
           break;
         case 'map': {
-          if (!operations) return exit(`Misordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`);
+          if (!operations) return exit(`Disordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`);
 
           let parsedMap;
           try {
@@ -244,7 +273,7 @@ export async function processRequest<T = any>(
 
       if (!map) {
         ignoreStream(stream);
-        return exit(`Misordered multipart fields; files should follow 'map' (${SPEC_URL}).`);
+        return exit(`Disordered multipart fields; files should follow 'map' (${SPEC_URL}).`);
       }
 
       const upload = map.get(fieldName);
