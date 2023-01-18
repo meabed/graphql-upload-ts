@@ -35,7 +35,7 @@ describe('processRequest', () => {
 
         const upload = await operation.variables.input.docs[0].file.promise;
 
-        strictEqual(upload.filename, 'a.txt');
+        strictEqual(upload.filename, '你好.txt');
         strictEqual(upload.fieldName, '1');
         strictEqual(upload.mimetype, 'text/plain');
         strictEqual(upload.encoding, '7bit');
@@ -65,8 +65,7 @@ describe('processRequest', () => {
         })
       );
       body.append('map', JSON.stringify({ 1: ['variables.input.docs.0.file'] }));
-      body.append('1', 'a', { filename: 'a.txt' });
-
+      body.append('1', 'a', { filename: '你好.txt' });
       await fetch(`http://localhost:${port}`, { method: 'POST', body });
 
       if (serverError) throw serverError;
@@ -816,7 +815,7 @@ describe('processRequest', () => {
     }
   });
 
-  it('`processRequest` with multipart form field `map` misordered before `operations`.', async () => {
+  it('`processRequest` with multipart form field `map` disordered before `operations`.', async () => {
     let serverError;
 
     const server = http.createServer(async (request, response) => {
@@ -824,7 +823,7 @@ describe('processRequest', () => {
         await rejects(processRequest(request, response), {
           name: 'BadRequestError',
           message:
-            "Misordered multipart fields; 'map' should follow 'operations' (https://github.com/jaydenseric/graphql-multipart-request-spec).",
+            "Disordered multipart fields; 'map' should follow 'operations' (https://github.com/jaydenseric/graphql-multipart-request-spec).",
           status: 400,
           expose: true,
         });
@@ -852,7 +851,7 @@ describe('processRequest', () => {
     }
   });
 
-  it('`processRequest` with multipart form field file misordered before `map`.', async () => {
+  it('`processRequest` with multipart form field file disordered before `map`.', async () => {
     let serverError;
 
     const server = http.createServer(async (request, response) => {
@@ -860,7 +859,7 @@ describe('processRequest', () => {
         await rejects(processRequest(request, response), {
           name: 'BadRequestError',
           message:
-            "Misordered multipart fields; files should follow 'map' (https://github.com/jaydenseric/graphql-multipart-request-spec).",
+            "Disordered multipart fields; files should follow 'map' (https://github.com/jaydenseric/graphql-multipart-request-spec).",
           status: 400,
           expose: true,
         });
