@@ -15,7 +15,7 @@ describe('graphqlUploadKoa', () => {
         async processRequest() {
           processRequestRan = true;
         },
-      })
+      }),
     );
 
     const { port, close } = await listen(app);
@@ -66,7 +66,7 @@ describe('graphqlUploadKoa', () => {
             processRequestRan = true;
             return processRequest(...args);
           },
-        })
+        }),
       )
       .use(async (ctx, next) => {
         ctxRequestBody = ctx.request.body;
@@ -115,7 +115,7 @@ describe('graphqlUploadKoa', () => {
             request.resume();
             throw error;
           },
-        })
+        }),
       );
 
     const { port, close } = await listen(app);

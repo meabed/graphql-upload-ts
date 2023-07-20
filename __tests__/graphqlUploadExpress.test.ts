@@ -16,7 +16,7 @@ describe('graphqlUploadExpress', () => {
         async processRequest() {
           processRequestRan = true;
         },
-      })
+      }),
     );
 
     const { port, close } = await listen(app);
@@ -69,7 +69,7 @@ describe('graphqlUploadExpress', () => {
             processRequestRan = true;
             return processRequest(...args);
           },
-        })
+        }),
       )
       .use((request, response, next) => {
         requestBody = request.body;
@@ -121,7 +121,7 @@ describe('graphqlUploadExpress', () => {
             request.resume();
             throw error;
           },
-        })
+        }),
       )
       .use((error, request, response, next) => {
         expressError = error;
