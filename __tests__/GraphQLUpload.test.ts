@@ -17,7 +17,7 @@ describe('GraphQLUpload', () => {
       {
         name: 'GraphQLError',
         message: 'Upload value invalid.',
-      }
+      },
     );
   });
 
@@ -31,7 +31,7 @@ describe('GraphQLUpload', () => {
         name: 'GraphQLError',
         message: 'Upload literal unsupported.',
         locations: [{ line: 1, column: 1 }],
-      }
+      },
     );
   });
 
@@ -44,7 +44,7 @@ describe('GraphQLUpload', () => {
       {
         name: 'GraphQLError',
         message: 'Upload serialization unsupported.',
-      }
+      },
     );
   });
 });

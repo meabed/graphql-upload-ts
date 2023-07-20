@@ -6,7 +6,5 @@
   "jsxSingleQuote": true,
   "htmlWhitespaceSensitivity": "strict",
   "bracketSameLine": false,
-  "printWidth": 120,
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true
+  "printWidth": 120
 }

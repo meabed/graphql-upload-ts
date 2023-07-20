@@ -62,7 +62,7 @@ describe('processRequest', () => {
         'operations',
         JSON.stringify({
           variables: { input: { docs: [{ type: 'manual', file: null }] } },
-        })
+        }),
       );
       body.append('map', JSON.stringify({ 1: ['variables.input.docs.0.file'] }));
       body.append('1', 'a', { filename: '你好.txt' });
@@ -385,7 +385,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        })
+        }),
       );
       body.append('1', 'a', { filename: 'a.txt' });
       body.append('2', 'b', { filename: 'b.txt' });
@@ -445,7 +445,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        })
+        }),
       );
       body.append('1', 'a', { filename: 'a.txt' });
       body.append('extraneous', 'c', { filename: 'c.txt' });
@@ -481,7 +481,7 @@ describe('processRequest', () => {
             message: 'File truncated as it exceeds the 2 byte size limit.',
             status: 413,
             expose: true,
-          }
+          },
         );
 
         ok(operation.variables.files[0] instanceof Upload);
@@ -515,7 +515,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        })
+        }),
       );
       body.append('1', 'aa', { filename: 'a.txt' });
       body.append('2', 'b', { filename: 'b.txt' });
@@ -627,7 +627,7 @@ describe('processRequest', () => {
               message: 'Request disconnected during file upload stream parsing.',
               status: 499,
               expose: true,
-            }
+            },
           );
         };
 
@@ -660,7 +660,7 @@ describe('processRequest', () => {
         'operations',
         JSON.stringify({
           variables: { fileA: null, fileB: null, fileC: null },
-        })
+        }),
       );
       formData.append(
         'map',
@@ -668,7 +668,7 @@ describe('processRequest', () => {
           1: ['variables.fileA'],
           2: ['variables.fileB'],
           3: ['variables.fileC'],
-        })
+        }),
       );
       formData.append('1', 'a', { filename: 'a.txt' });
       formData.append(
@@ -676,7 +676,7 @@ describe('processRequest', () => {
         // Will arrive in multiple chunks as the TCP max packet size is 64000
         // bytes and the default Node.js fs stream buffer is 65536 bytes.
         `${'b'.repeat(70000)}${abortMarker}${'b'.repeat(10)}`,
-        { filename: 'b.txt' }
+        { filename: 'b.txt' },
       );
       formData.append('3', 'c', { filename: 'c.txt' });
 
@@ -785,7 +785,7 @@ describe('processRequest', () => {
         'operations',
         JSON.stringify({
           variables: { fileA: null, fileB: null, fileC: null },
-        })
+        }),
       );
       formData.append(
         'map',
@@ -793,7 +793,7 @@ describe('processRequest', () => {
           1: ['variables.fileA'],
           2: ['variables.fileB'],
           3: ['variables.fileC'],
-        })
+        }),
       );
       formData.append('1', 'a', { filename: 'a.txt' });
       formData.append(
@@ -801,7 +801,7 @@ describe('processRequest', () => {
         // Will arrive in multiple chunks as the TCP max packet size is 64000
         // bytes and the default Node.js fs stream buffer is 65536 bytes.
         `${'b'.repeat(70000)}${abortMarker}${'b'.repeat(10)}`,
-        { filename: 'b.txt' }
+        { filename: 'b.txt' },
       );
       formData.append('3', 'c', { filename: 'c.txt' });
 
@@ -1023,7 +1023,7 @@ describe('processRequest', () => {
         // Will arrive in multiple chunks as the TCP max packet size is 64000
         // bytes and the default Node.js fs stream buffer is 65536 bytes.
         'a'.repeat(70000),
-        { filename: 'a.txt' }
+        { filename: 'a.txt' },
       );
 
       await fetch(`http://localhost:${port}`, { method: 'POST', body });

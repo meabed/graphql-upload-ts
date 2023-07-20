@@ -92,7 +92,7 @@ export type IncomingReq = Partial<IncomingMessage> & {
 export async function processRequest<T = any>(
   req?: IncomingReq | Readable,
   res?: Partial<ServerResponse>,
-  uploadOptions?: UploadOptions
+  uploadOptions?: UploadOptions,
 ): Promise<GraphQLOperation | GraphQLOperation[] | T> {
   const {
     maxFieldSize = 1000000, // 1 MB
@@ -106,14 +106,14 @@ export async function processRequest<T = any>(
     if (!(req as IncomingReq).rawBody)
       throw new HttpError(
         400,
-        'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data'
+        'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data',
       );
   } else if (environment === 'lambda') {
     // AWS Lambda compatibility
     if (!(req as IncomingReq).body)
       throw new HttpError(
         400,
-        'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md'
+        'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md',
       );
   } else if (environment === 'azure') {
     // Azure Functions compatibility
@@ -121,14 +121,14 @@ export async function processRequest<T = any>(
     if (!req || !(req as IncomingReq).body)
       throw new HttpError(
         400,
-        'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node'
+        'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node',
       );
   } else {
     // Regular node.js environment where request is a ReadableStream instance.
     if (!req || !req.pipe || !req.unpipe || !req.once || !req.resume)
       throw new HttpError(
         400,
-        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
+        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
       );
   }
 
@@ -249,14 +249,14 @@ export async function processRequest<T = any>(
             for (const [index, path] of paths.entries()) {
               if (typeof path !== 'string' || !path.trim())
                 return exit(
-                  `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`
+                  `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`,
                 );
 
               try {
                 deepSet(operations, path, map.get(fieldName));
               } catch (error) {
                 return exit(
-                  `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`
+                  `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`,
                 );
               }
             }
@@ -305,7 +305,7 @@ export async function processRequest<T = any>(
         createReadStream(...args) {
           if (args && args.some(Boolean)) {
             throw new Error(
-              'graphql-upload-ts does not support createReadStream() arguments. Use graphql-upload NPM module if you need this feature.'
+              'graphql-upload-ts does not support createReadStream() arguments. Use graphql-upload NPM module if you need this feature.',
             );
           }
 
@@ -314,7 +314,7 @@ export async function processRequest<T = any>(
 
           if (returnedStreams.has(stream)) {
             throw new Error(
-              "graphql-upload-ts does not allow calling createReadStream() multiple times. Please, consume the previously returned stream. Make sure you're not referencing same file twice in your query."
+              "graphql-upload-ts does not allow calling createReadStream() multiple times. Please, consume the previously returned stream. Make sure you're not referencing same file twice in your query.",
             );
           } else {
             returnedStreams.add(stream);
@@ -335,7 +335,7 @@ export async function processRequest<T = any>(
       if (!operations && !map) {
         return exit(
           `graphql-upload-ts couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then see README.md.`,
-          500
+          500,
         );
       }
 

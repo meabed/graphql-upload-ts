@@ -42,8 +42,8 @@ describe('processRequest serverless', () => {
       await rejects(
         processRequest({ headers: { 'content-type': 'multipart/form-data;' } }, {}, { environment: 'gcf' }),
         badRequest(
-          'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data'
-        )
+          'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data',
+        ),
       );
       await rejects(
         processRequest(
@@ -52,11 +52,11 @@ describe('processRequest serverless', () => {
             rawBody: null,
           },
           {},
-          { environment: 'gcf' }
+          { environment: 'gcf' },
         ),
         badRequest(
-          'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data'
-        )
+          'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data',
+        ),
       );
     });
 
@@ -71,8 +71,8 @@ describe('processRequest serverless', () => {
       await rejects(
         processRequest({ req: { headers: { 'content-type': 'multipart/form-data;' } } }, {}, { environment: 'azure' }),
         badRequest(
-          'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node'
-        )
+          'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node',
+        ),
       );
       await rejects(
         processRequest(
@@ -83,11 +83,11 @@ describe('processRequest serverless', () => {
             },
           },
           {},
-          { environment: 'azure' }
+          { environment: 'azure' },
         ),
         badRequest(
-          'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node'
-        )
+          'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node',
+        ),
       );
     });
 
@@ -104,8 +104,8 @@ describe('processRequest serverless', () => {
           environment: 'lambda',
         }),
         badRequest(
-          'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md'
-        )
+          'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md',
+        ),
       );
       await rejects(
         processRequest(
@@ -114,11 +114,11 @@ describe('processRequest serverless', () => {
             rawBody: null,
           },
           null,
-          { environment: 'lambda' }
+          { environment: 'lambda' },
         ),
         badRequest(
-          'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md'
-        )
+          'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md',
+        ),
       );
     });
 
@@ -133,8 +133,8 @@ describe('processRequest serverless', () => {
       await rejects(
         processRequest({ headers: { 'content-type': 'multipart/form-data;' } }),
         badRequest(
-          "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
-        )
+          "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
+        ),
       );
       await rejects(
         processRequest({
@@ -142,8 +142,8 @@ describe('processRequest serverless', () => {
           rawBody: null,
         }),
         badRequest(
-          "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support."
-        )
+          "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
+        ),
       );
     });
   });
