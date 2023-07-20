@@ -1,6 +1,10 @@
 # Changelog
 
-### [2.0.5](https://github.com/meabed/graphql-upload-ts/compare/v2.0.2...v2.0.4) (2022-12-25)
+### [2.0.9](https://github.com/meabed/graphql-upload-ts/compare/v2.0.5...v2.0.9) (2023-07-19)
+
+- Update packages
+
+### [2.0.5](https://github.com/meabed/graphql-upload-ts/compare/v2.0.2...v2.0.5) (2022-12-25)
 
 - Fix release script
 - Update packages
