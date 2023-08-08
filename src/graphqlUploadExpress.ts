@@ -59,9 +59,8 @@ export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
     if (overrideSendResponse) {
       const finished = new Promise((resolve) => request.on('end', resolve));
       const { send } = response;
-
-      // @ts-ignore Todo: Find a less hacky way to prevent sending a response
-      // before the request has ended.
+      // Todo: Find a less hacky way to prevent sending a response before the request has ended.
+      // TODO: add tests
       response.send = (...args) => {
         finished.then(() => {
           response.send = send;
