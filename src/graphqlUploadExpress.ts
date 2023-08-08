@@ -2,6 +2,7 @@ import { processRequest as defaultProcessRequest } from './processRequest';
 
 export type ProcessRequestOptions = {
   processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
+  overrideSendResponse?: boolean;
   [key: string]: any;
 };
 
@@ -16,6 +17,7 @@ export type ProcessRequestOptions = {
  * @name graphqlUploadExpress
  * @param {ProcessRequestOptions} params Middleware options. Any [`ProcessRequestOptions`]{@link ProcessRequestOptions} can be used.
  * @param {ProcessRequestOptions.processRequest} [params.processRequest=processRequest] Used to process [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec).
+ * @param {boolean} [params.overrideSendResponse=true] Whether to override the Express `response.send` method to prevent sending a response before the request has ended.
  * @returns {Function} Express middleware.
  * @example <caption>Ways to `import`.</caption>
  * ```js
@@ -50,19 +52,23 @@ export type ProcessRequestOptions = {
  * ```
  */
 export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
-  const { processRequest = defaultProcessRequest, ...processRequestOptions } = params;
+  const { processRequest = defaultProcessRequest, overrideSendResponse = true, ...processRequestOptions } = params;
   return function graphqlUploadExpressMiddleware(request: any, response: any, next: any) {
     if (!request.is('multipart/form-data')) return next();
 
-    const finished = new Promise((resolve) => request.on('end', resolve));
-    const { send } = response;
+    if (overrideSendResponse) {
+      const finished = new Promise((resolve) => request.on('end', resolve));
+      const { send } = response;
 
-    response.send = (...args: any) => {
-      finished.then(() => {
-        response.send = send;
-        response.send(...args);
-      });
-    };
+      // @ts-ignore Todo: Find a less hacky way to prevent sending a response
+      // before the request has ended.
+      response.send = (...args) => {
+        finished.then(() => {
+          response.send = send;
+          response.send(...args);
+        });
+      };
+    }
 
     processRequest(request, response, processRequestOptions)
       .then((body: any) => {
