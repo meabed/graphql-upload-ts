@@ -1,5 +1,11 @@
 # Changelog
 
+### [2.1.0](https://github.com/meabed/graphql-upload-ts/compare/v2.0.5...v2.0.9) (2023-07-19)
+
+- Feat: add overrideSendResponse to optionally disable override send response in express - thank you ([@Gherciu](https://github.com/Gherciu) for the [PR](https://github.com/meabed/graphql-upload-ts/pull/173))
+- Update packages
+
+
 ### [2.0.9](https://github.com/meabed/graphql-upload-ts/compare/v2.0.5...v2.0.9) (2023-07-19)
 
 - Update packages
