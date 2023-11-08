@@ -936,10 +936,10 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/busboy@1.5.2":
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/@types/busboy/-/busboy-1.5.2.tgz#ba9e4f21f1687e25def6c0fe044c7ea5b47dd2ef"
-  integrity sha512-OYkRy+dkQWwoGch3oyQ9UE08PO1jSte7aBtPemLXAP9evwh7fNAfikWdB2VMeP8syY3H/XvGq+pB38dDvTe06g==
+"@types/busboy@1.5.3":
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/@types/busboy/-/busboy-1.5.3.tgz#016c68692c767f0cf9d23c90a85a9c322f92cbc5"
+  integrity sha512-YMBLFN/xBD8bnqywIlGyYqsNFXu6bsiY7h3Ae0kO17qEuTjsqeyYMRPSUDacIKIquws2Y6KjmxAyNx8xB3xQbw==
   dependencies:
     "@types/node" "*"
 
@@ -1039,10 +1039,10 @@
   dependencies:
     "@types/istanbul-lib-report" "*"
 
-"@types/jest@29.5.7":
-  version "29.5.7"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-29.5.7.tgz#2c0dafe2715dd958a455bc10e2ec3e1ec47b5036"
-  integrity sha512-HLyetab6KVPSiF+7pFcUyMeLsx25LDNDemw9mGsJBkai/oouwrjTycocSDYopMEwFhN2Y4s9oPyOCZNofgSt2g==
+"@types/jest@29.5.8":
+  version "29.5.8"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-29.5.8.tgz#ed5c256fe2bc7c38b1915ee5ef1ff24a3427e120"
+  integrity sha512-fXEFTxMV2Co8ZF5aYFJv+YeA08RTYJfhtN5c9JSv/mFEMe+xxjufCb+PHL+bJcMs/ebPUsBu+UNTEz+ydXrR6g==
   dependencies:
     expect "^29.0.0"
     pretty-format "^29.0.0"
