@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "compile": "tsc -p .",
+    "start": "npm run compile && node ./dist/examples/apollo/index.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.17",
+    "@types/express": "~4.17.21",
+    "@types/node": "^20.11.2",
+    "typescript": "^5.3.3"
+  }
+}
