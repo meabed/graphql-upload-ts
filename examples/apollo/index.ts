@@ -22,6 +22,7 @@ const apolloSchema: ApolloServerOptions<BaseContext> = {
     filename: String!
     mimetype: String!
     encoding: String!
+    fileSize: Int!
   }
   type Query {
     hello: String!
@@ -41,14 +42,28 @@ const apolloSchema: ApolloServerOptions<BaseContext> = {
         const { createReadStream, filename, mimetype, encoding } = await file;
         const stream = createReadStream();
         // save file to current directory
+        let fileSize = 0;
         const outFilePath = `${__dirname}/uploaded-${Date.now()}-${filename}`;
         await new Promise((resolve, reject) => {
-          stream.pipe(createWriteStream(outFilePath)).on('finish', resolve).on('error', reject);
+          stream.on('data', (chunk) => {
+            fileSize += chunk.length;
+          });
+          stream
+            .pipe(createWriteStream(outFilePath))
+            .on('finish', () => {
+              console.log(`File ${outFilePath} saved`);
+              resolve(null);
+            })
+            .on('error', (err) => {
+              console.error(`Error saving file ${outFilePath}`, err);
+              reject(err);
+            });
         });
         return {
           filename,
           mimetype,
           encoding,
+          fileSize,
           uri: outFilePath,
         };
       },
