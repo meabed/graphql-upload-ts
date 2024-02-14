@@ -2,6 +2,7 @@
 
 ### [2.1.1](https://github.com/meabed/graphql-upload-ts/compare/v2.1.0...v2.1.1) (2024-02-14)
 - Improve readme and add more information about using `overrideSendResponse`
+- Make overrideSendResponse default to `false` if processRequest is not provided
 - Update types and tests
 - Update packages
 
