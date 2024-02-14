@@ -40,6 +40,10 @@ const apolloSchema: ApolloServerOptions<BaseContext> = {
       uploadFile: async (ctx, args) => {
         const { file } = args as { file: Promise<FileUpload> };
         const { createReadStream, filename, mimetype, encoding } = await file;
+
+        // validate file type
+        if (mimetype !== 'image/png') throw new Error('Only PNG files are allowed');
+
         const stream = createReadStream();
         // save file to current directory
         let fileSize = 0;
@@ -90,7 +94,7 @@ async function applyMiddlewares(app, httpServer) {
 
   app.use(
     '/graphql',
-    graphqlUploadExpress({}),
+    graphqlUploadExpress({ overrideSendResponse: false }),
     expressMiddleware(apolloServer, {
       context: async ({ req }) => contextFnInjections(req),
     }),
