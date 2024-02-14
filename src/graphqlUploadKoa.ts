@@ -1,9 +1,11 @@
 import { processRequest as defaultProcessRequest } from './processRequest';
+import { Context, Next } from 'koa';
 
 type ProcessRequestOptions = {
   processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
   [key: string]: any;
 };
+
 /**
  * Creates [Koa](https://koajs.com) middleware that processes
  * [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec)
@@ -50,13 +52,13 @@ type ProcessRequestOptions = {
  */
 export function graphqlUploadKoa(params: ProcessRequestOptions = {}) {
   const { processRequest = defaultProcessRequest, ...processRequestOptions } = params;
-  return async function graphqlUploadKoaMiddleware(ctx: any, next: any) {
+  return async function graphqlUploadKoaMiddleware(ctx: Context, next: Next) {
     if (!ctx.request.is('multipart/form-data')) return next();
 
     const finished = new Promise((resolve) => ctx.req.on('end', resolve));
 
     try {
-      ctx.request.body = await processRequest(ctx.req, ctx.res, processRequestOptions);
+      ctx.body = await processRequest(ctx.req, ctx.res, processRequestOptions);
       await next();
     } finally {
       await finished;

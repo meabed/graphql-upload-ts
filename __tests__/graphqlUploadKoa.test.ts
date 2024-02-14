@@ -32,7 +32,7 @@ describe('graphqlUploadKoa', () => {
     let ctxRequestBody;
 
     const app = new Koa().use(graphqlUploadKoa()).use(async (ctx, next) => {
-      ctxRequestBody = ctx.request.body;
+      ctxRequestBody = ctx.body;
       await next();
     });
 
@@ -69,7 +69,7 @@ describe('graphqlUploadKoa', () => {
         }),
       )
       .use(async (ctx, next) => {
-        ctxRequestBody = ctx.request.body;
+        ctxRequestBody = ctx.body;
         await next();
       });
 

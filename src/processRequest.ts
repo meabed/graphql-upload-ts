@@ -13,9 +13,9 @@ import { Readable } from 'stream';
  * @type {string}
  * @ignore
  */
-const SPEC_URL = 'https://github.com/jaydenseric/graphql-multipart-request-spec';
+const SPEC_URL: string = 'https://github.com/jaydenseric/graphql-multipart-request-spec';
 
-function isObject(val: any) {
+function isObject(val: unknown) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
 }
 
@@ -155,8 +155,8 @@ export async function processRequest<T = any>(
       },
     });
 
-    let exitError;
-    let lastFileStream;
+    let exitError: Error;
+    let lastFileStream: Readable;
     /**
      * Exits request processing with an error. Successive calls have no effect.
      * @kind function

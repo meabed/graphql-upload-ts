@@ -1,4 +1,5 @@
 import { processRequest as defaultProcessRequest } from './processRequest';
+import { NextFunction, Request, Response } from 'express';
 
 export type ProcessRequestOptions = {
   processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
@@ -53,7 +54,7 @@ export type ProcessRequestOptions = {
  */
 export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
   const { processRequest = defaultProcessRequest, overrideSendResponse = true, ...processRequestOptions } = params;
-  return function graphqlUploadExpressMiddleware(request: any, response: any, next: any) {
+  return function graphqlUploadExpressMiddleware(request: Request, response: Response, next: NextFunction) {
     if (!request.is('multipart/form-data')) return next();
 
     if (overrideSendResponse) {
@@ -61,7 +62,7 @@ export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
       const { send } = response;
       // Todo: Find a less hacky way to prevent sending a response before the request has ended.
       // TODO: add tests
-      response.send = (...args) => {
+      response.send = (...args): any => {
         finished.then(() => {
           response.send = send;
           response.send(...args);
@@ -70,11 +71,11 @@ export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
     }
 
     processRequest(request, response, processRequestOptions)
-      .then((body: any) => {
+      .then((body) => {
         request.body = body;
         next();
       })
-      .catch((error: any) => {
+      .catch((error) => {
         if (error.status && error.expose) response.status(error.status);
         next(error);
       });
