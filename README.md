@@ -93,7 +93,13 @@ const { graphqlUploadExpress } = require('graphql-upload-ts');
 express()
   .use(
     '/graphql',
-    graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10, overrideSendResponse: false }),
+    graphqlUploadExpress({ 
+      maxFileSize: 10000000,
+      maxFiles: 10,
+      // If you are using framework around express like [ NestJS or Apollo Serve ]
+      // use this options overrideSendResponse to allow nestjs to handle response errors like throwing exceptions
+      overrideSendResponse: false 
+    }),
     expressGraphql({ schema: require('./my-schema') })
   )
   .listen(3000);
@@ -243,7 +249,7 @@ const resolvers = {
 ## Tips
 
 - Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
-- In [ NestJS or Apollo Serve ] use the option `overrideSendResponse` eg: `graphqlUploadExpress({ overrideSendResponse: false })` to allow nestjs to handle response errors like throwing exceptions.
+- If you are using framework around express like [ NestJS or Apollo Serve ] use the option `overrideSendResponse` eg: `graphqlUploadExpress({ overrideSendResponse: false })` to allow nestjs to handle response errors like throwing exceptions.
 
 ## Architecture
 
