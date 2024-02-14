@@ -1,6 +1,6 @@
-## Apollo Server Graphql Upload Example
+## Express Server Graphql Upload Example
 
-This example shows how to use `graphql-upload-ts` with [Apollo Server](https://www.apollographql.com/docs/apollo-server/).
+This example shows how to use `graphql-upload-ts` with [Express](https://expressjs.com/)
 
 ### Usage
 
@@ -10,6 +10,9 @@ yarn install
 
 # Start the server
 yarn start
+
+# Test upload with cURL
+./upload.sh http://localhost:4000/graphql test.png
 
 # Test upload with cURL ( successful upload as server accept only mime type image/png)
 ./upload.sh http://localhost:4000/graphql test.png
