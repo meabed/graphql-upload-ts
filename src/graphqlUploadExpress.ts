@@ -18,7 +18,7 @@ export type ProcessRequestOptions = {
  * @name graphqlUploadExpress
  * @param {ProcessRequestOptions} params Middleware options. Any [`ProcessRequestOptions`]{@link ProcessRequestOptions} can be used.
  * @param {ProcessRequestOptions.processRequest} [params.processRequest=processRequest] Used to process [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec).
- * @param {boolean} [params.overrideSendResponse=true] Whether to override the Express `response.send` method to prevent sending a response before the request has ended.
+ * @param {boolean} [params.overrideSendResponse=false] Whether to override the Express `response.send` method to prevent sending a response before the request has ended.
  * @returns {Function} Express middleware.
  * @example <caption>Ways to `import`.</caption>
  * ```js
@@ -53,11 +53,12 @@ export type ProcessRequestOptions = {
  * ```
  */
 export function graphqlUploadExpress(params: ProcessRequestOptions = {}) {
-  const { processRequest = defaultProcessRequest, overrideSendResponse = true, ...processRequestOptions } = params;
+  const { processRequest = defaultProcessRequest, overrideSendResponse, ...processRequestOptions } = params;
   return function graphqlUploadExpressMiddleware(request: Request, response: Response, next: NextFunction) {
     if (!request.is('multipart/form-data')) return next();
 
-    if (overrideSendResponse) {
+    // if processRequest is defined, overrideSendResponse is undefined, and processRequest returns a truthy value, override response.send
+    if (overrideSendResponse || (typeof overrideSendResponse === 'undefined' && processRequest)) {
       const finished = new Promise((resolve) => request.on('end', resolve));
       const { send } = response;
       // Todo: Find a less hacky way to prevent sending a response before the request has ended.
