@@ -2,9 +2,9 @@ import { createWriteStream } from 'node:fs';
 import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
-import { FileUpload, GraphQLUpload, processRequest } from '../../src';
-import { createHandler } from 'graphql-http/lib/use/express';
+import { FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { createYoga } from 'graphql-yoga';
 
 const contextFnInjections = (req) => {
   const { user } = req;
@@ -77,6 +77,11 @@ const gqlSchema = makeExecutableSchema({
 });
 
 const app = express();
+const yoga = createYoga({
+  schema: gqlSchema,
+  context: contextFnInjections,
+});
+
 const httpServer = createServer(app);
 app.use(
   cors({
@@ -86,26 +91,11 @@ app.use(
     origin: true,
   }),
 );
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(
-  '/graphql',
-  createHandler({
-    schema: gqlSchema,
-    context: contextFnInjections,
-    parseRequestParams: async (req) => {
-      const params = await processRequest(req.raw, req.context.res);
-      if (Array.isArray(params)) {
-        throw new Error('Batching is not supported');
-      }
-      return {
-        ...params,
-        // variables must be an object as per the GraphQL over HTTP spec
-        variables: Object(params.variables),
-      };
-    },
-  }),
-);
+
+app.use(yoga.graphqlEndpoint, graphqlUploadExpress({}), yoga);
 
 const port = process.env.PORT || 4000;
 httpServer.listen({ port }, () => {

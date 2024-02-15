@@ -8,11 +8,11 @@ This example shows how to use `graphql-upload-ts` with [Express](https://express
 # Install dependencies
 yarn install
 
-# Start the server
-yarn start
+# Start the server with `graphql-http` library
+yarn start:graphql-http
 
-# Test upload with cURL
-./upload.sh http://localhost:4000/graphql test.png
+# Or start the server with `graphql-yoga` library
+yarn start:graphql-yoga
 
 # Test upload with cURL ( successful upload as server accept only mime type image/png)
 ./upload.sh http://localhost:4000/graphql test.png
