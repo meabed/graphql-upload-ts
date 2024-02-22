@@ -105,6 +105,7 @@ const app = express();
 const yoga = createYoga({
   schema: gqlSchema,
   context: contextFnInjections,
+  maskedErrors: false,
 });
 
 const httpServer = createServer(app);
