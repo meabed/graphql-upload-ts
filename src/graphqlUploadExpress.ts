@@ -4,6 +4,9 @@ import { NextFunction, Request, Response } from 'express';
 export type ProcessRequestOptions = {
   processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
   overrideSendResponse?: boolean;
+  maxFieldSize?: number;
+  maxFileSize?: number;
+  maxFiles?: number;
   [key: string]: any;
 };
 

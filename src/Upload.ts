@@ -1,38 +1,12 @@
-import { ReadStream } from 'fs';
+import { ReadStream, ReadStreamOptions, WriteStream } from './fs-capacitor';
 
-/**
- * A file expected to be uploaded as it has been declared in the `map` field of
- * a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
- * The [`processRequest`]{@link processRequest} function places references to an
- * instance of this class wherever the file is expected in the
- * [GraphQL operation]{@link GraphQLOperation}. The
- * [`Upload` scalar]{@link GraphQLUpload} derives it's value from the
- * [`promise`]{@link Upload#promise} property.
- * @kind class
- * @name Upload
- * @example <caption>Ways to `import`.</caption>
- * ```js
- * import { Upload } from 'graphql-upload-minimal';
- * ```
- *
- * ```js
- * import Upload from 'graphql-upload-minimal/public/Upload.js';
- * ```
- * @example <caption>Ways to `require`.</caption>
- * ```js
- * const { Upload } = require('graphql-upload-minimal');
- * ```
- *
- * ```js
- * const Upload = require('graphql-upload-minimal/public/Upload');
- * ```
- */
 export interface FileUpload {
   filename: string;
   fieldName: string;
   mimetype: string;
   encoding: string;
-  createReadStream(): ReadStream;
+  createReadStream(options?: ReadStreamOptions): ReadStream;
+  capacitor: WriteStream;
 }
 
 export class Upload {
@@ -40,32 +14,26 @@ export class Upload {
   resolve: (file?: FileUpload) => void;
   reject: (error?: Error | string) => void;
   file?: FileUpload;
-  onPromiseCatch?: (e: unknown) => void;
 
   constructor() {
     /**
      * Promise that resolves file upload details. This should only be utilized
-     * by [`GraphQLUpload`]{@link GraphQLUpload}.
-     * @kind member
-     * @name Upload#promise
-     * @type {Promise<FileUpload>}
+     * by {@linkcode GraphQLUpload}.
+     * @type {Promise<import("./processRequest.mjs").FileUpload>}
      */
     this.promise = new Promise((resolve, reject) => {
       /**
        * Resolves the upload promise with the file upload details. This should
-       * only be utilized by [`processRequest`]{@link processRequest}.
-       * @kind function
-       * @name Upload#resolve
-       * @param {FileUpload} file File upload details.
+       * only be utilized by {@linkcode processRequest}.
+       * @param {import("./processRequest.mjs").FileUpload} file File upload
+       *   details.
        */
       this.resolve = (file) => {
         /**
          * The file upload details, available when the
-         * [upload promise]{@link Upload#promise} resolves. This should only be
-         * utilized by [`processRequest`]{@link processRequest}.
-         * @kind member
-         * @name Upload#file
-         * @type {undefined|FileUpload}
+         * {@linkcode Upload.promise} resolves. This should only be utilized by
+         * {@linkcode processRequest}.
+         * @type {import("./processRequest.mjs").FileUpload | undefined}
          */
         this.file = file;
 
@@ -74,22 +42,14 @@ export class Upload {
 
       /**
        * Rejects the upload promise with an error. This should only be
-       * utilized by [`processRequest`]{@link processRequest}.
-       * @kind function
-       * @name Upload#reject
-       * @param {object} error Error instance.
+       * utilized by {@linkcode processRequest}.
+       * @param {Error} error Error instance.
        */
-      this.reject = (error) => {
-        reject(error);
-      };
+      this.reject = reject;
     });
 
     // Prevent errors crashing Node.js, see:
     // https://github.com/nodejs/node/issues/20392
-    this.promise.catch((e) => {
-      if (this.onPromiseCatch) {
-        return this.onPromiseCatch(e);
-      }
-    });
+    this.promise.catch(() => {});
   }
 }

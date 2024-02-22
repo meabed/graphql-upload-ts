@@ -51,9 +51,6 @@ Otherwise, **this module is a drop-in replacement for the `graphql-upload`**.
 The following environments are known to be compatible:
 
 - [Node.js](https://nodejs.org) versions 12, 14, 16, and 18. It works in Node 10 even though the unit tests fail.
-- [AWS Lambda](https://aws.amazon.com/lambda/). [Reported](https://github.com/meabed/graphql-upload-ts/issues/4#issuecomment-664234726) to be working.
-- [Google Cloud Functions (GCF)](https://cloud.google.com/functions) Experimental. Untested.
-- [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) Working.
 - [Koa](https://koajs.com)
 - [Express.js](https://expressjs.com)
 
@@ -156,41 +153,6 @@ const resolvers = {
 
 See the [example Koa server and client](https://github.com/jaydenseric/apollo-upload-examples).
 
-### AWS Lambda
-
-[Reported](https://github.com/meabed/graphql-upload-ts/issues/4#issuecomment-664234726) to be working.
-
-```js
-const { processRequest } = require('graphql-upload-ts');
-
-module.exports.processRequest = function (event) {
-  return processRequest(event, null, { environment: 'lambda' });
-};
-```
-
-### Google Cloud Functions (GCF)
-
-Possible example. Experimental. Untested.
-
-```js
-const { processRequest } = require('graphql-upload-ts');
-
-exports.uploadFile = function (req, res) {
-  return processRequest(req, res, { environment: 'gcf' });
-};
-```
-
-### Azure Functions
-
-Possible example. Working.
-
-```js
-const { processRequest } = require('graphql-upload-ts');
-
-exports.uploadFile = function (context, req) {
-  return processRequest(context, req, { environment: 'azure' });
-};
-```
 
 ### Uploading multiple files
 

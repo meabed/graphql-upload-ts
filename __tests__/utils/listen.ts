@@ -1,12 +1,14 @@
-export function listen(app): Promise<{ port: number; close: () => void }> {
-  return new Promise((resolve, reject) => {
-    const server = app.listen(function (error) {
-      if (error) reject(error);
-      else
-        resolve({
-          port: server.address().port,
-          close: () => server.close(),
-        });
-    });
+import { Server } from 'http';
+import { AddressInfo } from 'net';
+
+export async function listen(server: Server) {
+  await new Promise((resolve) => {
+    server.listen(resolve);
   });
+
+  const address = server.address() as AddressInfo;
+  return {
+    port: address.port,
+    close: () => server.close(),
+  };
 }

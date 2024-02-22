@@ -1,61 +1,63 @@
-import * as http from 'http';
-import { Transform } from 'stream';
+import { FormDataEncoder, FormDataLike } from 'form-data-encoder';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 /**
  * Sends a multipart request that deliberately aborts after a certain amount of
  * data has been uploaded to the server, for testing purposes.
- * @kind function
- * @name abortingMultipartRequest
  * @param {string} url The request URL.
  * @param {FormData} formData A `FormData` instance for the request body.
- * @param { string} abortMarker A unique character in the request body that marks where to abort the request.
- * @param {Promise<void>} requestReceived Resolves once the request has been received by the server request handler.
- * @returns {Promise<void>} Resolves once the aborted request closes.
- * @ignore
+ * @param {string} abortMarker A unique character in the request body that marks
+ *   where to abort the request.
+ * @param {Promise<void>} requestReceived Resolves once the request has been
+ *   received by the server request handler.
+ * @returns {Promise<void>} Resolves once the request aborts.
  */
-export function abortingMultipartRequest(url, formData, abortMarker, requestReceived) {
-  return new Promise((resolve, reject) => {
-    const request = http.request(url, {
+export async function abortingMultipartRequest(
+  url: RequestInfo | URL,
+  formData: FormDataLike | FormData,
+  abortMarker: string,
+  requestReceived: Promise<any>,
+) {
+  const abortController = new AbortController();
+  const encoder = new FormDataEncoder(formData);
+
+  try {
+    await fetch(url, {
       method: 'POST',
-      headers: formData.getHeaders(),
+      headers: encoder.headers,
+      body: new ReadableStream({
+        async start(controller) {
+          for await (const chunk of encoder) {
+            const chunkString = textDecoder.decode(chunk);
+            const chunkAbortIndex = chunkString.indexOf(abortMarker);
+
+            // Check if the chunk has the abort marker character in it.
+            if (chunkAbortIndex !== -1) {
+              if (chunkAbortIndex !== 0)
+                // Yield the final truncated chunk before aborting.
+                controller.enqueue(textEncoder.encode(chunkString.substring(0, chunkAbortIndex)));
+
+              // Abort the request after it has been received by the server
+              // request handler, or else Node.js won’t run the handler.
+              await requestReceived;
+
+              abortController.abort();
+
+              // Don’t iterate chunks after the abort marker.
+              break;
+            } else controller.enqueue(chunk);
+          }
+
+          controller.close();
+        },
+      }),
+      // @ts-expect-error https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1483
+      duplex: 'half',
+      signal: abortController.signal,
     });
-
-    request.on('error', (error) => {
-      // Error expected when the connection is aborted.
-      // @ts-ignore
-      if (error.code !== 'ECONNRESET') reject(error);
-    });
-
-    request.on('close', resolve);
-
-    const transform = new Transform({
-      transform(chunk, encoding, callback) {
-        // @ts-ignore
-        if (this._aborted) return;
-
-        const chunkString = chunk.toString('utf8');
-        const chunkAbortIndex = chunkString.indexOf(abortMarker);
-
-        // Check if the chunk has the abort marker character in it.
-        if (chunkAbortIndex !== -1) {
-          // @ts-ignore
-          this._aborted = true;
-
-          if (chunkAbortIndex !== 0)
-            // Send partial chunk before abort.
-            callback(null, chunkString.substr(0, chunkAbortIndex));
-
-          // Abort the request after it has been received by the server request
-          // handler, or else Node.js won't run the handler.
-          requestReceived.then(() => request.abort());
-
-          return;
-        }
-
-        callback(null, chunk);
-      },
-    });
-
-    formData.pipe(transform).pipe(request);
-  });
+  } catch (error) {
+    if (!(error instanceof Error && error.name === 'AbortError')) throw error;
+  }
 }

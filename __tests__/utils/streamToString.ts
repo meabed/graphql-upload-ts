@@ -1,3 +1,5 @@
+import { Readable } from 'stream';
+
 /**
  * Converts a Node.js readable stream to a string.
  * @kind function
@@ -6,7 +8,7 @@
  * @returns {Promise<string>} Resolves the final string.
  * @ignore
  */
-export function streamToString(stream) {
+export function streamToString(stream: Readable): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';
     stream

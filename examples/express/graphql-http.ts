@@ -6,6 +6,33 @@ import { FileUpload, GraphQLUpload, processRequest } from '../../src';
 import { createHandler } from 'graphql-http/lib/use/express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
+async function saveFileFromStream(stream: NodeJS.ReadableStream, filename: string) {
+  // save file to current directory
+  let fileSize = 0;
+  const outFilePath = `${__dirname}/uploaded-${Date.now()}-${filename}`;
+  const rs = await new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => {
+      fileSize += chunk.length;
+    });
+    stream
+      .pipe(createWriteStream(outFilePath))
+      .on('finish', () => {
+        console.log(`File ${outFilePath} saved`);
+        resolve(outFilePath);
+      })
+      .on('error', (err) => {
+        console.error(`Error saving file ${outFilePath}`, err);
+        reject(err);
+      });
+  });
+  if (rs instanceof Error) throw rs;
+  return {
+    filename,
+    fileSize,
+    uri: outFilePath,
+  };
+}
+
 const contextFnInjections = (req) => {
   const { user } = req;
   return {
@@ -28,6 +55,7 @@ const gqlSchema = makeExecutableSchema({
   }
   type Mutation {
     uploadFile(file: Upload!) : File!
+    upload2Files(file: Upload!, file2: Upload!) : [File!]!
   }
   `,
   resolvers: {
@@ -46,31 +74,28 @@ const gqlSchema = makeExecutableSchema({
         if (mimetype !== 'image/png') throw new Error('Only PNG files are allowed');
 
         const stream = createReadStream();
-        // save file to current directory
-        let fileSize = 0;
-        const outFilePath = `${__dirname}/uploaded-${Date.now()}-${filename}`;
-        await new Promise((resolve, reject) => {
-          stream.on('data', (chunk) => {
-            fileSize += chunk.length;
-          });
-          stream
-            .pipe(createWriteStream(outFilePath))
-            .on('finish', () => {
-              console.log(`File ${outFilePath} saved`);
-              resolve(null);
-            })
-            .on('error', (err) => {
-              console.error(`Error saving file ${outFilePath}`, err);
-              reject(err);
-            });
-        });
+        const rs = await saveFileFromStream(stream, filename);
         return {
           filename,
           mimetype,
           encoding,
-          fileSize,
-          uri: outFilePath,
+          fileSize: rs.fileSize,
+          uri: rs.uri,
         };
+      },
+      upload2Files: async (ctx, args) => {
+        console.log('upload2Files resolver ran');
+        const { file, file2 } = args as { file: Promise<FileUpload>; file2: Promise<FileUpload> };
+        const f1 = await file;
+        const f2 = await file2;
+        const stream1 = f1.createReadStream();
+        const stream2 = f2.createReadStream();
+        const rs1 = await saveFileFromStream(stream1, f1.filename);
+        const rs2 = await saveFileFromStream(stream2, f2.filename);
+        return [
+          { filename: f1.filename, mimetype: f1.mimetype, encoding: f1.encoding, fileSize: rs1.fileSize, uri: rs1.uri },
+          { filename: f2.filename, mimetype: f2.mimetype, encoding: f2.encoding, fileSize: rs2.fileSize, uri: rs2.uri },
+        ];
       },
     },
   },

@@ -5,6 +5,7 @@ import { deepStrictEqual, ok, strictEqual } from 'assert';
 import FormData from 'form-data';
 import Koa from 'koa';
 import fetch from 'node-fetch';
+import { createServer } from 'node:http';
 
 describe('graphqlUploadKoa', () => {
   it('`graphqlUploadKoa` with a non multipart request.', async () => {
@@ -18,7 +19,7 @@ describe('graphqlUploadKoa', () => {
       }),
     );
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app.callback()));
 
     try {
       await fetch(`http://localhost:${port}`, { method: 'POST' });
@@ -36,7 +37,7 @@ describe('graphqlUploadKoa', () => {
       await next();
     });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app.callback()));
 
     try {
       const body = new FormData();
@@ -73,7 +74,7 @@ describe('graphqlUploadKoa', () => {
         await next();
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app.callback()));
 
     try {
       const body = new FormData();
@@ -118,7 +119,7 @@ describe('graphqlUploadKoa', () => {
         }),
       );
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app.callback()));
 
     try {
       const body = new FormData();
@@ -157,7 +158,7 @@ describe('graphqlUploadKoa', () => {
         throw error;
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app.callback()));
 
     try {
       const body = new FormData();
