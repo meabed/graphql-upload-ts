@@ -17,34 +17,14 @@ I needed to support typescript to use it properly in typescript projects.
 #### This project is written in typescript
 
 - TypeScript support.
-- Single production dependency - `busboy`
-- Results in 9 less production dependencies.
-- And 6 less MB in your `node_modules`.
 - And using a bit less memory.
 - And a bit faster.
-- Most importantly, less risk that one of the dependencies would break your server.
 - More Examples and documentation
 
-#### More standard and developer friendly exception messages
-
-Using ASCII-only text. Direct developers to resolve common mistakes.
-
-#### **Does not create any temporary files on disk**
-
-- Thus works faster.
-- Does not have a risk of clogging your file system. Even on high load.
-- No need to manually destroy the programmatically aborted streams.
 
 #### Does not follow strict [specification](https://github.com/jaydenseric/graphql-multipart-request-spec)
 
 You can't have same file referenced twice in a GraphQL query/mutation.
-
-#### API changes comparing to the original `graphql-upload`
-
-- Does not accept any arguments to `createReadStream()`. Will **throw** if any provided.
-- Calling `createReadStream()` more than once per file is not allowed. Will **throw**.
-
-Otherwise, **this module is a drop-in replacement for the `graphql-upload`**.
 
 ## Support
 
@@ -209,14 +189,12 @@ const resolvers = {
 ```
 
 ## Tips
-
-- Only use [`createReadStream()`](#type-fileupload) _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error.
 - If you are using framework around express like [ NestJS or Apollo Serve ] use the option `overrideSendResponse` eg: `graphqlUploadExpress({ overrideSendResponse: false })` to allow nestjs to handle response errors like throwing exceptions.
 
 ## Architecture
 
 The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places.
-GraphQL resolvers need to be able to manage independent file streams.
+GraphQL's resolvers need to be able to manage independent file streams.
 
 [`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the
 operations are passed down the middleware chain to GraphQL resolvers.

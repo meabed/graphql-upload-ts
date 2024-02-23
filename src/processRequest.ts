@@ -209,7 +209,6 @@ export async function processRequest<T = any>(
         return;
       }
 
-      /** @type {Error} */
       let fileError: Error;
 
       const capacitor = new WriteStream();

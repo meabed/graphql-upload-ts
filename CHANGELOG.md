@@ -1,6 +1,7 @@
 # Changelog
 
-### [2.1.1](https://github.com/meabed/graphql-upload-ts/compare/v2.1.0...v2.1.1) (2024-02-14)
+### [2.1.1](https://github.com/meabed/graphql-upload-ts/compare/v2.1.0...v2.1.1) (2024-02-23)
+- rework file upload stream handling to fix multiple file upload and filesize issues 
 - Improve readme and add more information about using `overrideSendResponse`
 - Make overrideSendResponse default to `false` if processRequest is not provided
 - Added more examples in /examples folder

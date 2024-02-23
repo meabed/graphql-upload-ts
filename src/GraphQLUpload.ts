@@ -6,28 +6,26 @@ import { ASTNode, GraphQLError, GraphQLScalarType } from 'graphql';
  * [`GraphQLSchema`](https://graphql.org/graphql-js/type/#graphqlschema).
  * It's value in resolvers is a promise that resolves
  * [file upload details]{@link FileUpload} for processing and storage.
- * @kind class
- * @name GraphQLUpload
  * @example <caption>Ways to `import`.</caption>
  * ```js
- * import { GraphQLUpload } from 'graphql-upload-minimal';
+ * import { GraphQLUpload } from 'graphql-upload-ts';
  * ```
  *
  * ```js
- * import GraphQLUpload from 'graphql-upload-minimal/public/GraphQLUpload.js';
+ * import GraphQLUpload from 'graphql-upload-ts/dist/GraphQLUpload.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
- * const { GraphQLUpload } = require('graphql-upload-minimal');
+ * const { GraphQLUpload } = require('graphql-upload-ts');
  * ```
  *
  * ```js
- * const GraphQLUpload = require('graphql-upload-minimal/public/GraphQLUpload');
+ * const GraphQLUpload = require('graphql-upload-ts/dist/GraphQLUpload');
  * ```
  * @example <caption>Setup for a schema built with [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema).</caption>
  * ```js
  * const { makeExecutableSchema } = require('graphql-tools');
- * const { GraphQLUpload } = require('graphql-upload-minimal');
+ * const { GraphQLUpload } = require('graphql-upload-ts');
  *
  * const schema = makeExecutableSchema({
  *   typeDefs: /* GraphQL *\/ `
@@ -45,7 +43,7 @@ import { ASTNode, GraphQLError, GraphQLScalarType } from 'graphql';
  *   GraphQLObjectType,
  *   GraphQLBoolean,
  * } = require('graphql');
- * const { GraphQLUpload } = require('graphql-upload-minimal');
+ * const { GraphQLUpload } = require('graphql-upload-ts');
  *
  * const schema = new GraphQLSchema({
  *   mutation: new GraphQLObjectType({

@@ -3,6 +3,9 @@ import { Context, Next } from 'koa';
 
 type ProcessRequestOptions = {
   processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
+  maxFieldSize?: number;
+  maxFileSize?: number;
+  maxFiles?: number;
   [key: string]: any;
 };
 
@@ -13,33 +16,28 @@ type ProcessRequestOptions = {
  * requests. It sets the request body to be
  * [similar to a conventional GraphQL POST request]{@link GraphQLOperation} for
  * following GraphQL middleware to consume.
- * @kind function
- * @name graphqlUploadKoa
- * @param {ProcessRequestOptions} params Middleware options. Any [`ProcessRequestOptions`]{@link ProcessRequestOptions} can be used.
- * @param {ProcessRequestOptions.processRequest} [params.processRequest=processRequest] Used to process [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec).
- * @returns {Function} Koa middleware.
  * @example <caption>Ways to `import`.</caption>
  * ```js
- * import { graphqlUploadKoa } from 'graphql-upload-minimal';
+ * import { graphqlUploadKoa } from 'graphql-upload-ts';
  * ```
  *
  * ```js
- * import graphqlUploadKoa from 'graphql-upload-minimal/public/graphqlUploadKoa.js';
+ * import graphqlUploadKoa from 'graphql-upload-ts/dist/graphqlUploadKoa.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
- * const { graphqlUploadKoa } = require('graphql-upload-minimal');
+ * const { graphqlUploadKoa } = require('graphql-upload-ts');
  * ```
  *
  * ```js
- * const graphqlUploadKoa = require('graphql-upload-minimal/public/graphqlUploadKoa');
+ * const graphqlUploadKoa = require('graphql-upload-ts/dist/graphqlUploadKoa');
  * ```
  * @example <caption>Basic [`graphql-api-koa`](https://npm.im/graphql-api-koa) setup.</caption>
  * ```js
  * const Koa = require('koa');
  * const bodyParser = require('koa-bodyparser');
  * const { errorHandler, execute } = require('graphql-api-koa');
- * const { graphqlUploadKoa } = require('graphql-upload-minimal');
+ * const { graphqlUploadKoa } = require('graphql-upload-ts');
  * const schema = require('./schema');
  *
  * new Koa()

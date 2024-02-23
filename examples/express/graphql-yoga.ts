@@ -90,6 +90,17 @@ const gqlSchema = makeExecutableSchema({
         const f2 = await file2;
         const stream1 = f1.createReadStream();
         const stream2 = f2.createReadStream();
+
+        // example of creating multiple streams from the same file
+        const stream12 = f1.createReadStream();
+        stream12.on('data', (chunk) => {
+          console.log('stream12 :: chunk', chunk.length);
+        });
+        // example of creating multiple streams from the same file
+        const stream22 = f2.createReadStream();
+        stream22.on('data', (chunk) => {
+          console.log('stream22 :: chunk', chunk.length);
+        });
         const rs1 = await saveFileFromStream(stream1, f1.filename);
         const rs2 = await saveFileFromStream(stream2, f2.filename);
         return [

@@ -17,33 +17,27 @@ export type ProcessRequestOptions = {
  * requests. It sets the request body to be
  * [similar to a conventional GraphQL POST request]{@link GraphQLOperation} for
  * following GraphQL middleware to consume.
- * @kind function
- * @name graphqlUploadExpress
- * @param {ProcessRequestOptions} params Middleware options. Any [`ProcessRequestOptions`]{@link ProcessRequestOptions} can be used.
- * @param {ProcessRequestOptions.processRequest} [params.processRequest=processRequest] Used to process [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec).
- * @param {boolean} [params.overrideSendResponse=false] Whether to override the Express `response.send` method to prevent sending a response before the request has ended.
- * @returns {Function} Express middleware.
  * @example <caption>Ways to `import`.</caption>
  * ```js
- * import { graphqlUploadExpress } from 'graphql-upload-minimal';
+ * import { graphqlUploadExpress } from 'graphql-upload-ts';
  * ```
  *
  * ```js
- * import graphqlUploadExpress from 'graphql-upload-minimal/public/graphqlUploadExpress.js';
+ * import graphqlUploadExpress from 'graphql-upload-ts/dist/graphqlUploadExpress.js';
  * ```
  * @example <caption>Ways to `require`.</caption>
  * ```js
- * const { graphqlUploadExpress } = require('graphql-upload-minimal');
+ * const { graphqlUploadExpress } = require('graphql-upload-ts');
  * ```
  *
  * ```js
- * const graphqlUploadExpress = require('graphql-upload-minimal/public/graphqlUploadExpress');
+ * const graphqlUploadExpress = require('graphql-upload-ts/dist/graphqlUploadExpress');
  * ```
  * @example <caption>Basic [`express-graphql`](https://npm.im/express-graphql) setup.</caption>
  * ```js
  * const express = require('express');
  * const graphqlHTTP = require('express-graphql');
- * const { graphqlUploadExpress } = require('graphql-upload-minimal');
+ * const { graphqlUploadExpress } = require('graphql-upload-ts');
  * const schema = require('./schema');
  *
  * express()
