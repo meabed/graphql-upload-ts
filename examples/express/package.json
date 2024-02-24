@@ -1,14 +1,18 @@
 {
   "scripts": {
     "compile": "tsc -p .",
-    "start": "npm run compile && node ./dist/examples/apollo/index.js",
+    "start:graphql-http": "npm run compile && node ./dist/examples/express/graphql-http.js",
+    "start:graphql-yoga": "npm run compile && node ./dist/examples/express/graphql-yoga.js",
     "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png",
     "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg"
   },
   "dependencies": {
-    "@apollo/server": "^4.10.0",
+    "@graphql-tools/schema": "^10.0.3",
     "cors": "^2.8.5",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "graphql": "^16.8.1",
+    "graphql-http": "^1.22.0",
+    "graphql-yoga": "^5.1.1"
   },
   "devDependencies": {
     "@types/cors": "2.8.17",

@@ -1,11 +1,11 @@
-import { HttpError } from '../src';
-import { graphqlUploadExpress } from '../src';
-import { processRequest } from '../src';
+import { graphqlUploadExpress, processRequest } from '../src';
 import { listen } from './utils/listen';
 import { deepStrictEqual, ok, strictEqual } from 'assert';
 import express from 'express';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
+import { createServer } from 'node:http';
+import createHttpError from 'http-errors';
 
 describe('graphqlUploadExpress', () => {
   it('`graphqlUploadExpress` with a non multipart request.', async () => {
@@ -19,7 +19,7 @@ describe('graphqlUploadExpress', () => {
       }),
     );
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app));
 
     try {
       await fetch(`http://localhost:${port}`, { method: 'POST' });
@@ -30,7 +30,7 @@ describe('graphqlUploadExpress', () => {
   });
 
   it('`graphqlUploadExpress` with a multipart request.', async () => {
-    let requestBody;
+    let requestBody: any;
 
     const app = express()
       .use(graphqlUploadExpress())
@@ -39,7 +39,7 @@ describe('graphqlUploadExpress', () => {
         next();
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app));
 
     try {
       const body = new FormData();
@@ -60,7 +60,7 @@ describe('graphqlUploadExpress', () => {
 
   it('`graphqlUploadExpress` with a multipart request and option `processRequest`.', async () => {
     let processRequestRan = false;
-    let requestBody;
+    let requestBody: any;
 
     const app = express()
       .use(
@@ -76,7 +76,7 @@ describe('graphqlUploadExpress', () => {
         next();
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app));
 
     try {
       const body = new FormData();
@@ -97,11 +97,11 @@ describe('graphqlUploadExpress', () => {
   });
 
   it('`graphqlUploadExpress` with a multipart request and option `processRequest` throwing an exposed HTTP error.', async () => {
-    let expressError;
-    let requestCompleted;
-    let responseStatusCode;
+    let expressError: unknown;
+    let requestCompleted: unknown;
+    let responseStatusCode: unknown;
 
-    const error = new HttpError(400, 'Message.');
+    const error = createHttpError(400, 'Message.');
     const app = express()
       .use((request, response, next) => {
         const { send } = response;
@@ -134,7 +134,7 @@ describe('graphqlUploadExpress', () => {
         else response.send();
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app));
 
     try {
       const body = new FormData();
@@ -154,8 +154,8 @@ describe('graphqlUploadExpress', () => {
   });
 
   it('`graphqlUploadExpress` with a multipart request following middleware throwing an error.', async () => {
-    let expressError;
-    let requestCompleted;
+    let expressError: unknown;
+    let requestCompleted: unknown;
 
     const error = new Error('Message.');
     const app = express()
@@ -185,7 +185,7 @@ describe('graphqlUploadExpress', () => {
         else response.send();
       });
 
-    const { port, close } = await listen(app);
+    const { port, close } = await listen(createServer(app));
 
     try {
       const body = new FormData();

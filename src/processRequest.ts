@@ -1,48 +1,18 @@
-import { HttpError } from './HttpError';
-import { Upload } from './Upload';
-import { ignoreStream } from './ignoreStream';
-import busboy from 'busboy';
 import { IncomingMessage, ServerResponse } from 'http';
-import { Readable } from 'stream';
+import busboy from 'busboy';
+import { ReadStreamOptions, WriteStream } from './fs-capacitor';
+import createError from 'http-errors';
+import objectPath from 'object-path';
+import { ignoreStream } from './ignoreStream';
+import { FileUpload, Upload } from './Upload';
 
-/**
- * Official [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
- * URL. Useful for error messages, etc.
- * @kind constant
- * @name SPEC_URL
- * @type {string}
- * @ignore
- */
-const SPEC_URL = 'https://github.com/jaydenseric/graphql-multipart-request-spec';
-
-function isObject(val: any) {
-  return val != null && typeof val === 'object' && Array.isArray(val) === false;
-}
-
-/**
- * Deep set value using dot separated `path` of the object.
- * @param object {Object} Any JS object.
- * @param path {String} String like "input.docs.0.file"
- * @param value {*} The value we set.
- * @ignore
- * @private
- */
-function deepSet(object: any, path: string, value: any) {
-  const props = path.split('.'); // E.g. "input.docs.0.file" -> ["input", "docs", "0", "file"]
-  while (props.length !== 1) object = object[props.shift()];
-  if (!object) throw new Error(`The path ${path} was not found in the GraphQL query.`);
-  object[props[0]] = value;
-}
-
-const noop = () => {
-  return;
-};
+export const GRAPHQL_MULTIPART_REQUEST_SPEC_URL: string =
+  'https://github.com/jaydenseric/graphql-multipart-request-spec';
 
 export interface UploadOptions {
   maxFieldSize?: number | undefined;
   maxFileSize?: number | undefined;
   maxFiles?: number | undefined;
-  environment?: 'lambda' | 'gcf' | 'azure';
 }
 
 export interface GraphQLOperation {
@@ -61,91 +31,26 @@ export type IncomingReq = Partial<IncomingMessage> & {
   resume?: any;
 };
 
-/**
- * Processes a [GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec).
- * It parses the `operations` and `map` fields to create an
- * [`Upload`]{@link Upload} instance for each expected file upload, placing
- * references wherever the file is expected in the
- * [GraphQL operation]{@link GraphQLOperation} for the
- * [`Upload` scalar]{@link GraphQLUpload} to derive its value. Error objects
- * have HTTP `status` property and an appropriate HTTP error `name` property.
- * @kind function
- * @name processRequest
- * @type {ProcessRequestOptions.processRequest}
- * @example <caption>Ways to `import`.</caption>
- * ```js
- * import { processRequest } from 'graphql-upload-minimal';
- * ```
- *
- * ```js
- * import processRequest from 'graphql-upload-minimal/public/processRequest.js';
- * ```
- * @example <caption>Ways to `require`.</caption>
- * ```js
- * const { processRequest } = require('graphql-upload-minimal');
- * ```
- *
- * ```js
- * const processRequest = require('graphql-upload-minimal/public/processRequest');
- * ```
- */
 export async function processRequest<T = any>(
-  req?: IncomingReq | Readable,
-  res?: Partial<ServerResponse>,
-  uploadOptions?: UploadOptions,
+  request?: IncomingReq,
+  response?: Partial<ServerResponse>,
+  options?: UploadOptions,
 ): Promise<GraphQLOperation | GraphQLOperation[] | T> {
-  const {
-    maxFieldSize = 1000000, // 1 MB
-    maxFileSize = Infinity,
-    maxFiles = Infinity,
-    environment, // "lambda", "gcf", "azure"
-  } = uploadOptions ?? {};
-
-  if (environment === 'gcf') {
-    // Google Cloud Functions compatibility.
-    if (!(req as IncomingReq).rawBody)
-      throw new HttpError(
-        400,
-        'GCF req.rawBody is missing. See docs: https://cloud.google.com/functions/docs/writing/http#multipart_data',
-      );
-  } else if (environment === 'lambda') {
-    // AWS Lambda compatibility
-    if (!(req as IncomingReq).body)
-      throw new HttpError(
-        400,
-        'AWS Lambda req.body is missing. See these screenshots how to set it up: https://github.com/myshenin/aws-lambda-multipart-parser/blob/98ed57e55cf66b2053cf6c27df37a9243a07826a/README.md',
-      );
-  } else if (environment === 'azure') {
-    // Azure Functions compatibility
-    req = (req as IncomingReq).req || res;
-    if (!req || !(req as IncomingReq).body)
-      throw new HttpError(
-        400,
-        'Azure Function req.body is missing. See this page for more info: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node',
-      );
-  } else {
-    // Regular node.js environment where request is a ReadableStream instance.
-    if (!req || !req.pipe || !req.unpipe || !req.once || !req.resume)
-      throw new HttpError(
-        400,
-        "The request doesn't look like a ReadableStream. Tip: use `environment` option to enable serverless functions support.",
-      );
-  }
-
-  const contentType = req && (req as IncomingReq).headers && (req as IncomingReq).headers['content-type'];
-  if (typeof contentType !== 'string' || !contentType.includes('multipart/form-data;')) {
-    throw new HttpError(400, `Invalid content-type ${contentType}, should be multipart/form-data;`);
-  }
-
-  // ReadableStream mocking
-  if (!req.pipe) req.pipe = noop;
-  if (!req.unpipe) req.unpipe = noop;
-  if (!req.once) req.once = noop;
-  if (!req.resume) req.resume = noop;
+  const { maxFieldSize = 1000000, maxFileSize = Infinity, maxFiles = Infinity } = options || {};
 
   return new Promise((resolve, reject) => {
+    let released: boolean;
+
+    let exitError: Error;
+
+    let operations: GraphQLOperation | T | GraphQLOperation[] | PromiseLike<GraphQLOperation | T | GraphQLOperation[]>;
+
+    let operationsPath: { set: (arg0: string, arg1: any) => void };
+
+    let map: Map<any, Upload>;
+
     const parser = busboy({
-      headers: (req as IncomingReq).headers,
+      headers: request.headers,
       defParamCharset: 'utf8',
       limits: {
         fieldSize: maxFieldSize,
@@ -155,108 +60,125 @@ export async function processRequest<T = any>(
       },
     });
 
-    let exitError;
-    let lastFileStream;
     /**
      * Exits request processing with an error. Successive calls have no effect.
-     * @kind function
-     * @name processRequest~exit
-     * @param {string|Error} message Error message or error object.
-     * @param {number} [status=400] HTTP status code.
-     * @private
-     * @ignore
+     * @param {Error} error Error instance.
+     * @param {boolean} [isParserError] Is the error from the parser.
      */
-    const exit = (message, status = 400) => {
-      // None of the tested scenarios cause multiple calls of this function, but
-      // it’s still good to guard against it happening in case it’s possible now
-      // or in the future.
-      // coverage ignore next line
+    function exit(error: Error, isParserError: boolean = false) {
       if (exitError) return;
 
-      let isParserError = false;
-      if (message instanceof Error) {
-        isParserError = true;
-        exitError = message;
-      } else {
-        exitError = new HttpError(status, message);
-      }
+      exitError = error;
 
-      reject(exitError);
+      if (map) for (const upload of map.values()) if (!upload.file) upload.reject(exitError);
 
       // If the error came from the parser, don’t cause it to be emitted again.
       isParserError ? parser.destroy() : parser.destroy(exitError);
 
-      if (lastFileStream && !lastFileStream.readableEnded && !lastFileStream.destroyed) {
-        lastFileStream.destroy(exitError);
-      }
-
-      if (map) for (const upload of map.values()) if (!upload.file) upload.reject(exitError);
-
-      req.unpipe(parser);
+      request.unpipe(parser);
 
       // With a sufficiently large request body, subsequent events in the same
       // event frame cause the stream to pause after the parser is destroyed. To
       // ensure that the request resumes, the call to .resume() is scheduled for
       // later in the event loop.
       setImmediate(() => {
-        req.resume();
+        request.resume();
       });
-    };
 
-    let operations;
-    let map;
-    parser.on('field', (fieldName, value, { valueTruncated /*, nameTruncated, encoding, mimeType */ }) => {
+      reject(exitError);
+    }
+
+    parser.on('field', (fieldName, value, { valueTruncated }) => {
       if (valueTruncated)
-        return exit(`The '${fieldName}' multipart field value exceeds the ${maxFieldSize} byte size limit.`, 413);
+        return exit(
+          createError(413, `The ‘${fieldName}’ multipart field value exceeds the ${maxFieldSize} byte size limit.`),
+        );
 
       switch (fieldName) {
         case 'operations':
           try {
             operations = JSON.parse(value);
           } catch (error) {
-            return exit(`Invalid JSON in the 'operations' multipart field (${SPEC_URL}).`);
+            return exit(
+              createError(
+                400,
+                `Invalid JSON in the ‘operations’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+              ),
+            );
           }
 
-          if (!isObject(operations) && !Array.isArray(operations))
-            return exit(`Invalid type for the 'operations' multipart field (${SPEC_URL}).`);
+          // `operations` should be an object or an array. Note that arrays
+          // and `null` have an `object` type.
+          if (typeof operations !== 'object' || !operations)
+            return exit(
+              createError(
+                400,
+                `Invalid type for the ‘operations’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+              ),
+            );
+
+          operationsPath = objectPath(operations);
 
           break;
         case 'map': {
-          if (!operations) return exit(`Disordered multipart fields; 'map' should follow 'operations' (${SPEC_URL}).`);
+          if (!operations)
+            return exit(
+              createError(
+                400,
+                `Disordered multipart fields; ‘map’ should follow ‘operations’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+              ),
+            );
 
-          let parsedMap;
+          let parsedMap: { [s: string]: unknown } | ArrayLike<unknown>;
           try {
             parsedMap = JSON.parse(value);
           } catch (error) {
-            return exit(`Invalid JSON in the 'map' multipart field (${SPEC_URL}).`);
+            return exit(
+              createError(400, `Invalid JSON in the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`),
+            );
           }
 
-          if (!isObject(parsedMap)) return exit(`Invalid type for the 'map' multipart field (${SPEC_URL}).`);
+          // `map` should be an object.
+          if (typeof parsedMap !== 'object' || !parsedMap || Array.isArray(parsedMap))
+            return exit(
+              createError(400, `Invalid type for the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`),
+            );
 
           const mapEntries = Object.entries(parsedMap);
 
-          // Check max files is not exceeded, even though the number of files to
-          // parse might not match th(e map provided by the client.
-          if (mapEntries.length > maxFiles) return exit(`${maxFiles} max file uploads exceeded.`, 413);
+          // Check max files is not exceeded, even though the number of files
+          // to parse might not match the map provided by the client.
+          if (mapEntries.length > maxFiles) return exit(createError(413, `${maxFiles} max file uploads exceeded.`));
 
           map = new Map();
           for (const [fieldName, paths] of mapEntries) {
             if (!Array.isArray(paths))
-              return exit(`Invalid type for the 'map' multipart field entry key '${fieldName}' array (${SPEC_URL}).`);
+              return exit(
+                createError(
+                  400,
+                  `Invalid type for the ‘map’ multipart field entry key ‘${fieldName}’ array (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+                ),
+              );
 
             map.set(fieldName, new Upload());
 
             for (const [index, path] of paths.entries()) {
-              if (typeof path !== 'string' || !path.trim())
+              if (typeof path !== 'string')
                 return exit(
-                  `Invalid type for the 'map' multipart field entry key '${fieldName}' array index '${index}' value (${SPEC_URL}).`,
+                  createError(
+                    400,
+                    `Invalid type for the ‘map’ multipart field entry key ‘${fieldName}’ array index ‘${index}’ value (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+                  ),
                 );
 
               try {
-                deepSet(operations, path, map.get(fieldName));
+                operationsPath.set(path, map.get(fieldName));
               } catch (error) {
                 return exit(
-                  `Invalid object path for the 'map' multipart field entry key '${fieldName}' array index '${index}' value '${path}' (${SPEC_URL}).`,
+                  createError(
+                    400,
+                    `Invalid object path for the ‘map’ multipart field entry key ‘${fieldName}’ array index ‘${index}’ value ‘${path}’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+                  ),
                 );
               }
             }
@@ -267,115 +189,108 @@ export async function processRequest<T = any>(
       }
     });
 
-    const returnedStreams = new Set();
     parser.on('file', (fieldName, stream, { filename, encoding, mimeType: mimetype }) => {
-      lastFileStream = stream;
-
       if (!map) {
         ignoreStream(stream);
-        return exit(`Disordered multipart fields; files should follow 'map' (${SPEC_URL}).`);
+        return exit(
+          createError(
+            400,
+            `Disordered multipart fields; files should follow ‘map’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
+          ),
+        );
       }
 
       const upload = map.get(fieldName);
 
       if (!upload) {
         // The file is extraneous. As the rest can still be processed, just
-        // ignore it and don't exit with an error.
+        // ignore it and don’t exit with an error.
         ignoreStream(stream);
         return;
       }
 
-      let fileError;
+      let fileError: Error;
+
+      const capacitor = new WriteStream();
+
+      capacitor.on('error', () => {
+        stream.unpipe();
+        stream.resume();
+      });
 
       stream.on('limit', () => {
-        fileError = new HttpError(413, `File truncated as it exceeds the ${maxFileSize} byte size limit.`);
+        fileError = createError(413, `File truncated as it exceeds the ${maxFileSize} byte size limit.`);
         stream.unpipe();
+        capacitor.destroy(fileError);
       });
 
       stream.on('error', (error) => {
         fileError = error;
         stream.unpipe();
+        capacitor.destroy(fileError);
       });
 
-      const file = {
+      const file: FileUpload = {
         fieldName,
         filename,
         mimetype,
         encoding,
-        createReadStream(...args) {
-          if (args && args.some(Boolean)) {
-            throw new Error(
-              'graphql-upload-ts does not support createReadStream() arguments. Use graphql-upload NPM module if you need this feature.',
-            );
-          }
-
+        // @ts-ignore
+        createReadStream(options: ReadStreamOptions) {
           const error = fileError || (released ? exitError : null);
           if (error) throw error;
-
-          if (returnedStreams.has(stream)) {
-            throw new Error(
-              "graphql-upload-ts does not allow calling createReadStream() multiple times. Please, consume the previously returned stream. Make sure you're not referencing same file twice in your query.",
-            );
-          } else {
-            returnedStreams.add(stream);
-            return stream;
-          }
+          return capacitor.createReadStream(options);
         },
+        capacitor,
       };
 
+      Object.defineProperty(file, 'capacitor', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+      });
+
+      stream.pipe(capacitor);
       upload.resolve(file);
     });
 
-    parser.once('filesLimit', () => exit(`${maxFiles} max file uploads exceeded.`, 413));
+    parser.once('filesLimit', () => exit(createError(413, `${maxFiles} max file uploads exceeded.`)));
 
-    parser.once('close', () => {
-      req.unpipe(parser);
-      req.resume();
+    parser.once('finish', () => {
+      request.unpipe(parser);
+      request.resume();
 
-      if (!operations && !map) {
-        return exit(
-          `graphql-upload-ts couldn't find any files or JSON. Looks like another middleware had processed this multipart request. Or maybe you are running in a cloud serverless function? Then see README.md.`,
-          500,
-        );
-      }
+      if (!operations)
+        return exit(createError(400, `Missing multipart field ‘operations’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`));
 
-      if (!operations) return exit(`Missing multipart field 'operations' (${SPEC_URL}).`);
-
-      if (!map) return exit(`Missing multipart field 'map' (${SPEC_URL}).`);
+      if (!map) return exit(createError(400, `Missing multipart field ‘map’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`));
 
       for (const upload of map.values())
-        if (!upload.file) upload.reject(new HttpError(400, 'File missing in the request.'));
+        if (!upload.file) upload.reject(createError(400, 'File missing in the request.'));
     });
 
-    parser.once('error', exit);
+    // Use the `on` method instead of `once` as in edge cases the same parser
+    // could have multiple `error` events and all must be handled to prevent the
+    // Node.js process exiting with an error. One edge case is if there is a
+    // malformed part header as well as an unexpected end of the form.
+    parser.on('error', (error: Error) => {
+      exit(error, true);
+    });
 
-    let released;
-    /**
-     * Successive calls have no effect.
-     * @kind function
-     * @name processRequest~release
-     * @ignore
-     */
-    const release = () => {
+    response.once('close', () => {
       released = true;
-    };
 
-    if (res && res.once) {
-      res.once('close', release);
-    }
-
-    req.once('close', () => {
-      if (!req.readableEnded) exit('Request disconnected during file upload stream parsing.', 499);
+      if (map)
+        for (const upload of map.values())
+          if (upload.file)
+            // Release resources and clean up temporary files.
+            upload.file.capacitor.release();
     });
 
-    if (environment === 'gcf') {
-      parser.end((req as IncomingReq).rawBody);
-      release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
-    } else if (environment === 'lambda' || environment === 'azure') {
-      parser.end((req as IncomingReq).body);
-      release(); // the response was released by the cloud earlier, somewhere at the Gateway level.
-    } else {
-      req.pipe(parser);
-    }
+    request.once('close', () => {
+      if (!request.readableEnded) exit(createError(499, 'Request disconnected during file upload stream parsing.'));
+    });
+
+    request.pipe(parser);
   });
 }
