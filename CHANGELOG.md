@@ -1,5 +1,8 @@
 # Changelog
 
+### [2.1.2](https://github.com/meabed/graphql-upload-ts/compare/v2.1.1...v2.1.2) (2024-02-23)
+- Update package export to export fs-capacitor
+
 ### [2.1.1](https://github.com/meabed/graphql-upload-ts/compare/v2.1.0...v2.1.1) (2024-02-23)
 - rework file upload stream handling to fix multiple file upload and filesize issues 
 - Improve readme and add more information about using `overrideSendResponse`
