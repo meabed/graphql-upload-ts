@@ -14,29 +14,12 @@ This module was forked from [`graphql-upload`](https://npm.im/graphql-upload) an
 
 I needed to support typescript to use it properly in typescript projects.
 
-#### This project is written in typescript
+### Examples
+- Apollo Server & Express: [Apollo Server example](./examples/apollo)
+- Express & Graphql Http: [Express example](./examples/express/graphql-http.ts)
+- Express & Yoga: [Express example](./examples/express/graphql-yoga.ts)
 
-- TypeScript support.
-- And using a bit less memory.
-- And a bit faster.
-- More Examples and documentation
-
-
-#### Does not follow strict [specification](https://github.com/jaydenseric/graphql-multipart-request-spec)
-
-You can't have same file referenced twice in a GraphQL query/mutation.
-
-## Support
-
-The following environments are known to be compatible:
-
-- [Node.js](https://nodejs.org) versions 12, 14, 16, and 18. It works in Node 10 even though the unit tests fail.
-- [Koa](https://koajs.com)
-- [Express.js](https://expressjs.com)
-
-See also [GraphQL multipart request spec server implementations](https://github.com/jaydenseric/graphql-multipart-request-spec#server).
-
-## Setup
+### Setup
 
 To install [`graphql-upload-ts`](https://npm.im/graphql-upload-ts) and the [`graphql`](https://npm.im/graphql) peer dependency from [npm](https://npmjs.com) run:
 
@@ -51,18 +34,13 @@ custom middleware.
 
 A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema)) requires the [`Upload` scalar](#class-graphqlupload) to be setup.
 
-## Usage
+### Usage
 
 [Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are
 promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
 
 
-### Examples
-- Apollo Server & Express: [Apollo Server example](./examples/apollo)
-- Express & Graphql Http: [Express example](./examples/express/graphql-http.ts)
-- Express & Yoga: [Express example](./examples/express/graphql-yoga.ts)
-
-### Express.js
+#### Express.js
 
 Minimalistic code example showing how to upload a file along with arbitrary GraphQL data and save it to an S3 bucket.
 
@@ -132,66 +110,8 @@ const resolvers = {
 };
 ```
 
-### Koa
 
-See the [example Koa server and client](https://github.com/jaydenseric/apollo-upload-examples).
-
-
-### Uploading multiple files
-
-When uploading multiple files you can make use of the `fieldName` property to keep track of an identifier of the uploaded files. The fieldName is equal to the passed `name` property of the file in the `multipart/form-data` request. This can
-be modified to contain an identifier (like a UUID), for example using the `formDataAppendFile` in the commonly used [`apollo-upload-link`](https://github.com/jaydenseric/apollo-upload-client#function-formdataappendfile) library.
-
-GraphQL schema:
-
-```graphql
-scalar Upload
-input DocumentUploadInput {
-  docType: String!
-  files: [Upload!]
-}
-
-type SuccessResult {
-  success: Boolean!
-  message: String
-}
-type Mutations {
-  uploadDocuments(docs: [DocumentUploadInput!]!): SuccessResult
-}
-```
-
-GraphQL resolvers:
-
-```js
-const { S3 } = require('aws-sdk');
-
-const resolvers = {
-  Upload: require('graphql-upload-ts').GraphQLUpload,
-
-  Mutations: {
-    async uploadDocuments(root, { docs }, ctx) {
-      try {
-        const s3 = new S3({ apiVersion: '2006-03-01', params: { Bucket: 'my-bucket' } });
-
-        for (const doc of docs) {
-          // fieldName contains the "name" property from the multipart/form-data request.
-          // Use it to pass an identifier in order to store the file in a consistent manner.
-          const { createReadStream, filename, fieldName /*, mimetype, encoding */ } = await doc.file;
-          const Key = `${ctx.user.id}/${doc.docType}-${fieldName}`;
-          await s3.upload({ Key, Body: createReadStream() }).promise();
-        }
-
-        return { success: true };
-      } catch (error) {
-        console.log('File upload failed', error);
-        return { success: false, message: error.message };
-      }
-    },
-  },
-};
-```
-
-## Tips
+#### Tips
 - The process must have both read and write access to the directory identified by [`os.tmpdir()`](https://nodejs.org/api/os.html#ostmpdir).
 - The device requires sufficient disk space to buffer the expected number of concurrent upload requests.
 - Promisify and await file upload streams in resolvers or the server will send a response to the client before uploads are complete, causing a disconnect.
@@ -201,7 +121,7 @@ const resolvers = {
 - Use [`stream.destroy()`](https://nodejs.org/api/stream.html#readabledestroyerror) when an incomplete stream is no longer needed, or temporary files may not get cleaned up.
 - If you are using framework around express like [ NestJS or Apollo Serve ] use the option `overrideSendResponse` eg: `graphqlUploadExpress({ overrideSendResponse: false })` to allow nestjs to handle response errors like throwing exceptions.
 
-## Architecture
+#### Architecture
 
 The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places. GraphQL resolvers need to be able to manage independent file streams. As resolvers are executed asynchronously, it’s possible they will try to process files in a different order than received in the multipart request.
 
@@ -213,3 +133,14 @@ The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-mult
 
 [`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the
 operations are passed down the middleware chain to GraphQL resolvers.
+
+
+#### Support
+
+The following environments are known to be compatible:
+
+- [Node.js](https://nodejs.org) >= 16
+- [Koa](https://koajs.com)
+- [Express.js](https://expressjs.com)
+
+See also [GraphQL multipart request spec server implementations](https://github.com/jaydenseric/graphql-multipart-request-spec#server).
