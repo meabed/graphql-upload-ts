@@ -81,7 +81,7 @@
     "koa": "2.15.3",
     "lint-staged": "15.2.5",
     "node-fetch": "^3.3.2",
-    "prettier": "3.3.0",
+    "prettier": "3.3.1",
     "ts-jest": "29.1.4",
     "ts-node": "10.9.2",
     "typescript": "5.4.5"
