@@ -64,16 +64,16 @@
     "@trivago/prettier-plugin-sort-imports": "4.3.0",
     "@types/busboy": "1.5.4",
     "@types/express": "5.0.0",
-    "@types/jest": "29.5.13",
+    "@types/jest": "29.5.14",
     "@types/koa": "2.15.0",
     "@types/object-path": "0.11.4",
-    "@typescript-eslint/eslint-plugin": "8.8.1",
-    "@typescript-eslint/parser": "8.8.1",
-    "eslint": "9.12.0",
+    "@typescript-eslint/eslint-plugin": "8.12.2",
+    "@typescript-eslint/parser": "8.12.2",
+    "eslint": "9.14.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",
     "express": "4.21.1",
-    "form-data": "4.0.0",
+    "form-data": "4.0.1",
     "form-data-encoder": "^4.0.2",
     "graphql": "16.9.0",
     "husky": "9.1.6",
@@ -84,7 +84,7 @@
     "prettier": "3.3.3",
     "ts-jest": "29.2.5",
     "ts-node": "10.9.2",
-    "typescript": "5.6.2"
+    "typescript": "5.6.3"
   },
   "peerDependencies": {
     "graphql": ">=0.13.1"
