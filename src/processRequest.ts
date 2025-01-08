@@ -73,7 +73,11 @@ export async function processRequest<T = any>(
       if (map) for (const upload of map.values()) if (!upload.file) upload.reject(exitError);
 
       // If the error came from the parser, don’t cause it to be emitted again.
-      isParserError ? parser.destroy() : parser.destroy(exitError);
+      if (isParserError) {
+        parser.destroy();
+      } else {
+        parser.destroy(exitError);
+      }
 
       request.unpipe(parser);
 

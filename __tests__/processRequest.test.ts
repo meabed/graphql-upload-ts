@@ -1,9 +1,8 @@
 import { deepStrictEqual, notStrictEqual, ok, rejects, strictEqual, throws } from 'node:assert';
 import { createServer } from 'node:http';
 import { text } from 'node:stream/consumers';
-import { processRequest, Upload } from '../src';
+import { processRequest, ReadStream, Upload } from '../src';
 import { listen } from './utils/listen';
-import { ReadStream } from '../src/fs-capacitor';
 import { abortingMultipartRequest } from './utils/abortingMultipartRequest';
 import { Deferred } from './utils/defered';
 
@@ -57,7 +56,7 @@ describe('processRequest', () => {
 
         ok(stream instanceof ReadStream);
         strictEqual(stream.readableEncoding, null);
-        strictEqual(stream.readableHighWaterMark, 16384);
+        strictEqual(stream.readableHighWaterMark, 65536);
         strictEqual(await text(stream), 'a');
       } catch (error) {
         serverError = error;
@@ -104,7 +103,7 @@ describe('processRequest', () => {
 
         ok(stream instanceof ReadStream);
         strictEqual(stream.readableEncoding, null);
-        strictEqual(stream.readableHighWaterMark, 16384);
+        strictEqual(stream.readableHighWaterMark, 65536);
         strictEqual(await text(stream), 'a');
       } catch (error) {
         serverError = error;

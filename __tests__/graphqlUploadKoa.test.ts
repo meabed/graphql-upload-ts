@@ -1,5 +1,4 @@
-import { graphqlUploadKoa } from '../src';
-import { processRequest } from '../src';
+import { graphqlUploadKoa, processRequest } from '../src';
 import { listen } from './utils/listen';
 import { deepStrictEqual, ok, strictEqual } from 'assert';
 import FormData from 'form-data';

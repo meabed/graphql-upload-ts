@@ -21,7 +21,7 @@ export async function abortingMultipartRequest(
   requestReceived: Promise<any>,
 ) {
   const abortController = new AbortController();
-  const encoder = new FormDataEncoder(formData);
+  const encoder = new FormDataEncoder(formData as FormDataLike);
 
   try {
     await fetch(url, {
