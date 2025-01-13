@@ -67,7 +67,7 @@
     "@types/jest": "29.5.14",
     "@types/koa": "2.15.0",
     "@types/object-path": "0.11.4",
-    "@typescript-eslint/eslint-plugin": "8.19.1",
+    "@typescript-eslint/eslint-plugin": "8.20.0",
     "eslint": "9.18.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",
