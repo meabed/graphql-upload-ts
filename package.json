@@ -71,7 +71,7 @@
     "eslint": "9.26.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-prettier": "5.2.6",
-    "express": "4.21.2",
+    "express": "5.1.0",
     "form-data": "4.0.2",
     "form-data-encoder": "^4.0.2",
     "graphql": "16.11.0",
