@@ -361,6 +361,149 @@ describe('graphqlUploadExpress', () => {
     }
   });
 
+  it('`graphqlUploadExpress` with overrideSendResponse false.', async () => {
+    let requestProcessed = false;
+    let originalSendCalled = false;
+
+    const app = express()
+      .use(graphqlUploadExpress({ overrideSendResponse: false }))
+      .use((_request, response) => {
+        requestProcessed = true;
+        const originalSend = response.send;
+        response.send = function (...args) {
+          originalSendCalled = true;
+          return originalSend.apply(this, args);
+        };
+        response.json({ success: true });
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ query: '{ test }' }));
+      body.append('map', JSON.stringify({}));
+
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      ok(requestProcessed);
+      ok(originalSendCalled);
+    } finally {
+      close();
+    }
+  });
+
+  it('`graphqlUploadExpress` with overrideSendResponse true and request already finished.', async () => {
+    let requestBody: CtxRequestBody;
+    let sendCalledImmediately = false;
+
+    const app = express()
+      .use(graphqlUploadExpress({ overrideSendResponse: true }))
+      .use((request, response) => {
+        requestBody = request.body;
+        // By the time we send response, request should be finished
+        // This tests the else branch at lines 94-95
+        process.nextTick(() => {
+          response.json({
+            processed: true,
+            fileReceived: !!requestBody?.variables?.file,
+          });
+          sendCalledImmediately = true;
+        });
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ variables: { file: null } }));
+      body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+      body.append('1', 'test content', { filename: 'test.txt' });
+
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      const responseData = JSON.parse(response.responseData || '{}');
+      ok(requestBody);
+      ok(sendCalledImmediately);
+      deepStrictEqual(responseData, { processed: true, fileReceived: true });
+    } finally {
+      close();
+    }
+  });
+
+  it('`graphqlUploadExpress` with custom processRequest defaults overrideSendResponse to true.', async () => {
+    let customProcessRequestCalled = false;
+    let requestBody: CtxRequestBody;
+
+    const app = express()
+      .use(
+        graphqlUploadExpress({
+          async processRequest(request, response, options) {
+            customProcessRequestCalled = true;
+            return processRequest(request, response, options);
+          },
+        })
+      )
+      .use((request, response) => {
+        requestBody = request.body;
+        response.json({ customProcessor: true });
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ variables: { file: null } }));
+      body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+      body.append('1', 'test', { filename: 'test.txt' });
+
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      const responseData = JSON.parse(response.responseData || '{}');
+      ok(customProcessRequestCalled);
+      ok(requestBody);
+      deepStrictEqual(responseData, { customProcessor: true });
+    } finally {
+      close();
+    }
+  });
+
   it('`graphqlUploadExpress` with processRequest throwing non-exposed HTTP error.', async () => {
     let expressError: unknown;
     let responseStatusCode: unknown;
@@ -413,6 +556,63 @@ describe('graphqlUploadExpress', () => {
       deepStrictEqual(expressError, error);
       // When expose is false, the status should not be set
       strictEqual(responseStatusCode, 200);
+    } finally {
+      close();
+    }
+  });
+
+  it('`graphqlUploadExpress` with overrideSendResponse true and response.send called after request ends (lines 94-95).', async () => {
+    let requestBody: CtxRequestBody;
+    let originalSendRestored = false;
+    let sendCalledAfterEnd = false;
+
+    const app = express()
+      .use(graphqlUploadExpress({ overrideSendResponse: true }))
+      .use((request, response) => {
+        requestBody = request.body;
+
+        // Wait for the request to fully end
+        request.on('end', () => {
+          // Now call response.send after request has ended
+          // This specifically triggers lines 94-95
+          setTimeout(() => {
+            const originalSend = response.send;
+            response.json({ requestEnded: true });
+            // Check if send was restored to original
+            originalSendRestored = response.send === originalSend;
+            sendCalledAfterEnd = true;
+          }, 10);
+        });
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ variables: { file: null } }));
+      body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+      body.append('1', 'test', { filename: 'test.txt' });
+
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              // Wait a bit to ensure the setTimeout in the handler runs
+              setTimeout(() => resolve(res), 50);
+            });
+          }
+        });
+      });
+
+      const responseData = JSON.parse(response.responseData || '{}');
+      ok(requestBody);
+      ok(sendCalledAfterEnd, 'Send should be called after request ended');
+      ok(originalSendRestored, 'Original send should be restored (lines 94-95)');
+      deepStrictEqual(responseData, { requestEnded: true });
     } finally {
       close();
     }

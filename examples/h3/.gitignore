@@ -1,6 +1,0 @@
-node_modules/
-.nitro/
-.output/
-uploads/
-*.log
-.DS_Store
