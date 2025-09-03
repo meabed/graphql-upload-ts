@@ -60,6 +60,10 @@ pnpm add graphql-upload-ts graphql
 - Node.js >= 16
 - GraphQL >= 0.13.1
 
+### Build System
+
+This package uses Rollup for bundling and provides CommonJS builds for maximum compatibility. The build configuration has been optimized for simplicity and reliability.
+
 ## 🚀 Quick Start
 
 ### Basic Setup with Express
@@ -1039,7 +1043,7 @@ import { graphqlUploadExpress, GraphQLUpload } from 'graphql-upload-ts';
 
 Main differences:
 - Full TypeScript support with strict types
-- ESM and CommonJS dual module support
+- CommonJS build for maximum compatibility
 - Built-in validation utilities
 - Custom error classes
 - Modern Node.js features (16+)
@@ -1068,15 +1072,26 @@ npm test
 # Run tests with coverage
 npm run test:coverage
 
-# Build the library
+# Build the library (using Rollup)
 npm run build
 
-# Run linting
+# Run linting (using Biome)
 npm run lint
 
-# Format code
+# Format code (using Biome)
 npm run format
+
+# Type checking
+npm run typecheck
 ```
+
+#### Build Configuration
+
+The project uses:
+- **Rollup** - For bundling the TypeScript source into CommonJS format
+- **Biome** - For linting and formatting (replacing ESLint and Prettier)
+- **Jest** - For testing with comprehensive coverage
+- **TypeScript** - With strict mode enabled for type safety
 
 ## 📄 License
 

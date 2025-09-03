@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Replaced Rolldown with Rollup for more stable and reliable builds
+- Migrated build configuration to CommonJS format for better compatibility
+- Simplified TypeScript configuration and build process
+- Removed ESM builds in favor of CommonJS-only distribution
+- Updated all dependencies to latest versions
+- Improved package.json exports with comprehensive entry points
+- Made README examples collapsible for better readability
+- Converted internal file names to kebab-case for consistency
+
+### Fixed
+- Resolved ESM import errors by using CommonJS-only build
+- Fixed TypeScript import errors related to file casing
+- Improved build system stability and reliability
+
 ## [2.2.0](https://github.com/meabed/graphql-upload-ts/compare/v2.1.2...v2.2.0) (2025-01-03)
 
 ### Features
