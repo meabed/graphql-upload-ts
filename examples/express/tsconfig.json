@@ -4,9 +4,7 @@
     "incremental": true,
     "outDir": "./dist/",
     "target": "ES6",
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Main Bundle (CJS)",
+    "path": "dist/index.js",
+    "limit": "15 KB"
+  },
+  {
+    "name": "Main Bundle (ESM)",
+    "path": "dist/index.mjs",
+    "limit": "15 KB"
+  },
+  {
+    "name": "GraphQL Upload Scalar",
+    "path": "dist/GraphQLUpload.js",
+    "limit": "2 KB"
+  },
+  {
+    "name": "Express Middleware",
+    "path": "dist/graphqlUploadExpress.js",
+    "limit": "3 KB"
+  },
+  {
+    "name": "Koa Middleware",
+    "path": "dist/graphqlUploadKoa.js",
+    "limit": "3 KB"
+  }
+]

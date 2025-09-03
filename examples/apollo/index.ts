@@ -1,11 +1,11 @@
 import { createWriteStream } from 'node:fs';
-import { createServer } from 'http';
-import express from 'express';
-import cors from 'cors';
-import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServer, type ApolloServerOptions, type BaseContext } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
+import { expressMiddleware } from '@as-integrations/express5';
+import cors from 'cors';
+import express from 'express';
+import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from 'graphql-upload-ts';
+import { createServer } from 'http';
 
 const contextFnInjections = (req) => {
   const { user } = req;
@@ -84,13 +84,14 @@ async function applyMiddlewares(app, httpServer) {
       credentials: true,
       maxAge: 600,
       origin: true,
-    }),
+    })
   );
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
   apolloSchema.plugins = [ApolloServerPluginDrainHttpServer({ httpServer })];
   apolloSchema.allowBatchedHttpRequests = true;
+  // apolloSchema.csrfPrevention = false;
   const apolloServer = new ApolloServer(apolloSchema);
   await apolloServer.start();
 
@@ -99,7 +100,7 @@ async function applyMiddlewares(app, httpServer) {
     graphqlUploadExpress({ overrideSendResponse: false }),
     expressMiddleware(apolloServer, {
       context: async ({ req }) => contextFnInjections(req),
-    }),
+    })
   );
 }
 

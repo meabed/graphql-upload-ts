@@ -1,26 +1,38 @@
 {
   "name": "graphql-upload-ts",
-  "version": "2.1.2",
-  "description": "Typescript minimalistic and developer friendly middleware and an Upload scalar to add support for GraphQL multipart requests (file uploads via queries and mutations) to various Node.js GraphQL servers.",
+  "version": "2.2.0",
+  "description": "TypeScript-first middleware and Upload scalar for GraphQL multipart requests (file uploads) with support for Apollo Server, Express, Koa, and more.",
   "keywords": [
-    "typescript",
-    "graphql-upload-typescript",
     "graphql",
-    "upload",
-    "file",
+    "graphql-upload",
+    "graphql-upload-typescript",
+    "file-upload",
     "multipart",
-    "server",
-    "koa",
+    "multipart-request",
+    "apollo-server",
     "express",
-    "apollo",
+    "koa",
+    "typescript",
+    "upload-scalar",
+    "graphql-middleware",
+    "file-streaming",
+    "graphql-yoga",
+    "nestjs",
     "esm",
-    "mjs"
+    "commonjs"
   ],
   "homepage": "https://github.com/meabed/graphql-upload-ts#readme",
-  "bugs": "https://github.com/meabed/graphql-upload-ts/issues",
+  "bugs": {
+    "url": "https://github.com/meabed/graphql-upload-ts/issues",
+    "email": "mo@meabed.com"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/meabed/graphql-upload-ts"
+    "url": "git+https://github.com/meabed/graphql-upload-ts.git"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/meabed"
   },
   "license": "MIT",
   "author": {
@@ -28,32 +40,116 @@
     "email": "mo@meabed.com",
     "url": "https://meabed.com"
   },
-  "maintainers": [
+  "contributors": [
     {
       "name": "Mohamed Meabed",
       "email": "mo@meabed.com",
       "url": "https://meabed.com"
     }
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    },
+    "./fs-capacitor": {
+      "types": "./dist/fs-capacitor.d.ts",
+      "import": "./dist/fs-capacitor.mjs",
+      "require": "./dist/fs-capacitor.js",
+      "default": "./dist/fs-capacitor.mjs"
+    },
+    "./graphql-upload": {
+      "types": "./dist/graphql-upload.d.ts",
+      "import": "./dist/graphql-upload.mjs",
+      "require": "./dist/graphql-upload.js",
+      "default": "./dist/graphql-upload.mjs"
+    },
+    "./graphql-upload-express": {
+      "types": "./dist/graphql-upload-express.d.ts",
+      "import": "./dist/graphql-upload-express.mjs",
+      "require": "./dist/graphql-upload-express.js",
+      "default": "./dist/graphql-upload-express.mjs"
+    },
+    "./graphql-upload-koa": {
+      "types": "./dist/graphql-upload-koa.d.ts",
+      "import": "./dist/graphql-upload-koa.mjs",
+      "require": "./dist/graphql-upload-koa.js",
+      "default": "./dist/graphql-upload-koa.mjs"
+    },
+    "./ignore-stream": {
+      "types": "./dist/ignore-stream.d.ts",
+      "import": "./dist/ignore-stream.mjs",
+      "require": "./dist/ignore-stream.js",
+      "default": "./dist/ignore-stream.mjs"
+    },
+    "./process-request": {
+      "types": "./dist/process-request.d.ts",
+      "import": "./dist/process-request.mjs",
+      "require": "./dist/process-request.js",
+      "default": "./dist/process-request.mjs"
+    },
+    "./upload": {
+      "types": "./dist/upload.d.ts",
+      "import": "./dist/upload.mjs",
+      "require": "./dist/upload.js",
+      "default": "./dist/upload.mjs"
+    },
+    "./upload-errors": {
+      "types": "./dist/upload-errors.d.ts",
+      "import": "./dist/upload-errors.mjs",
+      "require": "./dist/upload-errors.js",
+      "default": "./dist/upload-errors.mjs"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation.mjs",
+      "require": "./dist/validation.js",
+      "default": "./dist/validation.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "!src/**/*.spec.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p . --skipLibCheck",
-    "ci": "npm run lint && npm t",
-    "lint": "eslint src __tests__",
-    "lint-fix": "yarn lint -- --fix",
-    "prepare": "yarn husky install",
-    "prepublishOnly": "yarn build",
-    "prettier": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\" \"__tests__/**/*.{ts,tsx,js,jsx}\"",
-    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js"
+    "analyze": "size-limit --why",
+    "build": "npm run clean && npm run build:rollup && npm run build:types",
+    "build:rollup": "rollup -c rollup.config.js",
+    "build:types": "tsc",
+    "clean": "rm -rf dist coverage *.tsbuildinfo",
+    "dev": "rollup -c rollup.config.js --watch",
+    "example:apollo": "cd examples/apollo && npm start",
+    "example:express": "cd examples/express && npm start",
+    "format": "biome format --write --no-errors-on-unmatched",
+    "format:check": "biome format",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "prepare": "husky",
+    "prepublishOnly": "npm run validate && npm run build",
+    "size": "size-limit",
+    "test": "jest --coverage",
+    "test:coverage": "jest --coverage --coverageReporters=html",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test"
   },
   "lint-staged": {
-    "src/*.{ts,tsx,js,jsx}": "prettier --write",
-    "__tests__/*.{ts,tsx,js,jsx}": "prettier --write"
+    "*.{ts,tsx,js,jsx,json,md}": [
+      "biome format --write",
+      "biome check --write"
+    ]
   },
   "dependencies": {
     "busboy": "^1.6.0",
@@ -61,36 +157,40 @@
     "object-path": "^0.11.8"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "4.3.0",
-    "@types/busboy": "1.5.3",
-    "@types/express": "4.17.21",
-    "@types/jest": "29.5.12",
-    "@types/koa": "2.15.0",
+    "@biomejs/biome": "^2.2.2",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@size-limit/preset-small-lib": "^11.2.0",
+    "@types/busboy": "1.5.4",
+    "@types/express": "5.0.3",
+    "@types/jest": "30.0.0",
+    "@types/koa": "3.0.0",
+    "@types/node": "^24.3.0",
     "@types/object-path": "0.11.4",
-    "@typescript-eslint/eslint-plugin": "7.0.2",
-    "@typescript-eslint/parser": "7.0.2",
-    "eslint": "8.57.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-prettier": "5.1.3",
-    "express": "4.18.2",
-    "form-data": "4.0.0",
-    "form-data-encoder": "^4.0.2",
-    "graphql": "16.8.1",
-    "husky": "9.0.11",
-    "jest": "29.7.0",
-    "koa": "2.15.0",
-    "lint-staged": "15.2.2",
+    "express": "5.1.0",
+    "form-data": "4.0.4",
+    "form-data-encoder": "^4.1.0",
+    "graphql": "16.11.0",
+    "husky": "9.1.7",
+    "jest": "30.1.3",
+    "koa": "3.0.1",
+    "lint-staged": "16.1.6",
     "node-fetch": "^3.3.2",
-    "prettier": "3.2.5",
-    "ts-jest": "29.1.2",
+    "rollup": "^4.50.0",
+    "size-limit": "^11.2.0",
+    "ts-jest": "29.4.1",
     "ts-node": "10.9.2",
-    "typescript": "5.3.3"
+    "tslib": "^2.8.1",
+    "typescript": "5.9.2"
   },
   "peerDependencies": {
     "graphql": ">=0.13.1"
   },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "engines": {
-    "node": ">=12"
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
   },
   "engineStrict": false
 }

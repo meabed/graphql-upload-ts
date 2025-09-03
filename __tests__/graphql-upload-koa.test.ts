@@ -1,11 +1,24 @@
-import { graphqlUploadKoa } from '../src';
-import { processRequest } from '../src';
-import { listen } from './utils/listen';
-import { deepStrictEqual, ok, strictEqual } from 'assert';
+import { deepStrictEqual, ok, strictEqual } from 'node:assert';
+import type { IncomingMessage } from 'node:http';
+// Node.js 18+ has native fetch
+import { createServer } from 'node:http';
 import FormData from 'form-data';
 import Koa from 'koa';
-import fetch from 'node-fetch';
-import { createServer } from 'node:http';
+import { graphqlUploadKoa, processRequest } from '../src';
+import { listen } from './utils/listen';
+
+type CtxRequestBody =
+  | {
+      variables?: {
+        file?: unknown;
+      };
+    }
+  | undefined;
+
+interface ResIncomingMessage extends IncomingMessage {
+  complete: boolean;
+  responseData?: string;
+}
 
 describe('graphqlUploadKoa', () => {
   it('`graphqlUploadKoa` with a non multipart request.', async () => {
@@ -13,10 +26,12 @@ describe('graphqlUploadKoa', () => {
 
     const app = new Koa().use(
       graphqlUploadKoa({
+        // @ts-expect-error
         async processRequest() {
           processRequestRan = true;
+          return {};
         },
-      }),
+      })
     );
 
     const { port, close } = await listen(createServer(app.callback()));
@@ -30,12 +45,24 @@ describe('graphqlUploadKoa', () => {
   });
 
   it('`graphqlUploadKoa` with a multipart request.', async () => {
-    let ctxRequestBody;
+    let ctxRequestBody: CtxRequestBody;
+    let errorCaught: Error | unknown;
 
-    const app = new Koa().use(graphqlUploadKoa()).use(async (ctx, next) => {
-      ctxRequestBody = ctx.body;
-      await next();
-    });
+    const app = new Koa()
+      .use(async (ctx, next) => {
+        try {
+          await next();
+        } catch (error) {
+          errorCaught = error;
+          ctx.status = 500;
+        }
+      })
+      .use(graphqlUploadKoa())
+      .use(async (ctx, next) => {
+        ctxRequestBody = ctx.body;
+        ctx.status = 200;
+        await next();
+      });
 
     const { port, close } = await listen(createServer(app.callback()));
 
@@ -46,9 +73,26 @@ describe('graphqlUploadKoa', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
-      ok(ctxRequestBody);
+      if (errorCaught) {
+        console.error('Error caught:', errorCaught);
+      }
+
+      ok(ctxRequestBody, `ctxRequestBody is undefined, response status: ${response.statusCode}`);
       ok(ctxRequestBody.variables);
       ok(ctxRequestBody.variables.file);
     } finally {
@@ -58,7 +102,7 @@ describe('graphqlUploadKoa', () => {
 
   it('`graphqlUploadKoa` with a multipart request and option `processRequest`.', async () => {
     let processRequestRan = false;
-    let ctxRequestBody;
+    let ctxRequestBody: CtxRequestBody;
 
     const app = new Koa()
       .use(
@@ -67,7 +111,7 @@ describe('graphqlUploadKoa', () => {
             processRequestRan = true;
             return processRequest(...args);
           },
-        }),
+        })
       )
       .use(async (ctx, next) => {
         ctxRequestBody = ctx.body;
@@ -83,7 +127,20 @@ describe('graphqlUploadKoa', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       strictEqual(processRequestRan, true);
       ok(ctxRequestBody);
@@ -95,8 +152,8 @@ describe('graphqlUploadKoa', () => {
   });
 
   it('`graphqlUploadKoa` with a multipart request and option `processRequest` throwing an error.', async () => {
-    let koaError;
-    let requestCompleted;
+    let koaError: unknown;
+    let requestCompleted = false;
 
     const error = new Error('Message.');
     const app = new Koa()
@@ -116,7 +173,7 @@ describe('graphqlUploadKoa', () => {
             request.resume();
             throw error;
           },
-        }),
+        })
       );
 
     const { port, close } = await listen(createServer(app.callback()));
@@ -128,7 +185,20 @@ describe('graphqlUploadKoa', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       deepStrictEqual(koaError, error);
       ok(requestCompleted, "Response wasn't delayed until the request completed.");
@@ -138,8 +208,8 @@ describe('graphqlUploadKoa', () => {
   });
 
   it('`graphqlUploadKoa` with a multipart request and following middleware throwing an error.', async () => {
-    let koaError;
-    let requestCompleted;
+    let koaError: unknown;
+    let requestCompleted = false;
 
     const error = new Error('Message.');
     const app = new Koa()
@@ -167,7 +237,20 @@ describe('graphqlUploadKoa', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       deepStrictEqual(koaError, error);
       ok(requestCompleted, "Response wasn't delayed until the request completed.");

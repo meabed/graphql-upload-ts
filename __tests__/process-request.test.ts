@@ -1,15 +1,14 @@
 import { deepStrictEqual, notStrictEqual, ok, rejects, strictEqual, throws } from 'node:assert';
 import { createServer } from 'node:http';
 import { text } from 'node:stream/consumers';
-import { processRequest, Upload } from '../src';
-import { listen } from './utils/listen';
-import { ReadStream } from '../src/fs-capacitor';
-import { abortingMultipartRequest } from './utils/abortingMultipartRequest';
+import { type GraphQLOperation, processRequest, ReadStream, Upload } from '../src';
+import { abortingMultipartRequest } from './utils/aborting-multipart-request';
 import { Deferred } from './utils/defered';
+import { listen } from './utils/listen';
 
 describe('processRequest', () => {
   it('`processRequest` with no files.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const operation = { variables: { a: true } };
     const server = createServer(async (request, response) => {
@@ -39,15 +38,16 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with a single file, default `createReadStream` options, file name chars `latin1`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.file instanceof Upload);
 
-        const upload = await operation.variables.file.promise;
+        const upload = await ops.variables?.file.promise;
 
         strictEqual(upload.filename, 'a.txt');
         strictEqual(upload.mimetype, 'text/plain');
@@ -57,7 +57,7 @@ describe('processRequest', () => {
 
         ok(stream instanceof ReadStream);
         strictEqual(stream.readableEncoding, null);
-        strictEqual(stream.readableHighWaterMark, 16384);
+        strictEqual(stream.readableHighWaterMark, 65536);
         strictEqual(await text(stream), 'a');
       } catch (error) {
         serverError = error;
@@ -86,15 +86,16 @@ describe('processRequest', () => {
   it('`processRequest` with a single file, default `createReadStream` options, file name chars non `latin1`.', async () => {
     const fileName = '你好.txt';
 
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.file instanceof Upload);
 
-        const upload = await operation.variables.file.promise;
+        const upload = await ops.variables?.file.promise;
 
         strictEqual(upload.filename, fileName);
         strictEqual(upload.mimetype, 'text/plain');
@@ -104,7 +105,7 @@ describe('processRequest', () => {
 
         ok(stream instanceof ReadStream);
         strictEqual(stream.readableEncoding, null);
-        strictEqual(stream.readableHighWaterMark, 16384);
+        strictEqual(stream.readableHighWaterMark, 65536);
         strictEqual(await text(stream), 'a');
       } catch (error) {
         serverError = error;
@@ -131,15 +132,16 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with a single file and custom `createReadStream` options.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.file instanceof Upload);
 
-        const upload = await operation.variables.file.promise;
+        const upload = await ops.variables?.file.promise;
 
         strictEqual(upload.filename, 'a.txt');
         strictEqual(upload.mimetype, 'text/plain');
@@ -178,15 +180,16 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with a single file, batched.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operations = await processRequest(request, response);
 
-        ok(operations[0].variables.file instanceof Upload);
+        const ops = operations as GraphQLOperation[];
+        ok(ops[0]?.variables?.file instanceof Upload);
 
-        const uploadA = await operations[0].variables.file.promise;
+        const uploadA = await ops[0]?.variables?.file.promise;
 
         strictEqual(uploadA.filename, 'a.txt');
         strictEqual(uploadA.mimetype, 'text/plain');
@@ -197,9 +200,9 @@ describe('processRequest', () => {
         ok(streamA instanceof ReadStream);
         strictEqual(await text(streamA), 'a');
 
-        ok(operations[1].variables.file instanceof Upload);
+        ok(ops[1]?.variables?.file instanceof Upload);
 
-        const uploadB = await operations[1].variables.file.promise;
+        const uploadB = await ops[1]?.variables?.file.promise;
 
         strictEqual(uploadB.filename, 'b.txt');
         strictEqual(uploadB.mimetype, 'text/plain');
@@ -221,7 +224,10 @@ describe('processRequest', () => {
     try {
       const body = new FormData();
 
-      body.append('operations', JSON.stringify([{ variables: { file: null } }, { variables: { file: null } }]));
+      body.append(
+        'operations',
+        JSON.stringify([{ variables: { file: null } }, { variables: { file: null } }])
+      );
       body.append('map', JSON.stringify({ 1: ['0.variables.file'], 2: ['1.variables.file'] }));
       body.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       body.append('2', new File(['b'], 'b.txt', { type: 'text/plain' }));
@@ -235,20 +241,19 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with deduped files.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.files[0] instanceof Upload);
-        ok(operation.variables.files[1] instanceof Upload);
-        strictEqual(operation.variables.files[0], operation.variables.files[1]);
+        const ops = operation as GraphQLOperation;
+        const files = ops.variables?.files as Upload[];
+        ok(files[0] instanceof Upload);
+        ok(files[1] instanceof Upload);
+        strictEqual(files[0], files[1]);
 
-        const [upload1, upload2] = await Promise.all([
-          operation.variables.files[0].promise,
-          operation.variables.files[1].promise,
-        ]);
+        const [upload1, upload2] = await Promise.all([files[0].promise, files[1].promise]);
 
         strictEqual(upload1, upload2);
         strictEqual(upload1.filename, 'a.txt');
@@ -291,15 +296,16 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with unconsumed uploads.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.fileB instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.fileB instanceof Upload);
 
-        const uploadB = await operation.variables.fileB.promise;
+        const uploadB = await ops.variables?.fileB.promise;
         const streamB = uploadB.createReadStream();
 
         await text(streamB);
@@ -329,15 +335,16 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with an extraneous multipart form field file.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.file instanceof Upload);
 
-        const upload = await operation.variables.file.promise;
+        const upload = await ops.variables?.file.promise;
 
         strictEqual(upload.filename, 'a.txt');
         strictEqual(upload.mimetype, 'text/plain');
@@ -373,14 +380,15 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with a missing multipart form field file.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response);
 
-        ok(operation.variables.file instanceof Upload);
-        await rejects(operation.variables.file.promise, {
+        const ops = operation as GraphQLOperation;
+        ok(ops.variables?.file instanceof Upload);
+        await rejects(ops.variables?.file.promise, {
           name: 'BadRequestError',
           message: 'File missing in the request.',
           status: 400,
@@ -410,7 +418,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with option `maxFiles`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -438,7 +446,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        }),
+        })
       );
       body.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       body.append('2', new File(['b'], 'b.txt', { type: 'text/plain' }));
@@ -452,15 +460,17 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with option `maxFiles` and an interspersed extraneous file.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         const operation = await processRequest(request, response, { maxFiles: 2 });
 
-        ok(operation.variables.files[0] instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        const files = ops.variables?.files as Upload[];
+        ok(files[0] instanceof Upload);
 
-        const uploadA = await operation.variables.files[0].promise;
+        const uploadA = await files[0].promise;
 
         strictEqual(uploadA.filename, 'a.txt');
         strictEqual(uploadA.mimetype, 'text/plain');
@@ -470,8 +480,8 @@ describe('processRequest', () => {
 
         ok(streamA instanceof ReadStream);
         strictEqual(await text(streamA), 'a');
-        ok(operation.variables.files[1] instanceof Upload);
-        await rejects(operation.variables.files[1].promise, {
+        ok(files[1] instanceof Upload);
+        await rejects(files[1].promise, {
           name: 'PayloadTooLargeError',
           message: '2 max file uploads exceeded.',
           status: 413,
@@ -495,7 +505,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        }),
+        })
       );
       body.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       body.append('extraneous', new File(['c'], 'c.txt', { type: 'text/plain' }));
@@ -510,7 +520,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with option `maxFileSize`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -520,9 +530,11 @@ describe('processRequest', () => {
           maxFileSize: 2,
         });
 
-        ok(operation.variables.files[0] instanceof Upload);
+        const ops = operation as GraphQLOperation;
+        const files = ops.variables?.files as Upload[];
+        ok(files[0] instanceof Upload);
 
-        const { createReadStream } = await operation.variables.files[0].promise;
+        const { createReadStream } = await files[0].promise;
 
         await throws(
           () => {
@@ -533,12 +545,12 @@ describe('processRequest', () => {
             message: 'File truncated as it exceeds the 2 byte size limit.',
             status: 413,
             expose: true,
-          },
+          }
         );
 
-        ok(operation.variables.files[0] instanceof Upload);
+        ok(files[1] instanceof Upload);
 
-        const uploadB = await operation.variables.files[1].promise;
+        const uploadB = await files[1].promise;
 
         strictEqual(uploadB.filename, 'b.txt');
         strictEqual(uploadB.mimetype, 'text/plain');
@@ -566,7 +578,7 @@ describe('processRequest', () => {
         JSON.stringify({
           1: ['variables.files.0'],
           2: ['variables.files.1'],
-        }),
+        })
       );
       body.append('1', new File(['aa'], 'a.txt', { type: 'text/plain' }));
       body.append('2', new File(['b'], 'b.txt', { type: 'text/plain' }));
@@ -580,7 +592,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with option `maxFieldSize`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -615,7 +627,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with an aborted request and immediate stream creation.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     // In other tests a fetch request can be awaited that resolves once the
     // request, tests and response are done. Because this test aborts a
@@ -635,9 +647,10 @@ describe('processRequest', () => {
         const operation = await processRequest(request, response);
 
         const testUploadA = async () => {
-          ok(operation.variables.fileA instanceof Upload);
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileA instanceof Upload);
 
-          const upload = await operation.variables.fileA.promise;
+          const upload = await ops.variables?.fileA.promise;
 
           strictEqual(upload.filename, 'a.txt');
           strictEqual(upload.mimetype, 'text/plain');
@@ -650,9 +663,10 @@ describe('processRequest', () => {
         };
 
         const testUploadB = async () => {
-          ok(operation.variables.fileB instanceof Upload);
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileB instanceof Upload);
 
-          const upload = await operation.variables.fileB.promise;
+          const upload = await ops.variables?.fileB.promise;
 
           strictEqual(upload.filename, 'b.txt');
           strictEqual(upload.mimetype, 'text/plain');
@@ -670,13 +684,14 @@ describe('processRequest', () => {
               message: 'Request disconnected during file upload stream parsing.',
               status: 499,
               expose: true,
-            },
+            }
           );
         };
 
         const testUploadC = async () => {
-          ok(operation.variables.fileC instanceof Upload);
-          await rejects(operation.variables.fileC.promise, {
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileC instanceof Upload);
+          await rejects(ops.variables?.fileC.promise, {
             name: 'BadRequestError',
             message: 'Request disconnected during file upload stream parsing.',
             status: 499,
@@ -703,7 +718,7 @@ describe('processRequest', () => {
         'operations',
         JSON.stringify({
           variables: { fileA: null, fileB: null, fileC: null },
-        }),
+        })
       );
       formData.append(
         'map',
@@ -711,7 +726,7 @@ describe('processRequest', () => {
           1: ['variables.fileA'],
           2: ['variables.fileB'],
           3: ['variables.fileC'],
-        }),
+        })
       );
       formData.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       formData.append(
@@ -724,14 +739,19 @@ describe('processRequest', () => {
             `${'b'.repeat(70000)}${abortMarker}${'b'.repeat(10)}`,
           ],
           'b.txt',
-          { type: 'text/plain' },
-        ),
+          { type: 'text/plain' }
+        )
       );
       formData.append('3', new File(['c'], 'c.txt', { type: 'text/plain' }));
 
       try {
-        await abortingMultipartRequest(`http://localhost:${port}`, formData, abortMarker, requestReceived.promise);
-      } catch (error) {}
+        await abortingMultipartRequest(
+          `http://localhost:${port}`,
+          formData,
+          abortMarker,
+          requestReceived.promise
+        );
+      } catch (_error) {}
 
       await done.promise;
 
@@ -742,7 +762,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with an aborted request and delayed stream creation.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     // In other tests a fetch request can be awaited that resolves once the
     // request, tests and response are done. Because this test aborts a
@@ -767,9 +787,10 @@ describe('processRequest', () => {
         });
 
         const testUploadA = async () => {
-          ok(operation.variables.fileA instanceof Upload);
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileA instanceof Upload);
 
-          const upload = await operation.variables.fileA.promise;
+          const upload = await ops.variables?.fileA.promise;
 
           strictEqual(upload.filename, 'a.txt');
           strictEqual(upload.mimetype, 'text/plain');
@@ -784,9 +805,10 @@ describe('processRequest', () => {
         };
 
         const testUploadB = async () => {
-          ok(operation.variables.fileB instanceof Upload);
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileB instanceof Upload);
 
-          const upload = await operation.variables.fileB.promise;
+          const upload = await ops.variables?.fileB.promise;
 
           strictEqual(upload.filename, 'b.txt');
           strictEqual(upload.mimetype, 'text/plain');
@@ -800,8 +822,9 @@ describe('processRequest', () => {
         };
 
         const testUploadC = async () => {
-          ok(operation.variables.fileC instanceof Upload);
-          await rejects(operation.variables.fileC.promise, {
+          const ops = operation as GraphQLOperation;
+          ok(ops.variables?.fileC instanceof Upload);
+          await rejects(ops.variables?.fileC.promise, {
             name: 'BadRequestError',
             message: 'Request disconnected during file upload stream parsing.',
             status: 499,
@@ -828,7 +851,7 @@ describe('processRequest', () => {
         'operations',
         JSON.stringify({
           variables: { fileA: null, fileB: null, fileC: null },
-        }),
+        })
       );
       formData.append(
         'map',
@@ -836,7 +859,7 @@ describe('processRequest', () => {
           1: ['variables.fileA'],
           2: ['variables.fileB'],
           3: ['variables.fileC'],
-        }),
+        })
       );
       formData.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       formData.append(
@@ -849,14 +872,19 @@ describe('processRequest', () => {
             `${'b'.repeat(70000)}${abortMarker}${'b'.repeat(10)}`,
           ],
           'b.txt',
-          { type: 'text/plain' },
-        ),
+          { type: 'text/plain' }
+        )
       );
       formData.append('3', new File(['c'], 'c.txt', { type: 'text/plain' }));
 
       try {
-        await abortingMultipartRequest(`http://localhost:${port}`, formData, abortMarker, requestReceived.promise);
-      } catch (error) {}
+        await abortingMultipartRequest(
+          `http://localhost:${port}`,
+          formData,
+          abortMarker,
+          requestReceived.promise
+        );
+      } catch (_error) {}
 
       await done.promise;
 
@@ -867,7 +895,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with multipart form field `map` disordered before `operations`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -903,7 +931,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with multipart form field file disordered before `map`.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -939,13 +967,14 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with multipart form fields `map` and file missing.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
         await rejects(processRequest(request, response), {
           name: 'BadRequestError',
-          message: 'Missing multipart field ‘map’ (https://github.com/jaydenseric/graphql-multipart-request-spec).',
+          message:
+            'Missing multipart field ‘map’ (https://github.com/jaydenseric/graphql-multipart-request-spec).',
           status: 400,
           expose: true,
         });
@@ -972,7 +1001,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with multipart form fields `operations`, `map` and file missing.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1005,7 +1034,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with invalid multipart form field `operations` JSON and a small file.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1041,7 +1070,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with invalid multipart form field `operations` JSON and a large file.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1076,8 +1105,8 @@ describe('processRequest', () => {
             'a'.repeat(70000),
           ],
           'a.txt',
-          { type: 'text/plain' },
-        ),
+          { type: 'text/plain' }
+        )
       );
 
       await fetch(`http://localhost:${port}`, { method: 'POST', body });
@@ -1094,7 +1123,7 @@ describe('processRequest', () => {
     ['string', ''],
   ])
     it(`\`processRequest\` with invalid multipart form field \`operations\` type, ${type}.`, async () => {
-      let serverError;
+      let serverError: unknown;
 
       const server = createServer(async (request, response) => {
         try {
@@ -1130,7 +1159,7 @@ describe('processRequest', () => {
     });
 
   it('`processRequest` with invalid multipart form field `map` JSON.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1172,7 +1201,7 @@ describe('processRequest', () => {
     ['string', ''],
   ])
     it(`\`processRequest\` with invalid multipart form field \`map\` type, ${type}.`, async () => {
-      let serverError;
+      let serverError: unknown;
 
       const server = createServer(async (request, response) => {
         try {
@@ -1208,7 +1237,7 @@ describe('processRequest', () => {
     });
 
   it('`processRequest` with invalid multipart form field `map` entry type.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1244,7 +1273,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with invalid multipart form field `map` entry array item type.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1280,7 +1309,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with invalid multipart form field `map` entry array item object path.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1316,7 +1345,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with an unparsable multipart request.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {
@@ -1351,7 +1380,7 @@ describe('processRequest', () => {
   });
 
   it('`processRequest` with a maliciously malformed multipart request.', async () => {
-    let serverError;
+    let serverError: unknown;
 
     const server = createServer(async (request, response) => {
       try {

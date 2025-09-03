@@ -1,6 +1,6 @@
-import { GraphQLUpload, Upload } from '../src';
-import { doesNotThrow, throws } from 'assert';
+import { doesNotThrow, throws } from 'node:assert';
 import { parseValue } from 'graphql';
+import { GraphQLUpload, Upload } from '../src';
 
 describe('GraphQLUpload', () => {
   it('`GraphQLUpload` scalar `parseValue` with a valid value.', () => {
@@ -16,8 +16,8 @@ describe('GraphQLUpload', () => {
       },
       {
         name: 'GraphQLError',
-        message: 'Upload value invalid.',
-      },
+        message: 'Upload value invalid. Expected Upload instance.',
+      }
     );
   });
 
@@ -29,9 +29,8 @@ describe('GraphQLUpload', () => {
       },
       {
         name: 'GraphQLError',
-        message: 'Upload literal unsupported.',
-        locations: [{ line: 1, column: 1 }],
-      },
+        message: 'Upload literal unsupported. Uploads can only be passed as variables.',
+      }
     );
   });
 
@@ -43,8 +42,8 @@ describe('GraphQLUpload', () => {
       },
       {
         name: 'GraphQLError',
-        message: 'Upload serialization unsupported.',
-      },
+        message: 'Upload serialization unsupported. Uploads cannot be serialized.',
+      }
     );
   });
 });
