@@ -1,11 +1,11 @@
 import { createWriteStream } from 'node:fs';
-import { createServer } from 'http';
-import express from 'express';
-import cors from 'cors';
-import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
+import { ApolloServer, type ApolloServerOptions, type BaseContext } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import { FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
+import cors from 'cors';
+import express from 'express';
+import { createServer } from 'http';
+import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
 
 const contextFnInjections = (req) => {
   const { user } = req;
@@ -84,7 +84,7 @@ async function applyMiddlewares(app, httpServer) {
       credentials: true,
       maxAge: 600,
       origin: true,
-    }),
+    })
   );
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
@@ -99,7 +99,7 @@ async function applyMiddlewares(app, httpServer) {
     graphqlUploadExpress({ overrideSendResponse: false }),
     expressMiddleware(apolloServer, {
       context: async ({ req }) => contextFnInjections(req),
-    }),
+    })
   );
 }
 

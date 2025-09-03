@@ -2,9 +2,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import busboy, { type Busboy } from 'busboy';
 import createError, { type HttpError } from 'http-errors';
 import objectPath from 'object-path';
-import { type FileUpload, Upload } from './Upload';
 import { type ReadStreamOptions, WriteStream } from './fs-capacitor';
 import { ignoreStream } from './ignoreStream';
+import { type FileUpload, Upload } from './Upload';
 
 export const GRAPHQL_MULTIPART_REQUEST_SPEC_URL =
   'https://github.com/jaydenseric/graphql-multipart-request-spec' as const;

@@ -1,6 +1,5 @@
 import { ok, strictEqual } from 'assert';
-import { type FileUpload, Upload } from '../src';
-import { WriteStream } from '../src';
+import { type FileUpload, Upload, WriteStream } from '../src';
 
 describe('Upload', () => {
   it('`Upload` class resolving a file.', async () => {

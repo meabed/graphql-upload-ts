@@ -1,6 +1,6 @@
 import { deepStrictEqual, ok, strictEqual } from 'node:assert';
 // Node.js 18+ has native fetch
-import { type IncomingMessage, createServer } from 'node:http';
+import { createServer, type IncomingMessage } from 'node:http';
 import type { Response } from 'express';
 import express, { type NextFunction } from 'express';
 import FormData from 'form-data';
@@ -147,7 +147,7 @@ describe('graphqlUploadExpress', () => {
       .use((request, response, next) => {
         const { send } = response;
 
-        // @ts-ignore
+        // @ts-expect-error
         response.send = (...args: []) => {
           requestCompleted = request.complete;
           response.send = send;
@@ -216,7 +216,7 @@ describe('graphqlUploadExpress', () => {
       .use((request, response, next) => {
         const { send } = response;
 
-        // @ts-ignore
+        // @ts-expect-error
         response.send = (...args: []) => {
           requestCompleted = request.complete;
           response.send = send;

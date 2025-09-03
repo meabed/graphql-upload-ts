@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { HttpError } from 'http-errors';
 import {
+  processRequest as defaultProcessRequest,
   type GraphQLOperation,
   type IncomingReq,
   type UploadOptions,
-  processRequest as defaultProcessRequest,
 } from './processRequest';
 
 type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(

@@ -1,10 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
@@ -14,6 +9,18 @@
     "lineWidth": 100,
     "attributePosition": "auto"
   },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "es5",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSpacing": true,
+      "bracketSameLine": false,
+      "quoteStyle": "single"
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -21,10 +28,8 @@
       "complexity": {
         "noBannedTypes": "error",
         "noExtraBooleanCast": "error",
-        "noMultipleSpacesInRegularExpressionLiterals": "error",
         "noUselessCatch": "error",
-        "noUselessTypeConstraint": "error",
-        "noWith": "error"
+        "noUselessTypeConstraint": "error"
       },
       "correctness": {
         "noConstAssign": "error",
@@ -33,7 +38,6 @@
         "noEmptyPattern": "error",
         "noGlobalObjectCalls": "error",
         "noInvalidConstructorSuper": "error",
-        "noInvalidNewBuiltin": "error",
         "noNonoctalDecimalEscape": "error",
         "noPrecisionLoss": "error",
         "noSelfAssign": "error",
@@ -45,27 +49,24 @@
         "noUnsafeFinally": "error",
         "noUnsafeOptionalChaining": "error",
         "noUnusedLabels": "error",
-        "noUnusedVariables": "error",
-        "useArrayLiterals": "error",
+        "noUnusedVariables": "warn",
         "useIsNan": "error",
         "useValidForDirection": "error",
         "useYield": "error",
-        "noVoidTypeReturn": "off"
+        "noVoidTypeReturn": "off",
+        "noInvalidBuiltinInstantiation": "error"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off",
         "noGlobalEval": "error"
       },
       "style": {
-        "noArguments": "error",
-        "noCommaOperator": "error",
         "noImplicitBoolean": "off",
         "noInferrableTypes": "error",
         "noNamespace": "error",
         "noNegationElse": "off",
         "noParameterAssign": "error",
         "noRestrictedGlobals": "error",
-        "noVar": "error",
         "useAsConstAssertion": "error",
         "useBlockStatements": "off",
         "useCollapsedElseIf": "error",
@@ -85,7 +86,6 @@
         "noCatchAssign": "error",
         "noClassAssign": "error",
         "noCompareNegZero": "error",
-        "noConsoleLog": "warn",
         "noControlCharactersInRegex": "error",
         "noDebugger": "error",
         "noDuplicateCase": "error",
@@ -110,27 +110,19 @@
         "useDefaultSwitchClauseLast": "error",
         "useGetterReturn": "error",
         "useNamespaceKeyword": "error",
-        "useValidTypeof": "error",
-        "noAssignInExpressions": "off"
+        "noAssignInExpressions": "off",
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": ["log"]
+          }
+        }
       }
     }
   },
-  "organizeImports": {
-    "enabled": true
-  },
-  "javascript": {
-    "formatter": {
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded",
-      "trailingCommas": "es5",
-      "semicolons": "always",
-      "arrowParentheses": "always",
-      "bracketSpacing": true,
-      "bracketSameLine": false,
-      "quoteStyle": "single"
-    }
-  },
-  "files": {
-    "ignore": ["dist", "node_modules", "coverage", "*.min.js", "*.d.ts", "examples"]
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
   }
 }

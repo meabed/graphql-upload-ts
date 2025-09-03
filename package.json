@@ -47,7 +47,10 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
@@ -78,7 +81,7 @@
     "object-path": "^0.11.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.2.2",
     "@size-limit/preset-small-lib": "^11.2.0",
     "@types/busboy": "1.5.4",
     "@types/express": "5.0.3",

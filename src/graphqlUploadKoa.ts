@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
 import type { Context, Next } from 'koa';
 import {
+  processRequest as defaultProcessRequest,
   type GraphQLOperation,
   type IncomingReq,
   type UploadOptions,
-  processRequest as defaultProcessRequest,
 } from './processRequest';
 
 type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(

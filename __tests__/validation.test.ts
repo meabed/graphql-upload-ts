@@ -1,10 +1,10 @@
 import type { UploadOptions } from '../src/processRequest';
 import {
   DEFAULT_MAX_FIELD_SIZE,
-  DEFAULT_MAX_FILES,
   DEFAULT_MAX_FILE_SIZE,
-  type ValidationResult,
+  DEFAULT_MAX_FILES,
   sanitizeFilename,
+  type ValidationResult,
   validateFileExtension,
   validateMimeType,
   validateOptions,

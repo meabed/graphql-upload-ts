@@ -86,7 +86,7 @@ export function sanitizeFilename(filename: string): string {
   let sanitized = filename.replace(/\.\./g, '');
 
   // Remove directory separators
-  sanitized = sanitized.replace(/[\/\\]/g, '');
+  sanitized = sanitized.replace(/[/\\]/g, '');
 
   // Remove control characters and non-printable characters
   // biome-ignore lint/suspicious/noControlCharactersInRegex: Intentional to remove control characters

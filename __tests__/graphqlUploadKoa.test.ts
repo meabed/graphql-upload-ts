@@ -26,7 +26,7 @@ describe('graphqlUploadKoa', () => {
 
     const app = new Koa().use(
       graphqlUploadKoa({
-        // @ts-ignore
+        // @ts-expect-error
         async processRequest() {
           processRequestRan = true;
           return {};
