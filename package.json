@@ -51,68 +51,68 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": "./dist/index.mjs"
     },
     "./fs-capacitor": {
       "types": "./dist/fs-capacitor.d.ts",
-      "import": "./dist/fs-capacitor.js",
+      "import": "./dist/fs-capacitor.mjs",
       "require": "./dist/fs-capacitor.js",
-      "default": "./dist/fs-capacitor.js"
+      "default": "./dist/fs-capacitor.mjs"
     },
     "./graphql-upload": {
       "types": "./dist/graphql-upload.d.ts",
-      "import": "./dist/graphql-upload.js",
+      "import": "./dist/graphql-upload.mjs",
       "require": "./dist/graphql-upload.js",
-      "default": "./dist/graphql-upload.js"
+      "default": "./dist/graphql-upload.mjs"
     },
     "./graphql-upload-express": {
       "types": "./dist/graphql-upload-express.d.ts",
-      "import": "./dist/graphql-upload-express.js",
+      "import": "./dist/graphql-upload-express.mjs",
       "require": "./dist/graphql-upload-express.js",
-      "default": "./dist/graphql-upload-express.js"
+      "default": "./dist/graphql-upload-express.mjs"
     },
     "./graphql-upload-koa": {
       "types": "./dist/graphql-upload-koa.d.ts",
-      "import": "./dist/graphql-upload-koa.js",
+      "import": "./dist/graphql-upload-koa.mjs",
       "require": "./dist/graphql-upload-koa.js",
-      "default": "./dist/graphql-upload-koa.js"
+      "default": "./dist/graphql-upload-koa.mjs"
     },
     "./ignore-stream": {
       "types": "./dist/ignore-stream.d.ts",
-      "import": "./dist/ignore-stream.js",
+      "import": "./dist/ignore-stream.mjs",
       "require": "./dist/ignore-stream.js",
-      "default": "./dist/ignore-stream.js"
+      "default": "./dist/ignore-stream.mjs"
     },
     "./process-request": {
       "types": "./dist/process-request.d.ts",
-      "import": "./dist/process-request.js",
+      "import": "./dist/process-request.mjs",
       "require": "./dist/process-request.js",
-      "default": "./dist/process-request.js"
+      "default": "./dist/process-request.mjs"
     },
     "./upload": {
       "types": "./dist/upload.d.ts",
-      "import": "./dist/upload.js",
+      "import": "./dist/upload.mjs",
       "require": "./dist/upload.js",
-      "default": "./dist/upload.js"
+      "default": "./dist/upload.mjs"
     },
     "./upload-errors": {
       "types": "./dist/upload-errors.d.ts",
-      "import": "./dist/upload-errors.js",
+      "import": "./dist/upload-errors.mjs",
       "require": "./dist/upload-errors.js",
-      "default": "./dist/upload-errors.js"
+      "default": "./dist/upload-errors.mjs"
     },
     "./validation": {
       "types": "./dist/validation.d.ts",
-      "import": "./dist/validation.js",
+      "import": "./dist/validation.mjs",
       "require": "./dist/validation.js",
-      "default": "./dist/validation.js"
+      "default": "./dist/validation.mjs"
     },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
@@ -125,12 +125,11 @@
   ],
   "scripts": {
     "analyze": "size-limit --why",
-    "build": "npm run clean && npm run build:cjs",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:types": "tsc -p tsconfig.types.json",
+    "build": "npm run clean && npm run build:rolldown && npm run build:types",
+    "build:rolldown": "rolldown -c rolldown.config.mjs",
+    "build:types": "tsc",
     "clean": "rm -rf dist coverage *.tsbuildinfo",
-    "dev": "tsc --watch -p tsconfig.cjs.json",
+    "dev": "rolldown -c rolldown.config.mjs --watch",
     "example:apollo": "cd examples/apollo && npm start",
     "example:express": "cd examples/express && npm start",
     "format": "biome format --write no-error-on-unmatched-pattern",
@@ -175,9 +174,11 @@
     "koa": "3.0.1",
     "lint-staged": "16.1.6",
     "node-fetch": "^3.3.2",
+    "rolldown": "^1.0.0-beta.34",
     "size-limit": "^11.2.0",
     "ts-jest": "29.4.1",
     "ts-node": "10.9.2",
+    "tslib": "^2.8.1",
     "typescript": "5.9.2"
   },
   "peerDependencies": {
