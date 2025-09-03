@@ -665,6 +665,313 @@ export class UploadResolver {
 
 </details>
 
+### TypeGraphQL Integration
+
+<details>
+<summary>Click to expand example</summary>
+
+For TypeGraphQL, you need to create a custom scalar wrapper:
+
+```typescript
+// upload.scalar.ts
+import { GraphQLUpload } from 'graphql-upload-ts';
+import { Scalar, CustomScalar } from 'type-graphql';
+import { GraphQLScalarType, GraphQLError } from 'graphql';
+
+// Create a custom Upload scalar for TypeGraphQL
+@Scalar('Upload')
+export class UploadScalar implements CustomScalar<any, any> {
+  description = 'The `Upload` scalar type represents a file upload.';
+
+  parseValue(value: any) {
+    return GraphQLUpload.parseValue(value);
+  }
+
+  serialize(value: any) {
+    return GraphQLUpload.serialize(value);
+  }
+
+  parseLiteral(ast: any) {
+    return GraphQLUpload.parseLiteral(ast, null);
+  }
+}
+
+// Define the FileUpload type for TypeScript
+import { Stream } from 'stream';
+import { Field, ObjectType, InputType } from 'type-graphql';
+
+interface Upload {
+  filename: string;
+  mimetype: string;
+  encoding: string;
+  createReadStream: () => Stream;
+}
+
+// Output type for file information
+@ObjectType()
+export class FileInfo {
+  @Field()
+  filename: string;
+
+  @Field()
+  mimetype: string;
+
+  @Field()
+  encoding: string;
+
+  @Field()
+  url: string;
+}
+
+// Input type for mutations with files and additional fields
+@InputType()
+export class CreatePostInput {
+  @Field()
+  title: string;
+
+  @Field()
+  content: string;
+
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
+
+  // Note: File upload fields are handled separately in resolver args
+}
+
+// resolver.ts
+import { Resolver, Mutation, Arg, Query } from 'type-graphql';
+import { GraphQLUpload } from 'graphql-upload-ts';
+import { FileInfo, CreatePostInput } from './types';
+import { createWriteStream } from 'fs';
+import path from 'path';
+
+@Resolver()
+export class PostResolver {
+  // Simple file upload
+  @Mutation(() => FileInfo)
+  async uploadFile(
+    @Arg('file', () => GraphQLUpload)
+    file: Promise<Upload>
+  ): Promise<FileInfo> {
+    const { filename, mimetype, encoding, createReadStream } = await file;
+    
+    // Save file to disk
+    const savePath = path.join(__dirname, 'uploads', filename);
+    const stream = createReadStream();
+    const writeStream = createWriteStream(savePath);
+    stream.pipe(writeStream);
+    
+    await new Promise((resolve, reject) => {
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+    
+    return {
+      filename,
+      mimetype,
+      encoding,
+      url: `/uploads/${filename}`,
+    };
+  }
+
+  // File upload with additional form fields
+  @Mutation(() => Boolean)
+  async createPostWithImage(
+    @Arg('data') data: CreatePostInput,
+    @Arg('image', () => GraphQLUpload)
+    image: Promise<Upload>,
+    @Arg('thumbnail', () => GraphQLUpload, { nullable: true })
+    thumbnail?: Promise<Upload>
+  ): Promise<boolean> {
+    // Process the main image
+    const mainImage = await image;
+    const { filename, createReadStream } = mainImage;
+    
+    // Save the main image
+    const imagePath = path.join(__dirname, 'uploads', 'posts', filename);
+    const imageStream = createReadStream();
+    const imageWriteStream = createWriteStream(imagePath);
+    imageStream.pipe(imageWriteStream);
+    
+    // Process thumbnail if provided
+    if (thumbnail) {
+      const thumbFile = await thumbnail;
+      const thumbPath = path.join(__dirname, 'uploads', 'posts', 'thumbnails', thumbFile.filename);
+      const thumbStream = thumbFile.createReadStream();
+      const thumbWriteStream = createWriteStream(thumbPath);
+      thumbStream.pipe(thumbWriteStream);
+    }
+    
+    // Save post data to database
+    console.log('Creating post with:', {
+      title: data.title,
+      content: data.content,
+      tags: data.tags,
+      imagePath,
+    });
+    
+    // In a real app, save to database here
+    
+    return true;
+  }
+
+  // Multiple file uploads with metadata
+  @Mutation(() => [FileInfo])
+  async uploadMultipleFiles(
+    @Arg('files', () => [GraphQLUpload])
+    files: Promise<Upload>[],
+    @Arg('descriptions', () => [String], { nullable: true })
+    descriptions?: string[]
+  ): Promise<FileInfo[]> {
+    const uploadedFiles: FileInfo[] = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = await files[i];
+      const { filename, mimetype, encoding, createReadStream } = file;
+      const description = descriptions?.[i] || '';
+      
+      // Save each file
+      const savePath = path.join(__dirname, 'uploads', filename);
+      const stream = createReadStream();
+      const writeStream = createWriteStream(savePath);
+      stream.pipe(writeStream);
+      
+      await new Promise((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+      
+      // Store metadata if needed
+      console.log(`File ${filename} uploaded with description: ${description}`);
+      
+      uploadedFiles.push({
+        filename,
+        mimetype,
+        encoding,
+        url: `/uploads/${filename}`,
+      });
+    }
+    
+    return uploadedFiles;
+  }
+}
+
+// server.ts - Setting up the server
+import 'reflect-metadata';
+import express from 'express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { buildSchema } from 'type-graphql';
+import { graphqlUploadExpress } from 'graphql-upload-ts';
+import { PostResolver } from './resolver';
+import { UploadScalar } from './upload.scalar';
+
+async function bootstrap() {
+  // Build TypeGraphQL schema
+  const schema = await buildSchema({
+    resolvers: [PostResolver],
+    scalarsMap: [{ type: Object, scalar: UploadScalar }],
+  });
+
+  // Create Apollo Server
+  const server = new ApolloServer({ schema });
+  await server.start();
+
+  // Create Express app
+  const app = express();
+
+  // IMPORTANT: Apply upload middleware BEFORE Apollo Server
+  app.use(
+    '/graphql',
+    graphqlUploadExpress({
+      maxFileSize: 10 * 1024 * 1024, // 10 MB
+      maxFiles: 10,
+    }),
+    express.json(),
+    expressMiddleware(server)
+  );
+
+  app.listen(4000, () => {
+    console.log('Server is running on http://localhost:4000/graphql');
+  });
+}
+
+bootstrap();
+```
+
+#### Example GraphQL Mutations
+
+```graphql
+# Simple file upload
+mutation UploadFile($file: Upload!) {
+  uploadFile(file: $file) {
+    filename
+    mimetype
+    url
+  }
+}
+
+# Upload with additional fields
+mutation CreatePost($data: CreatePostInput!, $image: Upload!, $thumbnail: Upload) {
+  createPostWithImage(data: $data, image: $image, thumbnail: $thumbnail)
+}
+
+# Multiple files with descriptions
+mutation UploadMultiple($files: [Upload!]!, $descriptions: [String!]) {
+  uploadMultipleFiles(files: $files, descriptions: $descriptions) {
+    filename
+    url
+  }
+}
+```
+
+#### Client-Side Example (using Apollo Client)
+
+```javascript
+import { gql, useMutation } from '@apollo/client';
+
+const UPLOAD_WITH_DATA = gql`
+  mutation CreatePost($data: CreatePostInput!, $image: Upload!) {
+    createPostWithImage(data: $data, image: $image)
+  }
+`;
+
+function PostForm() {
+  const [createPost] = useMutation(UPLOAD_WITH_DATA);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const file = formData.get('image');
+    const data = {
+      title: formData.get('title'),
+      content: formData.get('content'),
+      tags: formData.get('tags').split(','),
+    };
+
+    await createPost({
+      variables: {
+        data,
+        image: file,
+      },
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="title" placeholder="Post Title" required />
+      <textarea name="content" placeholder="Content" required />
+      <input name="tags" placeholder="Tags (comma-separated)" />
+      <input name="image" type="file" required />
+      <button type="submit">Create Post</button>
+    </form>
+  );
+}
+```
+
+</details>
+
 ### Image Upload with Validation
 
 <details>
