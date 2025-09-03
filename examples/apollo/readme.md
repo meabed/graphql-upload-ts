@@ -6,7 +6,7 @@ This example shows how to use `graphql-upload-ts` with [Apollo Server](https://w
 
 ```bash
 # Install dependencies
-yarn install
+yarn
 
 # Start the server
 yarn start

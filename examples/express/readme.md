@@ -6,7 +6,7 @@ This example shows how to use `graphql-upload-ts` with [Express](https://express
 
 ```bash
 # Install dependencies
-yarn install
+yarn
 
 # Start the server with `graphql-http` library
 yarn start:graphql-http
