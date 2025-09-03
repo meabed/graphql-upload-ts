@@ -1,5 +1,3 @@
-// Core exports
-
 // Utility exports
 export * from './fs-capacitor';
 export * from './graphql-upload';
