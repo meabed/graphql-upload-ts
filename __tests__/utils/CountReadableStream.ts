@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import { Readable, type ReadableOptions } from 'node:stream';
 
 /**
  * A count readable stream, for testing purposes.
@@ -11,7 +11,7 @@ export class CountReadableStream extends Readable {
   private _max: number;
   private _index: number;
 
-  constructor(options) {
+  constructor(options?: ReadableOptions) {
     super(options);
     this._max = 1000000;
     this._index = 1;

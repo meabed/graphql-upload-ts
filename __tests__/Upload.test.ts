@@ -1,5 +1,6 @@
-import { Upload } from '../src';
 import { ok, strictEqual } from 'assert';
+import { type FileUpload, Upload } from '../src';
+import { WriteStream } from '../src';
 
 describe('Upload', () => {
   it('`Upload` class resolving a file.', async () => {
@@ -8,7 +9,14 @@ describe('Upload', () => {
     ok(upload.promise instanceof Promise);
     strictEqual(typeof upload.resolve, 'function');
 
-    const file = {} as any;
+    const file: FileUpload = {
+      filename: 'test.txt',
+      fieldName: 'file',
+      mimetype: 'text/plain',
+      encoding: 'utf-8',
+      capacitor: new WriteStream(),
+      createReadStream: () => file.capacitor.createReadStream(),
+    };
 
     upload.resolve(file);
 
@@ -41,7 +49,7 @@ describe('Upload', () => {
 
     upload.reject(error);
 
-    // Rely on the fact that node.js and default mocha behaviour is used.
+    // Rely on the fact that node.js and Jest handle unhandled rejections properly.
     // The process won't exit with an error
     // if the unhandled rejection is silenced as intended.
     await new Promise((r) => setTimeout(r, 10));

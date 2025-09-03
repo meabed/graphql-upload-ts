@@ -1,62 +1,62 @@
-import { processRequest as defaultProcessRequest } from './processRequest';
-import { Context, Next } from 'koa';
+import type { ServerResponse } from 'node:http';
+import type { Context, Next } from 'koa';
+import {
+  type GraphQLOperation,
+  type IncomingReq,
+  type UploadOptions,
+  processRequest as defaultProcessRequest,
+} from './processRequest';
 
-type ProcessRequestOptions = {
-  processRequest?: ((req: any, res: any, options: any) => Promise<any>) | (() => Promise<void>);
-  maxFieldSize?: number;
-  maxFileSize?: number;
-  maxFiles?: number;
-  [key: string]: any;
-};
+type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
+  req: IncomingReq,
+  res: Pick<ServerResponse, 'once'>,
+  options?: UploadOptions
+) => Promise<T>;
+
+export interface GraphqlUploadKoaOptions extends UploadOptions {
+  processRequest?: ProcessRequestFn;
+}
 
 /**
- * Creates [Koa](https://koajs.com) middleware that processes
- * [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec)
- * using [`processRequest`]{@link processRequest}, ignoring non-multipart
- * requests. It sets the request body to be
- * [similar to a conventional GraphQL POST request]{@link GraphQLOperation} for
- * following GraphQL middleware to consume.
- * @example <caption>Ways to `import`.</caption>
- * ```js
+ * Creates Koa middleware for handling GraphQL multipart requests (file uploads).
+ * This middleware processes multipart/form-data requests and converts them into a format
+ * that GraphQL servers can understand.
+ *
+ * @example Basic setup with Apollo Server Koa
+ * ```typescript
+ * import Koa from 'koa';
  * import { graphqlUploadKoa } from 'graphql-upload-ts';
- * ```
+ * import { ApolloServer } from '@apollo/server';
+ * import { koaMiddleware } from '@as-integrations/koa';
  *
- * ```js
- * import graphqlUploadKoa from 'graphql-upload-ts/dist/graphqlUploadKoa.js';
- * ```
- * @example <caption>Ways to `require`.</caption>
- * ```js
- * const { graphqlUploadKoa } = require('graphql-upload-ts');
- * ```
+ * const app = new Koa();
  *
- * ```js
- * const graphqlUploadKoa = require('graphql-upload-ts/dist/graphqlUploadKoa');
- * ```
- * @example <caption>Basic [`graphql-api-koa`](https://npm.im/graphql-api-koa) setup.</caption>
- * ```js
- * const Koa = require('koa');
- * const bodyParser = require('koa-bodyparser');
- * const { errorHandler, execute } = require('graphql-api-koa');
- * const { graphqlUploadKoa } = require('graphql-upload-ts');
- * const schema = require('./schema');
+ * app.use(
+ *   graphqlUploadKoa({
+ *     maxFileSize: 10_000_000, // 10MB
+ *     maxFiles: 10
+ *   })
+ * );
  *
- * new Koa()
- *   .use(errorHandler())
- *   .use(bodyParser())
- *   .use(graphqlUploadKoa({ maxFileSize: 10000000, maxFiles: 10 }))
- *   .use(execute({ schema }))
- *   .listen(3000);
+ * // Apollo Server setup continues...
  * ```
  */
-export function graphqlUploadKoa(params: ProcessRequestOptions = {}) {
-  const { processRequest = defaultProcessRequest, ...processRequestOptions } = params;
-  return async function graphqlUploadKoaMiddleware(ctx: Context, next: Next) {
-    if (!ctx.request.is('multipart/form-data')) return next();
+export function graphqlUploadKoa(
+  options: GraphqlUploadKoaOptions = {}
+): (ctx: Context, next: Next) => Promise<void> {
+  const { processRequest = defaultProcessRequest, ...uploadOptions } = options;
 
-    const finished = new Promise((resolve) => ctx.req.on('end', resolve));
+  return async function graphqlUploadKoaMiddleware(ctx: Context, next: Next): Promise<void> {
+    if (!ctx.request.is('multipart/form-data')) {
+      return next();
+    }
+
+    const finished = new Promise<void>((resolve) => {
+      ctx.req.on('end', resolve);
+    });
 
     try {
-      ctx.body = await processRequest(ctx.req, ctx.res, processRequestOptions);
+      ctx.body = await processRequest(ctx.req as IncomingReq, ctx.res, uploadOptions);
       await next();
     } finally {
       await finished;

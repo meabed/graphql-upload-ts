@@ -1,11 +1,25 @@
+import { deepStrictEqual, ok, strictEqual } from 'node:assert';
+// Node.js 18+ has native fetch
+import { type IncomingMessage, createServer } from 'node:http';
+import type { Response } from 'express';
+import express, { type NextFunction } from 'express';
+import FormData from 'form-data';
+import createHttpError from 'http-errors';
 import { graphqlUploadExpress, processRequest } from '../src';
 import { listen } from './utils/listen';
-import { deepStrictEqual, ok, strictEqual } from 'assert';
-import express from 'express';
-import FormData from 'form-data';
-import fetch from 'node-fetch';
-import { createServer } from 'node:http';
-import createHttpError from 'http-errors';
+
+type CtxRequestBody =
+  | {
+      variables?: {
+        file?: unknown;
+      };
+    }
+  | undefined;
+
+interface ResIncomingMessage extends IncomingMessage {
+  complete: boolean;
+  responseData?: string;
+}
 
 describe('graphqlUploadExpress', () => {
   it('`graphqlUploadExpress` with a non multipart request.', async () => {
@@ -13,10 +27,11 @@ describe('graphqlUploadExpress', () => {
 
     const app = express().use(
       graphqlUploadExpress({
-        async processRequest() {
+        async processRequest<T>() {
           processRequestRan = true;
+          return {} as T;
         },
-      }),
+      })
     );
 
     const { port, close } = await listen(createServer(app));
@@ -30,11 +45,11 @@ describe('graphqlUploadExpress', () => {
   });
 
   it('`graphqlUploadExpress` with a multipart request.', async () => {
-    let requestBody: any;
+    let requestBody: CtxRequestBody;
 
     const app = express()
       .use(graphqlUploadExpress())
-      .use((request, response, next) => {
+      .use((request, _response, next) => {
         requestBody = request.body;
         next();
       });
@@ -48,7 +63,20 @@ describe('graphqlUploadExpress', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       ok(requestBody);
       ok(requestBody.variables);
@@ -60,7 +88,7 @@ describe('graphqlUploadExpress', () => {
 
   it('`graphqlUploadExpress` with a multipart request and option `processRequest`.', async () => {
     let processRequestRan = false;
-    let requestBody: any;
+    let requestBody: CtxRequestBody;
 
     const app = express()
       .use(
@@ -69,9 +97,9 @@ describe('graphqlUploadExpress', () => {
             processRequestRan = true;
             return processRequest(...args);
           },
-        }),
+        })
       )
-      .use((request, response, next) => {
+      .use((request, _response, next) => {
         requestBody = request.body;
         next();
       });
@@ -85,7 +113,20 @@ describe('graphqlUploadExpress', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       strictEqual(processRequestRan, true);
       ok(requestBody);
@@ -107,7 +148,7 @@ describe('graphqlUploadExpress', () => {
         const { send } = response;
 
         // @ts-ignore
-        response.send = (...args) => {
+        response.send = (...args: []) => {
           requestCompleted = request.complete;
           response.send = send;
           response.send(...args);
@@ -121,9 +162,9 @@ describe('graphqlUploadExpress', () => {
             request.resume();
             throw error;
           },
-        }),
+        })
       )
-      .use((error, request, response, next) => {
+      .use((error: unknown, _request: unknown, response: Response, next: NextFunction) => {
         expressError = error;
         responseStatusCode = response.statusCode;
 
@@ -143,7 +184,20 @@ describe('graphqlUploadExpress', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       deepStrictEqual(expressError, error);
       ok(requestCompleted, "Response wasn't delayed until the request completed.");
@@ -163,7 +217,7 @@ describe('graphqlUploadExpress', () => {
         const { send } = response;
 
         // @ts-ignore
-        response.send = (...args) => {
+        response.send = (...args: []) => {
           requestCompleted = request.complete;
           response.send = send;
           response.send(...args);
@@ -175,7 +229,7 @@ describe('graphqlUploadExpress', () => {
       .use(() => {
         throw error;
       })
-      .use((error, request, response, next) => {
+      .use((error: unknown, _request: unknown, response: Response, next: NextFunction) => {
         expressError = error;
 
         // Sending a response here prevents the default Express error handler
@@ -194,7 +248,20 @@ describe('graphqlUploadExpress', () => {
       body.append('map', JSON.stringify({ 1: ['variables.file'] }));
       body.append('1', 'a', { filename: 'a.txt' });
 
-      await fetch(`http://localhost:${port}`, { method: 'POST', body });
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            // Wait for response to complete
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
 
       deepStrictEqual(expressError, error);
       ok(requestCompleted, "Response wasn't delayed until the request completed.");

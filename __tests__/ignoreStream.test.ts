@@ -1,6 +1,6 @@
+import { doesNotThrow, strictEqual } from 'assert';
 import { ignoreStream } from '../src';
 import { CountReadableStream } from './utils/CountReadableStream';
-import { doesNotThrow, strictEqual } from 'assert';
 
 describe('ignoreStream', () => {
   it('`ignoreStream` ignores errors.', () => {

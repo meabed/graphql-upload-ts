@@ -1,9 +1,9 @@
-import { randomBytes } from 'crypto';
-import { read, open, closeSync, unlinkSync, write, close, unlink } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { Readable, ReadableOptions, Writable, WritableOptions } from 'stream';
-import { EventEmitter } from 'events';
+import { randomBytes } from 'node:crypto';
+import { EventEmitter } from 'node:events';
+import { close, closeSync, open, read, unlink, unlinkSync, write } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable, type ReadableOptions, Writable, type WritableOptions } from 'node:stream';
 
 export class ReadAfterDestroyedError extends Error {}
 export class ReadAfterReleasedError extends Error {}
@@ -18,11 +18,11 @@ export interface ReadStreamOptions {
 // `fs-capacitor` `ReadStream` instances are created at the same time. See:
 // https://github.com/mike-marcacci/fs-capacitor/issues/30
 const processExitProxy = new EventEmitter();
-processExitProxy.setMaxListeners(Infinity);
+processExitProxy.setMaxListeners(Number.POSITIVE_INFINITY);
 process.once('exit', () => processExitProxy.emit('exit'));
 
 export class ReadStream extends Readable {
-  private _pos: number = 0;
+  private _pos = 0;
   private _writeStream: WriteStream;
 
   constructor(writeStream: WriteStream, options?: ReadStreamOptions) {
@@ -37,7 +37,7 @@ export class ReadStream extends Readable {
   _read(n: number): void {
     if (this.destroyed) return;
 
-    if (typeof this._writeStream['_fd'] !== 'number') {
+    if (typeof this._writeStream._fd !== 'number') {
       this._writeStream.once('ready', () => this._read(n));
       return;
     }
@@ -46,42 +46,46 @@ export class ReadStream extends Readable {
     // `bytesRead`, and discard the rest. This prevents node from having to zero
     // out the entire allocation first.
     const buf = Buffer.allocUnsafe(n);
-    read(this._writeStream['_fd'], buf, 0, n, this._pos, (error, bytesRead) => {
-      if (error) this.destroy(error);
+    read(
+      (this._writeStream as unknown as { _fd: number })._fd,
+      buf as NodeJS.ArrayBufferView,
+      0,
+      n,
+      this._pos,
+      (error, bytesRead) => {
+        if (error) this.destroy(error);
 
-      // Push any read bytes into the local stream buffer.
-      if (bytesRead) {
-        this._pos += bytesRead;
-        this.push(buf.slice(0, bytesRead));
-        return;
+        // Push any read bytes into the local stream buffer.
+        if (bytesRead) {
+          this._pos += bytesRead;
+          this.push(buf.slice(0, bytesRead));
+          return;
+        }
+
+        // If there were no more bytes to read and the write stream is finished,
+        // then this stream has reached the end.
+        if (
+          (this._writeStream as unknown as { _writableState: { finished: boolean } })._writableState
+            .finished
+        ) {
+          // Check if we have consumed the whole file up to where
+          // the write stream has written before ending the stream
+          if (this._pos < (this._writeStream as unknown as { _pos: number })._pos) this._read(n);
+          else this.push(null);
+          return;
+        }
+
+        // Otherwise, wait for the write stream to add more data or finish.
+        const retry = (): void => {
+          this._writeStream.off('finish', retry);
+          this._writeStream.off('write', retry);
+          this._read(n);
+        };
+
+        this._writeStream.on('finish', retry);
+        this._writeStream.on('write', retry);
       }
-
-      // If there were no more bytes to read and the write stream is finished,
-      // then this stream has reached the end.
-      if (
-        (
-          this._writeStream as any as {
-            _writableState: { finished: boolean };
-          }
-        )._writableState.finished
-      ) {
-        // Check if we have consumed the whole file up to where
-        // the write stream has written before ending the stream
-        if (this._pos < (this._writeStream as any as { _pos: number })._pos) this._read(n);
-        else this.push(null);
-        return;
-      }
-
-      // Otherwise, wait for the write stream to add more data or finish.
-      const retry = (): void => {
-        this._writeStream.off('finish', retry);
-        this._writeStream.off('write', retry);
-        this._read(n);
-      };
-
-      this._writeStream.on('finish', retry);
-      this._writeStream.on('write', retry);
-    });
+    );
   }
 }
 
@@ -92,11 +96,11 @@ export interface WriteStreamOptions {
 }
 
 export class WriteStream extends Writable {
-  private _fd: null | number = null;
+  public _fd: null | number = null;
   private _path: null | string = null;
-  private _pos: number = 0;
+  private _pos = 0;
   private _readStreams: Set<ReadStream> = new Set();
-  private _released: boolean = false;
+  private _released = false;
 
   constructor(options?: WriteStreamOptions) {
     super({
@@ -162,7 +166,7 @@ export class WriteStream extends Writable {
     if (typeof this._fd === 'number')
       try {
         closeSync(this._fd);
-      } catch (error) {
+      } catch (_error) {
         // An error here probably means the fd was already closed, but we can
         // still try to unlink the file.
       }
@@ -171,13 +175,13 @@ export class WriteStream extends Writable {
       if (this._path !== null) {
         unlinkSync(this._path);
       }
-    } catch (error) {
+    } catch (_error) {
       // If we are unable to unlink the file, the operating system will clean
       // up on next restart, since we use store thes in `os.tmpdir()`
     }
   };
 
-  _final(callback: (error?: null | Error) => any): void {
+  _final(callback: (error?: null | Error) => void): void {
     if (typeof this._fd !== 'number') {
       this.once('ready', () => this._final(callback));
       return;
@@ -185,13 +189,13 @@ export class WriteStream extends Writable {
     callback();
   }
 
-  _write(chunk: Buffer, encoding: string, callback: (error?: null | Error) => any): void {
+  _write(chunk: Buffer, encoding: string, callback: (error?: null | Error) => void): void {
     if (typeof this._fd !== 'number') {
       this.once('ready', () => this._write(chunk, encoding, callback));
       return;
     }
 
-    write(this._fd, chunk, 0, chunk.length, this._pos, (error) => {
+    write(this._fd, chunk as NodeJS.ArrayBufferView, 0, chunk.length, this._pos, (error) => {
       if (error) {
         callback(error);
         return;
@@ -215,7 +219,7 @@ export class WriteStream extends Writable {
     if (this._readStreams.size === 0) this.destroy();
   }
 
-  _destroy(error: undefined | null | Error, callback: (error?: null | Error) => any): void {
+  _destroy(error: undefined | null | Error, callback: (error?: null | Error) => void): void {
     // Destroy all attached read streams.
     for (const readStream of this._readStreams) {
       readStream.destroy(error || undefined);
@@ -242,9 +246,14 @@ export class WriteStream extends Writable {
 
   createReadStream(options?: ReadStreamOptions): ReadStream {
     if (this.destroyed)
-      throw new ReadAfterDestroyedError('A ReadStream cannot be created from a destroyed WriteStream.');
+      throw new ReadAfterDestroyedError(
+        'A ReadStream cannot be created from a destroyed WriteStream.'
+      );
 
-    if (this._released) throw new ReadAfterReleasedError('A ReadStream cannot be created from a released WriteStream.');
+    if (this._released)
+      throw new ReadAfterReleasedError(
+        'A ReadStream cannot be created from a released WriteStream.'
+      );
 
     const readStream = new ReadStream(this, options);
     this._readStreams.add(readStream);

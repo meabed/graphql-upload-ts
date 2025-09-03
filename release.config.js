@@ -63,7 +63,13 @@ module.exports = {
     isMaster && [
       '@semantic-release/git',
       {
-        assets: ['package.json', 'package-lock.json', 'yarn.lock', 'npm-shrinkwrap.json', 'CHANGELOG.md'],
+        assets: [
+          'package.json',
+          'package-lock.json',
+          'yarn.lock',
+          'npm-shrinkwrap.json',
+          'CHANGELOG.md',
+        ],
         message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
         GIT_AUTHOR_NAME: pkg.author.name,
         GIT_AUTHOR_EMAIL: pkg.author.email,
