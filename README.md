@@ -972,6 +972,300 @@ function PostForm() {
 
 </details>
 
+### H3 (Nuxt 3) Integration
+
+<details>
+<summary>Click to expand example</summary>
+
+H3 is a minimal HTTP framework that powers Nuxt 3. Here's how to integrate file uploads:
+
+```typescript
+// server/api/graphql.ts
+import { ApolloServer } from '@apollo/server';
+import { startServerAndCreateH3Handler } from '@as-integrations/h3';
+import { GraphQLUpload, processRequest } from 'graphql-upload-ts';
+import { 
+  GraphQLSchema, 
+  GraphQLObjectType, 
+  GraphQLString, 
+  GraphQLList, 
+  GraphQLNonNull 
+} from 'graphql';
+import { createWriteStream } from 'fs';
+import { mkdir } from 'fs/promises';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { defineEventHandler, getHeaders, setResponseStatus } from 'h3';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Ensure uploads directory exists
+await mkdir(join(__dirname, '../../uploads'), { recursive: true });
+
+// Define GraphQL types
+const FileType = new GraphQLObjectType({
+  name: 'File',
+  fields: {
+    filename: { type: GraphQLString },
+    mimetype: { type: GraphQLString },
+    encoding: { type: GraphQLString },
+    url: { type: GraphQLString },
+  },
+});
+
+// Create GraphQL schema
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve: () => 'Hello from H3 + GraphQL!',
+      },
+    },
+  }),
+  mutation: new GraphQLObjectType({
+    name: 'Mutation',
+    fields: {
+      // Single file upload
+      uploadFile: {
+        type: FileType,
+        args: {
+          file: { type: new GraphQLNonNull(GraphQLUpload) },
+        },
+        async resolve(_, { file }) {
+          const { filename, mimetype, encoding, createReadStream } = await file;
+          
+          // Save file to filesystem
+          const uploadPath = join(__dirname, '../../uploads', filename);
+          const stream = createReadStream();
+          const writeStream = createWriteStream(uploadPath);
+          
+          stream.pipe(writeStream);
+          
+          await new Promise((resolve, reject) => {
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+          });
+          
+          return {
+            filename,
+            mimetype,
+            encoding,
+            url: `/uploads/${filename}`,
+          };
+        },
+      },
+      
+      // Multiple file uploads
+      uploadFiles: {
+        type: new GraphQLList(FileType),
+        args: {
+          files: {
+            type: new GraphQLNonNull(
+              new GraphQLList(new GraphQLNonNull(GraphQLUpload))
+            ),
+          },
+        },
+        async resolve(_, { files }) {
+          const uploadedFiles = [];
+          
+          for (const file of files) {
+            const { filename, mimetype, encoding, createReadStream } = await file;
+            
+            const uploadPath = join(__dirname, '../../uploads', filename);
+            const stream = createReadStream();
+            const writeStream = createWriteStream(uploadPath);
+            
+            stream.pipe(writeStream);
+            
+            await new Promise((resolve, reject) => {
+              writeStream.on('finish', resolve);
+              writeStream.on('error', reject);
+            });
+            
+            uploadedFiles.push({
+              filename,
+              mimetype,
+              encoding,
+              url: `/uploads/${filename}`,
+            });
+          }
+          
+          return uploadedFiles;
+        },
+      },
+      
+      // Upload with additional data
+      createPost: {
+        type: GraphQLString,
+        args: {
+          title: { type: new GraphQLNonNull(GraphQLString) },
+          content: { type: new GraphQLNonNull(GraphQLString) },
+          image: { type: new GraphQLNonNull(GraphQLUpload) },
+        },
+        async resolve(_, { title, content, image }) {
+          const { filename, createReadStream } = await image;
+          
+          // Save image
+          const uploadPath = join(__dirname, '../../uploads', filename);
+          const stream = createReadStream();
+          const writeStream = createWriteStream(uploadPath);
+          
+          stream.pipe(writeStream);
+          
+          await new Promise((resolve, reject) => {
+            writeStream.on('finish', resolve);
+            writeStream.on('error', reject);
+          });
+          
+          // In a real app, save post data to database
+          console.log('Created post:', { 
+            title, 
+            content, 
+            imageUrl: `/uploads/${filename}` 
+          });
+          
+          return `Post "${title}" created with image ${filename}`;
+        },
+      },
+    },
+  }),
+});
+
+// Create Apollo Server
+const apollo = new ApolloServer({ schema });
+await apollo.start();
+
+// Create H3 handler with upload processing
+export default defineEventHandler(async (event) => {
+  const contentType = getHeaders(event)['content-type'] || '';
+  
+  // Handle multipart/form-data uploads
+  if (contentType.includes('multipart/form-data')) {
+    try {
+      // Process the upload request
+      const body = await processRequest(event.node.req, event.node.res, {
+        maxFileSize: 10 * 1024 * 1024, // 10 MB
+        maxFiles: 10,
+      });
+      
+      // Set the processed body on the request for Apollo to use
+      event.node.req.body = body;
+    } catch (error) {
+      console.error('Upload processing error:', error);
+      setResponseStatus(event, 400);
+      return { errors: [{ message: 'Failed to process upload' }] };
+    }
+  }
+  
+  // Create and execute the GraphQL handler
+  const handler = startServerAndCreateH3Handler(apollo, {
+    context: async ({ event }) => ({
+      headers: getHeaders(event),
+    }),
+  });
+  
+  return handler(event);
+});
+```
+
+#### Nitro Configuration
+
+```typescript
+// nitro.config.ts
+import { defineNitroConfig } from 'nitropack/config';
+
+export default defineNitroConfig({
+  typescript: {
+    strict: true,
+  },
+  experimental: {
+    asyncContext: true,
+  },
+  devServer: {
+    port: 4000,
+  },
+});
+```
+
+#### Package Configuration
+
+```json
+// package.json
+{
+  "name": "graphql-upload-h3-example",
+  "type": "module",
+  "scripts": {
+    "dev": "nitropack dev",
+    "build": "nitropack build",
+    "preview": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "h3": "^1.8.2",
+    "graphql": "^16.8.1",
+    "graphql-upload-ts": "^2.2.0",
+    "@apollo/server": "^4.9.5",
+    "@as-integrations/h3": "^1.1.5",
+    "nitropack": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}
+```
+
+#### Testing with cURL
+
+```bash
+# Single file upload
+curl -X POST http://localhost:4000/api/graphql \
+  -F operations='{"query":"mutation UploadFile($file: Upload!) { uploadFile(file: $file) { filename url } }","variables":{"file":null}}' \
+  -F map='{"0":["variables.file"]}' \
+  -F 0=@./image.jpg
+
+# Multiple files upload
+curl -X POST http://localhost:4000/api/graphql \
+  -F operations='{"query":"mutation UploadFiles($files: [Upload!]!) { uploadFiles(files: $files) { filename url } }","variables":{"files":[null,null]}}' \
+  -F map='{"0":["variables.files.0"],"1":["variables.files.1"]}' \
+  -F 0=@./file1.pdf \
+  -F 1=@./file2.pdf
+
+# Upload with additional data
+curl -X POST http://localhost:4000/api/graphql \
+  -F operations='{"query":"mutation CreatePost($title: String!, $content: String!, $image: Upload!) { createPost(title: $title, content: $content, image: $image) }","variables":{"title":"My Post","content":"Content here","image":null}}' \
+  -F map='{"0":["variables.image"]}' \
+  -F 0=@./photo.jpg
+```
+
+#### Key Points for H3 Integration
+
+1. **Event Handler**: Use `defineEventHandler` to create the GraphQL endpoint
+2. **Upload Processing**: Call `processRequest` before Apollo Server handles the request
+3. **Request Body**: Set the processed body on `event.node.req.body` for Apollo
+4. **Module Type**: Use `"type": "module"` in package.json for ESM support
+5. **Nitro**: Leverage Nitro for development and production builds
+
+#### Deployment Options
+
+H3/Nitro applications can be deployed to:
+- Vercel Edge Functions
+- Netlify Edge Functions  
+- Cloudflare Workers
+- AWS Lambda
+- Traditional Node.js servers
+- Deno Deploy
+
+For production, consider adding:
+- Rate limiting with h3-rate-limit
+- Authentication middleware
+- Cloud storage integration (S3, Cloudinary, etc.)
+- File type validation
+- Virus scanning
+
+</details>
+
 ### Image Upload with Validation
 
 <details>
