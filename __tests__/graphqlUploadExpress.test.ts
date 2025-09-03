@@ -269,4 +269,152 @@ describe('graphqlUploadExpress', () => {
       close();
     }
   });
+
+  it('`graphqlUploadExpress` with response sent after request completes.', async () => {
+    let requestProcessed = false;
+    let responseData: unknown;
+
+    const app = express()
+      .use(graphqlUploadExpress())
+      // @ts-expect-error - Unused parameter
+      .use((request, response) => {
+        requestProcessed = true;
+        // Simulate async operation that sends response after request is complete
+        setTimeout(() => {
+          response.json({ success: true });
+        }, 100);
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ query: '{ test }' }));
+      body.append('map', JSON.stringify({}));
+
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      responseData = JSON.parse(response.responseData || '{}');
+      ok(requestProcessed);
+      deepStrictEqual(responseData, { success: true });
+    } finally {
+      close();
+    }
+  });
+
+  it('`graphqlUploadExpress` with synchronous response after request completes.', async () => {
+    let requestBody: CtxRequestBody;
+
+    const app = express()
+      .use(graphqlUploadExpress())
+      .use((request, response) => {
+        requestBody = request.body;
+        // Send response immediately (synchronously)
+        // This tests the path where requestFinished is already true
+        response.json({
+          processed: true,
+          fileReceived: !!requestBody?.variables?.file,
+        });
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ variables: { file: null } }));
+      body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+      body.append('1', 'test content', { filename: 'test.txt' });
+
+      const response = await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+              res.responseData = data;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      const responseData = JSON.parse(response.responseData || '{}');
+      ok(requestBody);
+      ok(requestBody.variables);
+      ok(requestBody.variables.file);
+      deepStrictEqual(responseData, { processed: true, fileReceived: true });
+    } finally {
+      close();
+    }
+  });
+
+  it('`graphqlUploadExpress` with processRequest throwing non-exposed HTTP error.', async () => {
+    let expressError: unknown;
+    let responseStatusCode: unknown;
+
+    const error = createHttpError(500, 'Internal Server Error');
+    error.expose = false; // This error should not set the response status
+
+    const app = express()
+      .use(
+        graphqlUploadExpress({
+          async processRequest(request) {
+            request.resume();
+            throw error;
+          },
+        })
+      )
+      .use((error: unknown, _request: unknown, response: Response, next: NextFunction) => {
+        expressError = error;
+        responseStatusCode = response.statusCode;
+
+        // Sending a response here prevents the default Express error handler
+        // from running, which would undesirably (in this case) display the
+        // error in the console.
+        if (response.headersSent) next(error);
+        else response.send();
+      });
+
+    const { port, close } = await listen(createServer(app));
+
+    try {
+      const body = new FormData();
+      body.append('operations', JSON.stringify({ variables: { file: null } }));
+      body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+      body.append('1', 'a', { filename: 'a.txt' });
+
+      await new Promise<ResIncomingMessage>((resolve, reject) => {
+        body.submit(`http://localhost:${port}`, (err, res: ResIncomingMessage) => {
+          if (err) reject(err);
+          else {
+            let responseData = '';
+            res.on('data', (chunk) => (responseData += chunk));
+            res.on('end', () => {
+              res.responseData = responseData;
+              resolve(res);
+            });
+          }
+        });
+      });
+
+      deepStrictEqual(expressError, error);
+      // When expose is false, the status should not be set
+      strictEqual(responseStatusCode, 200);
+    } finally {
+      close();
+    }
+  });
 });
