@@ -4,8 +4,8 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { expressMiddleware } from '@as-integrations/express5';
 import cors from 'cors';
 import express from 'express';
+import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from 'graphql-upload-ts';
 import { createServer } from 'http';
-import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
 
 const contextFnInjections = (req) => {
   const { user } = req;

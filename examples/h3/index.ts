@@ -1,100 +1,77 @@
+import { createWriteStream } from 'node:fs';
 import { createApp, createRouter, defineEventHandler, toNodeListener } from 'h3';
 import { createServer } from 'node:http';
-import { ApolloServer } from '@apollo/server';
+import { ApolloServer, type ApolloServerOptions, type BaseContext } from '@apollo/server';
 import { startServerAndCreateH3Handler } from '@as-integrations/h3';
-import { GraphQLUpload, processRequest, validateMimeType } from 'graphql-upload-ts';
-import { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLNonNull } from 'graphql';
-import { createWriteStream } from 'fs';
-import { mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { type FileUpload, GraphQLUpload, processRequest } from 'graphql-upload-ts';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Ensure uploads directory exists
-await mkdir(join(__dirname, './uploads'), { recursive: true });
-
-// Define the File type (matching other examples)
-const FileType = new GraphQLObjectType({
-  name: 'File',
-  fields: {
-    uri: { type: GraphQLString },
-    filename: { type: GraphQLString },
-    mimetype: { type: GraphQLString },
-    encoding: { type: GraphQLString },
-    fileSize: { type: GraphQLInt },
-  },
-});
-
-// Create GraphQL schema
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Query',
-    fields: {
-      hello: {
-        type: GraphQLString,
-        resolve: () => 'Hello from H3 + GraphQL Upload!',
-      },
+// Same schema pattern as Apollo and Express examples
+const apolloSchema: ApolloServerOptions<BaseContext> = {
+  typeDefs: `#graphql
+  scalar Upload
+  type File {
+    uri: String!
+    filename: String!
+    mimetype: String!
+    encoding: String!
+    fileSize: Int!
+  }
+  type Query {
+    hello: String!
+  }
+  type Mutation {
+    uploadFile(file: Upload!) : File!
+  }
+  `,
+  resolvers: {
+    Upload: GraphQLUpload,
+    Query: {
+      hello: () => 'Hello from H3 + GraphQL Upload!',
     },
-  }),
-  mutation: new GraphQLObjectType({
-    name: 'Mutation',
-    fields: {
-      // Single file upload with validation (matching other examples)
-      uploadFile: {
-        type: FileType,
-        args: {
-          file: {
-            type: new GraphQLNonNull(GraphQLUpload),
-          },
-        },
-        async resolve(_, { file }) {
-          const { filename, mimetype, encoding, createReadStream } = await file;
-          
-          // Validate mime type (only accept PNG like other examples)
-          const mimeValidation = validateMimeType(mimetype, ['image/png']);
-          if (!mimeValidation.isValid) {
-            throw new Error(`Invalid file type. Only PNG images are allowed. Received: ${mimetype}`);
-          }
-          
-          // Save file to filesystem
-          const uploadPath = join(__dirname, './uploads', filename);
-          const stream = createReadStream();
-          const writeStream = createWriteStream(uploadPath);
-          
-          let fileSize = 0;
+    Mutation: {
+      uploadFile: async (ctx, args) => {
+        console.log('uploadFile resolver ran');
+        const { file } = args as { file: Promise<FileUpload> };
+        const { createReadStream, filename, mimetype, encoding } = await file;
+
+        console.log(`Received file ${filename} with mimetype ${mimetype} and encoding ${encoding}`);
+        // validate file type
+        if (mimetype !== 'image/png') throw new Error('Only PNG files are allowed');
+
+        const stream = createReadStream();
+        // save file to current directory
+        let fileSize = 0;
+        const outFilePath = `${__dirname}/uploaded-${Date.now()}-${filename}`;
+        await new Promise((resolve, reject) => {
           stream.on('data', (chunk) => {
             fileSize += chunk.length;
           });
-          
-          stream.pipe(writeStream);
-          
-          await new Promise((resolve, reject) => {
-            writeStream.on('finish', resolve);
-            writeStream.on('error', reject);
-          });
-          
-          console.log(`File uploaded: ${filename} (${fileSize} bytes)`);
-          
-          return {
-            uri: `/uploads/${filename}`,
-            filename,
-            mimetype,
-            encoding,
-            fileSize,
-          };
-        },
+          stream
+            .pipe(createWriteStream(outFilePath))
+            .on('finish', () => {
+              console.log(`File ${outFilePath} saved`);
+              resolve(null);
+            })
+            .on('error', (err) => {
+              console.error(`Error saving file ${outFilePath}`, err);
+              reject(err);
+            });
+        });
+        return {
+          filename,
+          mimetype,
+          encoding,
+          fileSize,
+          uri: outFilePath,
+        };
       },
     },
-  }),
-});
+  },
+};
 
 // Create Apollo Server
-const apollo = new ApolloServer({
-  schema,
-});
-
-await apollo.start();
+const apolloServer = new ApolloServer(apolloSchema);
+await apolloServer.start();
 
 // Create H3 app
 const app = createApp();
@@ -125,7 +102,7 @@ router.use(
     }
     
     // Create and execute the GraphQL handler
-    const handler = startServerAndCreateH3Handler(apollo, {
+    const handler = startServerAndCreateH3Handler(apolloServer, {
       context: async ({ event }) => ({
         headers: event.node.req.headers,
       }),

@@ -2,14 +2,15 @@
   "scripts": {
     "compile": "tsc -p .",
     "start": "npm run compile && node ./dist/examples/apollo/index.js",
-    "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png",
-    "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg"
+    "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg",
+    "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
     "@as-integrations/express5": "^1.1.2",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "graphql-upload-ts": "file:../../"
   },
   "devDependencies": {
     "@types/cors": "2.8.19",
