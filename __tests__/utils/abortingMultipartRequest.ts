@@ -1,4 +1,6 @@
-import { FormDataEncoder, FormDataLike } from 'form-data-encoder';
+import { FormDataEncoder, type FormDataLike } from 'form-data-encoder';
+
+// Node.js 18+ has native fetch
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -18,7 +20,7 @@ export async function abortingMultipartRequest(
   url: RequestInfo | URL,
   formData: FormDataLike | FormData,
   abortMarker: string,
-  requestReceived: Promise<any>,
+  requestReceived: Promise<unknown>
 ) {
   const abortController = new AbortController();
   const encoder = new FormDataEncoder(formData as FormDataLike);

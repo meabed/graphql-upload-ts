@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.2.0](https://github.com/meabed/graphql-upload-ts/compare/v2.1.2...v2.2.0) (2025-01-03)
+
+### Features
+- Add comprehensive error handling with custom error classes and error codes
+- Add file validation utilities (MIME type, file extension, filename sanitization)
+- Add dual module support (CommonJS and ESM)
+- Improve TypeScript support with strict mode enabled
+- Add extensive test coverage (91%+ coverage with 119 tests)
+
+### Improvements
+- Migrate from ESLint/Prettier to Biome for unified tooling
+- Update TypeScript target from ES5 to ES2020
+- Replace all `any` types with proper type inference
+- Use optional chaining (`?.`) instead of non-null assertions (`!`)
+- Improve Express middleware to properly wait for request completion
+- Update all dependencies to latest versions
+
+### Documentation
+- Complete README rewrite with comprehensive examples
+- Add manual schema construction examples with GraphQL.js
+- Add complete examples for Apollo Server v4, Koa, GraphQL Yoga, and NestJS
+- Add detailed image upload example with validation and S3 integration
+- Add security and validation documentation
+- Add migration guide from graphql-upload
+
+### Developer Experience
+- Remove Mocha, use Jest exclusively for testing
+- Add separate tsconfig files for different build targets
+- Improve build process for better performance
+- Add comprehensive type definitions
+
 ### [2.1.2](https://github.com/meabed/graphql-upload-ts/compare/v2.1.1...v2.1.2) (2024-02-23)
 - Update package export to export fs-capacitor
 

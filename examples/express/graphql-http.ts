@@ -1,10 +1,10 @@
 import { createWriteStream } from 'node:fs';
-import { createServer } from 'http';
-import express from 'express';
-import cors from 'cors';
-import { FileUpload, GraphQLUpload, processRequest } from '../../src';
-import { createHandler } from 'graphql-http/lib/use/express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import cors from 'cors';
+import express from 'express';
+import { createHandler } from 'graphql-http/lib/use/express';
+import { createServer } from 'http';
+import { type FileUpload, GraphQLUpload, processRequest } from '../../src';
 
 async function saveFileFromStream(stream: NodeJS.ReadableStream, filename: string) {
   // save file to current directory
@@ -93,8 +93,20 @@ const gqlSchema = makeExecutableSchema({
         const rs1 = await saveFileFromStream(stream1, f1.filename);
         const rs2 = await saveFileFromStream(stream2, f2.filename);
         return [
-          { filename: f1.filename, mimetype: f1.mimetype, encoding: f1.encoding, fileSize: rs1.fileSize, uri: rs1.uri },
-          { filename: f2.filename, mimetype: f2.mimetype, encoding: f2.encoding, fileSize: rs2.fileSize, uri: rs2.uri },
+          {
+            filename: f1.filename,
+            mimetype: f1.mimetype,
+            encoding: f1.encoding,
+            fileSize: rs1.fileSize,
+            uri: rs1.uri,
+          },
+          {
+            filename: f2.filename,
+            mimetype: f2.mimetype,
+            encoding: f2.encoding,
+            fileSize: rs2.fileSize,
+            uri: rs2.uri,
+          },
         ];
       },
     },
@@ -109,7 +121,7 @@ app.use(
     credentials: true,
     maxAge: 600,
     origin: true,
-  }),
+  })
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -129,7 +141,7 @@ app.use(
         variables: Object(params.variables),
       };
     },
-  }),
+  })
 );
 
 const port = process.env.PORT || 4000;

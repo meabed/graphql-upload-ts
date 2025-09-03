@@ -1,5 +1,5 @@
-import { Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 
 export async function listen(server: Server) {
   await new Promise((resolve) => {

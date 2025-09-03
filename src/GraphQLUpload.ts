@@ -1,86 +1,73 @@
+import {
+  type ASTNode,
+  GraphQLError,
+  GraphQLScalarType,
+  type GraphQLScalarTypeConfig,
+} from 'graphql';
 import { Upload } from './Upload';
-import { ASTNode, GraphQLError, GraphQLScalarType } from 'graphql';
 
 /**
- * A GraphQL `Upload` scalar that can be used in a
- * [`GraphQLSchema`](https://graphql.org/graphql-js/type/#graphqlschema).
- * It's value in resolvers is a promise that resolves
- * [file upload details]{@link FileUpload} for processing and storage.
- * @example <caption>Ways to `import`.</caption>
- * ```js
+ * A GraphQL `Upload` scalar that can be used in a GraphQL schema.
+ * Its value in resolvers is a promise that resolves to file upload details
+ * for processing and storage.
+ *
+ * @example Import usage
+ * ```typescript
  * import { GraphQLUpload } from 'graphql-upload-ts';
  * ```
  *
- * ```js
- * import GraphQLUpload from 'graphql-upload-ts/dist/GraphQLUpload.js';
- * ```
- * @example <caption>Ways to `require`.</caption>
- * ```js
- * const { GraphQLUpload } = require('graphql-upload-ts');
- * ```
- *
- * ```js
- * const GraphQLUpload = require('graphql-upload-ts/dist/GraphQLUpload');
- * ```
- * @example <caption>Setup for a schema built with [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema).</caption>
- * ```js
- * const { makeExecutableSchema } = require('graphql-tools');
- * const { GraphQLUpload } = require('graphql-upload-ts');
+ * @example Schema usage with GraphQL Tools
+ * ```typescript
+ * import { makeExecutableSchema } from '@graphql-tools/schema';
+ * import { GraphQLUpload } from 'graphql-upload-ts';
  *
  * const schema = makeExecutableSchema({
- *   typeDefs: /* GraphQL *\/ `
+ *   typeDefs: `
  *     scalar Upload
+ *
+ *     type Mutation {
+ *       uploadFile(file: Upload!): Boolean
+ *     }
  *   `,
  *   resolvers: {
  *     Upload: GraphQLUpload,
+ *     Mutation: {
+ *       uploadFile: async (_, { file }) => {
+ *         const { filename, mimetype, createReadStream } = await file;
+ *         const stream = createReadStream();
+ *         // Process the file stream...
+ *         return true;
+ *       }
+ *     }
  *   },
  * });
  * ```
- * @example <caption>A manually constructed schema with an image upload mutation.</caption>
- * ```js
- * const {
- *   GraphQLSchema,
- *   GraphQLObjectType,
- *   GraphQLBoolean,
- * } = require('graphql');
- * const { GraphQLUpload } = require('graphql-upload-ts');
- *
- * const schema = new GraphQLSchema({
- *   mutation: new GraphQLObjectType({
- *     name: 'Mutation',
- *     fields: {
- *       uploadImage: {
- *         description: 'Uploads an image.',
- *         type: GraphQLBoolean,
- *         args: {
- *           image: {
- *             description: 'Image file.',
- *             type: GraphQLUpload,
- *           },
- *         },
- *         async resolve(parent, { image }) {
- *           const { filename, fieldName, mimetype, createReadStream } = await image;
- *           const stream = createReadStream();
- *           // Promisify the stream and store the file, then…
- *           return true;
- *         },
- *       },
- *     },
- *   }),
- * });
- * ```
  */
-export const GraphQLUpload = new GraphQLScalarType({
+const uploadScalarConfig: GraphQLScalarTypeConfig<Upload['promise'], never> = {
   name: 'Upload',
   description: 'The `Upload` scalar type represents a file upload.',
-  parseValue(value: { promise: Promise<Upload> }) {
-    if (value instanceof Upload) return value.promise;
-    throw new GraphQLError('Upload value invalid.');
+
+  parseValue(value: unknown): Upload['promise'] {
+    if (value instanceof Upload) {
+      return value.promise;
+    }
+    throw new GraphQLError('Upload value invalid. Expected Upload instance.', {
+      extensions: { code: 'INVALID_UPLOAD_VALUE' },
+    });
   },
-  parseLiteral(node: ASTNode | ASTNode[]) {
-    throw new GraphQLError('Upload literal unsupported.', { nodes: node });
+
+  parseLiteral(node: ASTNode): never {
+    throw new GraphQLError('Upload literal unsupported. Uploads can only be passed as variables.', {
+      nodes: node,
+      extensions: { code: 'UPLOAD_LITERAL_UNSUPPORTED' },
+    });
   },
-  serialize() {
-    throw new GraphQLError('Upload serialization unsupported.');
+
+  serialize(): never {
+    throw new GraphQLError('Upload serialization unsupported. Uploads cannot be serialized.', {
+      extensions: { code: 'UPLOAD_SERIALIZATION_UNSUPPORTED' },
+    });
   },
-});
+};
+
+export const GraphQLUpload = new GraphQLScalarType(uploadScalarConfig);
