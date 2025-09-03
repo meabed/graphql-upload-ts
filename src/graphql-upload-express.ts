@@ -15,6 +15,17 @@ type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
 
 export interface GraphqlUploadExpressOptions extends UploadOptions {
   processRequest?: ProcessRequestFn;
+  /**
+   * Whether to override the response.send method to ensure the request stream
+   * is fully consumed before sending the response. This prevents potential issues
+   * with some GraphQL server implementations.
+   * 
+   * Set to `false` when using with NestJS or when you want to handle the response
+   * timing yourself.
+   * 
+   * @default true if processRequest is provided, false otherwise
+   */
+  overrideSendResponse?: boolean;
 }
 
 /**
@@ -44,7 +55,11 @@ export interface GraphqlUploadExpressOptions extends UploadOptions {
 export function graphqlUploadExpress(
   options: GraphqlUploadExpressOptions = {}
 ): (req: Request, res: Response, next: NextFunction) => void {
-  const { processRequest = defaultProcessRequest, ...uploadOptions } = options;
+  const { 
+    processRequest = defaultProcessRequest, 
+    overrideSendResponse = processRequest !== defaultProcessRequest ? true : false,
+    ...uploadOptions 
+  } = options;
 
   return function graphqlUploadExpressMiddleware(
     request: Request,
@@ -55,30 +70,33 @@ export function graphqlUploadExpress(
       return next();
     }
 
-    // Store the original send method
-    const originalSend = response.send.bind(response);
-    let requestFinished = false;
+    // Only override response.send if explicitly enabled
+    if (overrideSendResponse) {
+      // Store the original send method
+      const originalSend = response.send.bind(response);
+      let requestFinished = false;
 
-    // Monitor when the request is complete
-    request.on('end', () => {
-      requestFinished = true;
-    });
+      // Monitor when the request is complete
+      request.on('end', () => {
+        requestFinished = true;
+      });
 
-    // Override send to ensure request is complete before sending response
-    response.send = (...args: Parameters<typeof response.send>): typeof response => {
-      if (!requestFinished) {
-        // If request isn't finished, wait for it
-        request.on('end', () => {
+      // Override send to ensure request is complete before sending response
+      response.send = (...args: Parameters<typeof response.send>): typeof response => {
+        if (!requestFinished) {
+          // If request isn't finished, wait for it
+          request.on('end', () => {
+            response.send = originalSend;
+            originalSend(...args);
+          });
+        } else {
+          // Request is already finished, send immediately
           response.send = originalSend;
           originalSend(...args);
-        });
-      } else {
-        // Request is already finished, send immediately
-        response.send = originalSend;
-        originalSend(...args);
-      }
-      return response;
-    };
+        }
+        return response;
+      };
+    }
 
     processRequest(request as IncomingReq, response, uploadOptions)
       .then((body) => {
