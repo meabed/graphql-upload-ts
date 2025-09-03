@@ -1,26 +1,38 @@
 {
   "name": "graphql-upload-ts",
   "version": "2.2.0",
-  "description": "Typescript minimalistic and developer friendly middleware and an Upload scalar to add support for GraphQL multipart requests (file uploads via queries and mutations) to various Node.js GraphQL servers.",
+  "description": "TypeScript-first middleware and Upload scalar for GraphQL multipart requests (file uploads) with support for Apollo Server, Express, Koa, and more.",
   "keywords": [
-    "typescript",
-    "graphql-upload-typescript",
     "graphql",
-    "upload",
-    "file",
+    "graphql-upload",
+    "graphql-upload-typescript",
+    "file-upload",
     "multipart",
-    "server",
-    "koa",
+    "multipart-request",
+    "apollo-server",
     "express",
-    "apollo",
+    "koa",
+    "typescript",
+    "upload-scalar",
+    "graphql-middleware",
+    "file-streaming",
+    "graphql-yoga",
+    "nestjs",
     "esm",
-    "mjs"
+    "commonjs"
   ],
   "homepage": "https://github.com/meabed/graphql-upload-ts#readme",
-  "bugs": "https://github.com/meabed/graphql-upload-ts/issues",
+  "bugs": {
+    "url": "https://github.com/meabed/graphql-upload-ts/issues",
+    "email": "mo@meabed.com"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/meabed/graphql-upload-ts"
+    "url": "git+https://github.com/meabed/graphql-upload-ts.git"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/meabed"
   },
   "license": "MIT",
   "author": {
@@ -28,17 +40,14 @@
     "email": "mo@meabed.com",
     "url": "https://meabed.com"
   },
-  "maintainers": [
+  "contributors": [
     {
       "name": "Mohamed Meabed",
       "email": "mo@meabed.com",
       "url": "https://meabed.com"
     }
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -47,33 +56,46 @@
     },
     "./package.json": "./package.json"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "!src/**/*.test.ts",
+    "!src/**/*.spec.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
-  "sideEffects": false,
   "scripts": {
+    "analyze": "size-limit --why",
     "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:types": "tsc -p tsconfig.types.json",
-    "clean": "rm -rf dist coverage",
-    "test": "jest --coverage",
-    "test:watch": "jest --watch",
-    "lint": "biome check",
-    "lint:fix": "biome check --write",
+    "clean": "rm -rf dist coverage *.tsbuildinfo",
+    "dev": "tsc --watch -p tsconfig.cjs.json",
+    "example:apollo": "cd examples/apollo && npm start",
+    "example:express": "cd examples/express && npm start",
     "format": "biome format --write",
     "format:check": "biome format",
-    "typecheck": "tsc --noEmit",
-    "validate": "npm run lint && npm run typecheck && npm run test",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
     "prepare": "husky",
     "prepublishOnly": "npm run validate && npm run build",
     "size": "size-limit",
-    "analyze": "size-limit --why"
+    "test": "jest --coverage",
+    "test:coverage": "jest --coverage --coverageReporters=html",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test"
   },
   "lint-staged": {
-    "src/*.{ts,tsx,js,jsx}": "biome check --write",
-    "__tests__/*.{ts,tsx,js,jsx}": "biome check --write"
+    "*.{ts,tsx,js,jsx,json,md}": [
+      "biome format --write",
+      "biome check --write"
+    ]
   },
   "dependencies": {
     "busboy": "^1.6.0",
@@ -106,9 +128,10 @@
   "peerDependencies": {
     "graphql": ">=0.13.1"
   },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "engines": {
-    "node": ">=16"
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
   },
-  "engineStrict": false,
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "engineStrict": false
 }

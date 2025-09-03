@@ -1,12 +1,31 @@
-import type { UploadOptions } from './processRequest';
+import type { UploadOptions } from './process-request';
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
 
+/**
+ * Maximum size for non-file form fields (in bytes).
+ * This applies to text fields like 'operations' and 'map' in GraphQL multipart requests.
+ * These fields contain JSON data (query, variables, and file mappings).
+ * Default: 1MB - sufficient for large GraphQL queries and variable sets.
+ */
 export const DEFAULT_MAX_FIELD_SIZE = 1_000_000; // 1MB
-export const DEFAULT_MAX_FILE_SIZE = Number.POSITIVE_INFINITY;
+
+/**
+ * Maximum size for uploaded files (in bytes).
+ * This applies to the actual binary file content being uploaded.
+ * Default: 5MB - a reasonable limit for most web applications.
+ * Can be overridden per request for larger files (videos, high-res images, etc.).
+ */
+export const DEFAULT_MAX_FILE_SIZE = 5_000_000; // 5MB
+
+/**
+ * Maximum number of files that can be uploaded in a single request.
+ * Default: Infinity - no limit on the number of files.
+ * Should be set to a reasonable number in production to prevent abuse.
+ */
 export const DEFAULT_MAX_FILES = Number.POSITIVE_INFINITY;
 
 export function validateOptions(options?: UploadOptions): UploadOptions {

@@ -1,10 +1,10 @@
+import { createServer } from 'http';
 import { createWriteStream } from 'node:fs';
 import { ApolloServer, type ApolloServerOptions, type BaseContext } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { expressMiddleware } from '@as-integrations/express5';
 import cors from 'cors';
 import express from 'express';
-import { createServer } from 'http';
 import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
 
 const contextFnInjections = (req) => {

@@ -3,15 +3,32 @@ import busboy, { type Busboy } from 'busboy';
 import createError, { type HttpError } from 'http-errors';
 import objectPath from 'object-path';
 import { type ReadStreamOptions, WriteStream } from './fs-capacitor';
-import { ignoreStream } from './ignoreStream';
-import { type FileUpload, Upload } from './Upload';
+import { ignoreStream } from './ignore-stream';
+import { type FileUpload, Upload } from './upload';
+import { DEFAULT_MAX_FIELD_SIZE, DEFAULT_MAX_FILE_SIZE, DEFAULT_MAX_FILES } from './validation';
 
 export const GRAPHQL_MULTIPART_REQUEST_SPEC_URL =
   'https://github.com/jaydenseric/graphql-multipart-request-spec' as const;
 
 export interface UploadOptions {
+  /**
+   * Maximum allowed size for non-file form fields (in bytes).
+   * This limits the size of text fields like 'operations' and 'map' JSON.
+   * @default 1_000_000 (1MB)
+   */
   maxFieldSize?: number;
+
+  /**
+   * Maximum allowed size for uploaded files (in bytes).
+   * This limits the size of actual file content being uploaded.
+   * @default 5_000_000 (5MB)
+   */
   maxFileSize?: number;
+
+  /**
+   * Maximum number of files allowed in a single request.
+   * @default Infinity
+   */
   maxFiles?: number;
 }
 
@@ -36,9 +53,9 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
   options?: UploadOptions
 ): Promise<T> {
   const {
-    maxFieldSize = 1_000_000,
-    maxFileSize = Number.POSITIVE_INFINITY,
-    maxFiles = Number.POSITIVE_INFINITY,
+    maxFieldSize = DEFAULT_MAX_FIELD_SIZE,
+    maxFileSize = DEFAULT_MAX_FILE_SIZE,
+    maxFiles = DEFAULT_MAX_FILES,
   } = options ?? {};
 
   return new Promise((resolve, reject) => {
