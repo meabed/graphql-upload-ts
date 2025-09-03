@@ -5,7 +5,7 @@ import {
   type GraphQLOperation,
   type IncomingReq,
   type UploadOptions,
-} from './processRequest';
+} from './process-request';
 
 type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
   req: IncomingReq,

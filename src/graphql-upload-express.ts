@@ -5,7 +5,7 @@ import {
   type GraphQLOperation,
   type IncomingReq,
   type UploadOptions,
-} from './processRequest';
+} from './process-request';
 
 type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
   req: IncomingReq,
@@ -15,7 +15,6 @@ type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
 
 export interface GraphqlUploadExpressOptions extends UploadOptions {
   processRequest?: ProcessRequestFn;
-  overrideSendResponse?: boolean;
 }
 
 /**
@@ -45,11 +44,7 @@ export interface GraphqlUploadExpressOptions extends UploadOptions {
 export function graphqlUploadExpress(
   options: GraphqlUploadExpressOptions = {}
 ): (req: Request, res: Response, next: NextFunction) => void {
-  const {
-    processRequest = defaultProcessRequest,
-    overrideSendResponse = false,
-    ...uploadOptions
-  } = options;
+  const { processRequest = defaultProcessRequest, ...uploadOptions } = options;
 
   return function graphqlUploadExpressMiddleware(
     request: Request,

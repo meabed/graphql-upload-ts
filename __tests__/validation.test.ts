@@ -1,4 +1,4 @@
-import type { UploadOptions } from '../src/processRequest';
+import type { UploadOptions } from '../src/process-request';
 import {
   DEFAULT_MAX_FIELD_SIZE,
   DEFAULT_MAX_FILE_SIZE,
@@ -439,8 +439,8 @@ describe('Validation', () => {
 
   describe('DEFAULT constants', () => {
     it('should have expected default values', () => {
-      expect(DEFAULT_MAX_FIELD_SIZE).toBe(1_000_000); // 1MB
-      expect(DEFAULT_MAX_FILE_SIZE).toBe(Number.POSITIVE_INFINITY);
+      expect(DEFAULT_MAX_FIELD_SIZE).toBe(1_000_000); // 1MB for text fields
+      expect(DEFAULT_MAX_FILE_SIZE).toBe(5_000_000); // 5MB for file uploads
       expect(DEFAULT_MAX_FILES).toBe(Number.POSITIVE_INFINITY);
     });
   });

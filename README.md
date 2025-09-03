@@ -833,10 +833,9 @@ Express middleware for handling multipart/form-data requests.
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 
 app.use('/graphql', graphqlUploadExpress({
-  maxFileSize: 10000000,       // 10 MB (default: Infinity)
-  maxFiles: 10,                // Max number of files (default: Infinity)
-  maxFieldSize: 1000000,       // Max field size in bytes (default: 1 MB)
-  overrideSendResponse: false, // For NestJS/similar frameworks (default: false)
+  maxFileSize: 10000000,  // 10 MB for file uploads (default: 5 MB)
+  maxFiles: 10,           // Max number of files (default: Infinity)
+  maxFieldSize: 1000000,  // 1 MB for JSON fields (default: 1 MB)
 }));
 ```
 
@@ -880,8 +879,8 @@ Configuration options for the middleware:
 
 ```typescript
 interface UploadOptions {
-  maxFieldSize?: number;  // Max size of non-file fields (default: 1 MB)
-  maxFileSize?: number;   // Max size per file (default: Infinity)
+  maxFieldSize?: number;  // Max size of non-file fields like JSON (default: 1 MB)
+  maxFileSize?: number;   // Max size per file upload (default: 5 MB) 
   maxFiles?: number;      // Max number of files (default: Infinity)
 }
 ```

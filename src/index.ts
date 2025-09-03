@@ -1,14 +1,13 @@
 // Core exports
 
-export * from './errors';
 // Utility exports
 export * from './fs-capacitor';
-export * from './GraphQLUpload';
-
+export * from './graphql-upload';
 // Middleware exports
-export * from './graphqlUploadExpress';
-export * from './graphqlUploadKoa';
-export * from './ignoreStream';
-export * from './processRequest';
-export * from './Upload';
+export * from './graphql-upload-express';
+export * from './graphql-upload-koa';
+export * from './ignore-stream';
+export * from './process-request';
+export * from './upload';
+export * from './upload-errors';
 export * from './validation';

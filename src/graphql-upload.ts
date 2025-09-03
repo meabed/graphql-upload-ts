@@ -4,7 +4,7 @@ import {
   GraphQLScalarType,
   type GraphQLScalarTypeConfig,
 } from 'graphql';
-import { Upload } from './Upload';
+import { Upload } from './upload';
 
 /**
  * A GraphQL `Upload` scalar that can be used in a GraphQL schema.
