@@ -1,146 +1,462 @@
-# graphql upload typescript (graphql-upload-ts)
+# GraphQL Upload for TypeScript
 
-[![NPM version](https://badgen.net/npm/v/graphql-upload-ts)](https://npm.im/graphql-upload-ts)
+<div align="center">
+
+[![NPM version](https://img.shields.io/npm/v/graphql-upload-ts)](https://npm.im/graphql-upload-ts)
 [![Build Status](https://github.com/meabed/graphql-upload-ts/workflows/CI/badge.svg)](https://github.com/meabed/graphql-upload-ts/actions)
+[![Test Coverage](https://img.shields.io/badge/coverage-91.62%25-brightgreen)](https://github.com/meabed/graphql-upload-ts)
 [![Downloads](https://img.shields.io/npm/dm/graphql-upload-ts.svg)](https://www.npmjs.com/package/graphql-upload-ts)
-[![UNPKG](https://img.shields.io/badge/UNPKG-OK-179BD7.svg)](https://unpkg.com/browse/graphql-upload-ts@latest/)
+[![License](https://img.shields.io/npm/l/graphql-upload-ts)](https://github.com/meabed/graphql-upload-ts/blob/master/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/node/v/graphql-upload-ts)](https://nodejs.org)
 
-Minimalistic and developer friendly middleware and an [`Upload` scalar](#class-graphqlupload) to add support for [GraphQL multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec) (file uploads via queries and
-mutations) to various Node.js GraphQL servers.
+**A minimalistic, type-safe middleware for handling GraphQL file uploads in Node.js**
 
-#### Acknowledgements
+[Installation](#-installation) • [Quick Start](#-quick-start) • [Examples](#-examples) • [API](#-api) • [Contributing](#-contributing)
 
-This module was forked from [`graphql-upload`](https://npm.im/graphql-upload) and [`graphql-upload-minimal`](https://npm.im/graphql-upload-minimal). The original module is exceptionally well documented and well written. It was very easy to fork and amend.
+</div>
 
-I needed to support typescript to use it properly in typescript projects.
+## ✨ Features
 
-### Examples
-- Apollo Server & Express: [Apollo Server example](./examples/apollo)
-- Express & Graphql Http: [Express example](./examples/express/graphql-http.ts)
-- Express & Yoga: [Express example](./examples/express/graphql-yoga.ts)
+- 🚀 **Full TypeScript Support** - Written in TypeScript with complete type definitions
+- 📦 **Framework Agnostic** - Works with Express, Koa, Apollo Server, and more
+- 🔒 **Type-Safe** - Strict TypeScript mode enabled with comprehensive type coverage
+- 🎯 **Production Ready** - Battle-tested with 91%+ test coverage
+- ⚡ **High Performance** - Efficient file streaming with configurable limits
+- 🛡️ **Security First** - Built-in file validation and sanitization
+- 📝 **Well Documented** - Extensive documentation and real-world examples
+- 🔄 **Dual Module Support** - CommonJS and ESM modules included
 
-### Setup
+## 📋 Table of Contents
 
-To install [`graphql-upload-ts`](https://npm.im/graphql-upload-ts) and the [`graphql`](https://npm.im/graphql) peer dependency from [npm](https://npmjs.com) run:
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Examples](#-examples)
+- [API Documentation](#-api)
+- [File Upload Handling](#-file-upload-handling)
+- [Security & Validation](#-security--validation)
+- [Architecture](#-architecture)
+- [Migration Guide](#-migration-guide)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-```shell
+## 📦 Installation
+
+```bash
 npm install graphql-upload-ts graphql
 # or
 yarn add graphql-upload-ts graphql
+# or
+pnpm add graphql-upload-ts graphql
 ```
 
-Use the [`graphqlUploadKoa`](#function-graphqluploadkoa) or [`graphqlUploadExpress`](#function-graphqluploadexpress) middleware just before GraphQL middleware. Alternatively, use [`processRequest`](#function-processrequest) to create a
-custom middleware.
+### Requirements
 
-A schema built with separate SDL and resolvers (e.g. using [`makeExecutableSchema`](https://apollographql.com/docs/graphql-tools/generate-schema#makeExecutableSchema)) requires the [`Upload` scalar](#class-graphqlupload) to be setup.
+- Node.js >= 16
+- GraphQL >= 0.13.1
 
-### Usage
+## 🚀 Quick Start
 
-[Clients implementing the GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec#client) upload files as [`Upload` scalar](#class-graphqlupload) query or mutation variables. Their resolver values are
-promises that resolve [file upload details](#type-fileupload) for processing and storage. Files are typically streamed into cloud storage but may also be stored in the filesystem.
+### Express + Apollo Server
 
-
-#### Express.js
-
-Minimalistic code example showing how to upload a file along with arbitrary GraphQL data and save it to an S3 bucket.
-
-Express.js middleware. You must put it before the main GraphQL sever middleware. Also, **make sure there is no other Express.js middleware which parses `multipart/form-data`** HTTP requests before the `graphqlUploadExpress` middleware!
-
-```ts
+```typescript
 import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
-import { graphqlUploadExpress } from 'graphql-upload-ts';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { graphqlUploadExpress, GraphQLUpload } from 'graphql-upload-ts';
 
-express()
-  .use(
-    '/graphql',
-    graphqlUploadExpress({ 
-      maxFileSize: 10000000,
-      maxFiles: 10,
-    }),
-    graphqlHTTP({ schema: require('./my-schema') })
-  )
-  .listen(3000);
-```
+const typeDefs = `
+  scalar Upload
 
-GraphQL schema:
+  type File {
+    filename: String!
+    mimetype: String!
+    encoding: String!
+  }
 
-```graphql
-scalar Upload
-input DocumentUploadInput {
-  docType: String!
-  file: Upload!
-}
+  type Query {
+    hello: String
+  }
 
-type SuccessResult {
-  success: Boolean!
-  message: String
-}
-type Mutations {
-  uploadDocuments(docs: [DocumentUploadInput!]!): SuccessResult
-}
-```
-
-GraphQL resolvers:
-
-```js
-const { S3 } = require('aws-sdk');
+  type Mutation {
+    singleUpload(file: Upload!): File!
+  }
+`;
 
 const resolvers = {
-  Upload: require('graphql-upload-ts').GraphQLUpload,
+  Upload: GraphQLUpload,
+  Mutation: {
+    singleUpload: async (parent, { file }) => {
+      const { createReadStream, filename, mimetype, encoding } = await file;
+      
+      // Stream file to cloud storage, filesystem, etc.
+      const stream = createReadStream();
+      
+      // Process the file stream here...
+      
+      return { filename, mimetype, encoding };
+    },
+  },
+};
 
-  Mutations: {
-    async uploadDocuments(root, { docs }, ctx) {
-      try {
-        const s3 = new S3({ apiVersion: '2006-03-01', params: { Bucket: 'my-bucket' } });
+const app = express();
 
-        for (const doc of docs) {
-          const { createReadStream, filename /*, fieldName, mimetype, encoding */ } = await doc.file;
-          const Key = `${ctx.user.id}/${doc.docType}-${filename}`;
-          await s3.upload({ Key, Body: createReadStream() }).promise();
-        }
+// Add upload middleware BEFORE Apollo Server
+app.use(graphqlUploadExpress({
+  maxFileSize: 10 * 1024 * 1024, // 10 MB
+  maxFiles: 5,
+}));
 
-        return { success: true };
-      } catch (error) {
-        console.log('File upload failed', error);
-        return { success: false, message: error.message };
-      }
+const server = new ApolloServer({ typeDefs, resolvers });
+await server.start();
+
+app.use('/graphql', expressMiddleware(server));
+```
+
+### Koa + GraphQL Yoga
+
+```typescript
+import Koa from 'koa';
+import { createYoga, createSchema } from 'graphql-yoga';
+import { graphqlUploadKoa, GraphQLUpload } from 'graphql-upload-ts';
+
+const schema = createSchema({
+  typeDefs: /* GraphQL */ `
+    scalar Upload
+    
+    type Mutation {
+      uploadFile(file: Upload!): String
+    }
+  `,
+  resolvers: {
+    Upload: GraphQLUpload,
+    Mutation: {
+      uploadFile: async (_, { file }) => {
+        const { filename, createReadStream } = await file;
+        const stream = createReadStream();
+        // Handle file stream
+        return `Uploaded: ${filename}`;
+      },
+    },
+  },
+});
+
+const app = new Koa();
+
+// Add upload middleware
+app.use(graphqlUploadKoa({
+  maxFileSize: 10 * 1024 * 1024, // 10 MB
+  maxFiles: 5,
+}));
+
+const yoga = createYoga({ schema });
+app.use(yoga.middleware());
+```
+
+## 📚 Examples
+
+Check out the [examples](./examples) directory for complete working examples:
+
+- [Apollo Server with Express](./examples/apollo)
+- [Express with GraphQL-HTTP](./examples/express/graphql-http.ts)
+- [Express with GraphQL Yoga](./examples/express/graphql-yoga.ts)
+- [Koa with Apollo Server](./examples/koa)
+
+## 📖 API
+
+### Middleware Functions
+
+#### `graphqlUploadExpress(options?)`
+
+Express middleware for handling multipart/form-data requests.
+
+```typescript
+import { graphqlUploadExpress } from 'graphql-upload-ts';
+
+app.use('/graphql', graphqlUploadExpress({
+  maxFileSize: 10000000, // 10 MB (default: Infinity)
+  maxFiles: 10,          // Max number of files (default: Infinity)
+  maxFieldSize: 1000000, // Max field size in bytes (default: 1 MB)
+  overrideSendResponse: false, // For use with NestJS (default: false)
+}));
+```
+
+#### `graphqlUploadKoa(options?)`
+
+Koa middleware for handling multipart/form-data requests.
+
+```typescript
+import { graphqlUploadKoa } from 'graphql-upload-ts';
+
+app.use(graphqlUploadKoa({
+  maxFileSize: 10000000, // 10 MB
+  maxFiles: 10,
+}));
+```
+
+### Types
+
+#### `FileUpload`
+
+The promise returned from uploaded files contains:
+
+```typescript
+interface FileUpload {
+  filename: string;
+  mimetype: string;
+  encoding: string;
+  fieldName: string;
+  createReadStream: () => NodeJS.ReadableStream;
+}
+```
+
+#### `UploadOptions`
+
+Configuration options for the middleware:
+
+```typescript
+interface UploadOptions {
+  maxFieldSize?: number;  // Max size of non-file fields (default: 1 MB)
+  maxFileSize?: number;   // Max size per file (default: Infinity)
+  maxFiles?: number;      // Max number of files (default: Infinity)
+}
+```
+
+### Scalar Type
+
+#### `GraphQLUpload`
+
+The GraphQL scalar type for file uploads. Add it to your schema resolvers:
+
+```typescript
+import { GraphQLUpload } from 'graphql-upload-ts';
+
+const resolvers = {
+  Upload: GraphQLUpload,
+  // ... other resolvers
+};
+```
+
+## 📁 File Upload Handling
+
+### Single File Upload
+
+```typescript
+const resolvers = {
+  Mutation: {
+    uploadFile: async (_, { file }: { file: Promise<FileUpload> }) => {
+      const { filename, mimetype, createReadStream } = await file;
+      
+      const stream = createReadStream();
+      
+      // Example: Save to filesystem
+      const out = createWriteStream(`./uploads/${filename}`);
+      stream.pipe(out);
+      await finished(out);
+      
+      return { filename, mimetype };
     },
   },
 };
 ```
 
+### Multiple File Uploads
 
-#### Tips
-- The process must have both read and write access to the directory identified by [`os.tmpdir()`](https://nodejs.org/api/os.html#ostmpdir).
-- The device requires sufficient disk space to buffer the expected number of concurrent upload requests.
-- Promisify and await file upload streams in resolvers or the server will send a response to the client before uploads are complete, causing a disconnect.
-- Handle file upload promise rejection and stream errors; uploads sometimes fail due to network connectivity issues or impatient users disconnecting.
-- Process multiple uploads asynchronously with [`Promise.all`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all) or a more flexible solution such as [`Promise.allSettled`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled) where an error in one does not reject them all.
-- Only use the function `createReadStream` _before_ the resolver returns; late calls (e.g. in an unawaited async function or callback) throw an error. Existing streams can still be used after a response is sent, although there are few valid reasons for not awaiting their completion.
-- Use [`stream.destroy()`](https://nodejs.org/api/stream.html#readabledestroyerror) when an incomplete stream is no longer needed, or temporary files may not get cleaned up.
-- If you are using framework around express like [ NestJS or Apollo Serve ] use the option `overrideSendResponse` eg: `graphqlUploadExpress({ overrideSendResponse: false })` to allow nestjs to handle response errors like throwing exceptions.
+```typescript
+const resolvers = {
+  Mutation: {
+    uploadFiles: async (_, { files }: { files: Promise<FileUpload>[] }) => {
+      const uploadedFiles = await Promise.all(files);
+      
+      for (const file of uploadedFiles) {
+        const { filename, createReadStream } = file;
+        // Process each file
+      }
+      
+      return uploadedFiles.map(f => ({ filename: f.filename }));
+    },
+  },
+};
+```
 
-#### Architecture
+### Upload to Cloud Storage (S3 Example)
 
-The [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) allows a file to be used for multiple query or mutation variables (file deduplication), and for variables to be used in multiple places. GraphQL resolvers need to be able to manage independent file streams. As resolvers are executed asynchronously, it’s possible they will try to process files in a different order than received in the multipart request.
+```typescript
+import { S3 } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 
-[`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload`](./src/GraphQLUpload.ts) scalar values in the GraphQL operations are populated with promises, and the operations are passed down the middleware chain to GraphQL resolvers.
+const s3 = new S3({ region: 'us-east-1' });
 
-[`fs-capacitor`](https://npm.im/fs-capacitor) is used to buffer file uploads to the filesystem and coordinate simultaneous reading and writing. As soon as a file upload’s contents begins streaming, its data begins buffering to the filesystem and its associated promise resolves. GraphQL resolvers can then create new streams from the buffer by calling the function `createReadStream`. The buffer is destroyed once all streams have ended or closed and the server has responded to the request. Any remaining buffer files will be cleaned when the process exits.
+const resolvers = {
+  Mutation: {
+    uploadToS3: async (_, { file }) => {
+      const { filename, mimetype, createReadStream } = await file;
+      
+      const upload = new Upload({
+        client: s3,
+        params: {
+          Bucket: 'my-bucket',
+          Key: `uploads/${Date.now()}-${filename}`,
+          Body: createReadStream(),
+          ContentType: mimetype,
+        },
+      });
+      
+      const result = await upload.done();
+      return { url: result.Location };
+    },
+  },
+};
+```
 
+## 🛡️ Security & Validation
 
+### Built-in Protections
 
-[`busboy`](https://npm.im/busboy) parses multipart request streams. Once the `operations` and `map` fields have been parsed, [`Upload` scalar](#class-graphqlupload) values in the GraphQL operations are populated with promises, and the
-operations are passed down the middleware chain to GraphQL resolvers.
+The library includes several security features:
 
+- **File size limits** - Prevent large file DoS attacks
+- **File count limits** - Restrict number of concurrent uploads
+- **Field size limits** - Limit non-file field sizes
+- **Filename sanitization** - Remove unsafe characters from filenames
+- **MIME type validation** - Optional MIME type restrictions
 
-#### Support
+### Custom Validation Example
 
-The following environments are known to be compatible:
+```typescript
+import { validateFileExtension, validateMimeType } from 'graphql-upload-ts';
 
-- [Node.js](https://nodejs.org) >= 16
-- [Koa](https://koajs.com)
-- [Express.js](https://expressjs.com)
+const resolvers = {
+  Mutation: {
+    uploadImage: async (_, { file }) => {
+      const { filename, mimetype, createReadStream } = await file;
+      
+      // Validate file type
+      const mimeValidation = validateMimeType(mimetype, ['image/jpeg', 'image/png']);
+      if (!mimeValidation.isValid) {
+        throw new Error(mimeValidation.error);
+      }
+      
+      // Validate extension
+      const extValidation = validateFileExtension(filename, ['.jpg', '.jpeg', '.png']);
+      if (!extValidation.isValid) {
+        throw new Error(extValidation.error);
+      }
+      
+      // Process validated file...
+      
+      return { success: true };
+    },
+  },
+};
+```
 
-See also [GraphQL multipart request spec server implementations](https://github.com/jaydenseric/graphql-multipart-request-spec#server).
+### Error Handling
+
+The library provides custom error classes for better error handling:
+
+```typescript
+import { UploadError, UploadErrorCode } from 'graphql-upload-ts';
+
+// Error codes available:
+// - FILE_TOO_LARGE
+// - TOO_MANY_FILES
+// - INVALID_FILE_TYPE
+// - STREAM_ERROR
+// - FIELD_SIZE_EXCEEDED
+// - MISSING_MULTIPART_BOUNDARY
+// - INVALID_MULTIPART_REQUEST
+```
+
+## 🏗️ Architecture
+
+The library uses a streaming architecture for efficient file handling:
+
+1. **Request Parsing** - [`busboy`](https://npm.im/busboy) parses multipart requests
+2. **File Buffering** - Files are buffered to filesystem using [`fs-capacitor`](https://npm.im/fs-capacitor)
+3. **Promise Resolution** - Upload promises resolve with file details
+4. **Stream Creation** - Resolvers can create multiple read streams from buffered files
+5. **Cleanup** - Temporary files are automatically cleaned up after response
+
+This architecture allows:
+- Processing files in any order
+- Multiple reads of the same file
+- Backpressure handling
+- Automatic cleanup
+
+## 🔄 Migration Guide
+
+### From `graphql-upload` v15+
+
+This library is a TypeScript-first alternative with similar API:
+
+```typescript
+// Before (graphql-upload)
+const { graphqlUploadExpress } = require('graphql-upload');
+const { GraphQLUpload } = require('graphql-upload');
+
+// After (graphql-upload-ts)
+import { graphqlUploadExpress, GraphQLUpload } from 'graphql-upload-ts';
+```
+
+Main differences:
+- Full TypeScript support with strict types
+- ESM and CommonJS dual module support
+- Built-in validation utilities
+- Custom error classes
+- Modern Node.js features (16+)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Build the library
+npm run build
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
+```
+
+### Testing
+
+The library maintains high test coverage (91%+) with comprehensive test suites:
+
+```bash
+npm test
+```
+
+## 📄 License
+
+[MIT](./LICENSE) © Mohamed Meabed
+
+## 🙏 Acknowledgments
+
+This library is a TypeScript fork of [`graphql-upload`](https://github.com/jaydenseric/graphql-upload) by Jayden Seric. The original library was exceptionally well designed, and this fork aims to maintain that quality while adding TypeScript support and modern features.
+
+## 🔗 Links
+
+- [NPM Package](https://www.npmjs.com/package/graphql-upload-ts)
+- [GitHub Repository](https://github.com/meabed/graphql-upload-ts)
+- [GraphQL Multipart Request Spec](https://github.com/jaydenseric/graphql-multipart-request-spec)
+- [Issue Tracker](https://github.com/meabed/graphql-upload-ts/issues)
+
+---
+
+<div align="center">
+  Made with ❤️ by <a href="https://github.com/meabed">Mohamed Meabed</a>
+</div>
