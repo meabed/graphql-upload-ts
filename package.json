@@ -51,13 +51,68 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./fs-capacitor": {
+      "types": "./dist/fs-capacitor.d.ts",
+      "import": "./dist/fs-capacitor.js",
+      "require": "./dist/fs-capacitor.js",
+      "default": "./dist/fs-capacitor.js"
+    },
+    "./graphql-upload": {
+      "types": "./dist/graphql-upload.d.ts",
+      "import": "./dist/graphql-upload.js",
+      "require": "./dist/graphql-upload.js",
+      "default": "./dist/graphql-upload.js"
+    },
+    "./graphql-upload-express": {
+      "types": "./dist/graphql-upload-express.d.ts",
+      "import": "./dist/graphql-upload-express.js",
+      "require": "./dist/graphql-upload-express.js",
+      "default": "./dist/graphql-upload-express.js"
+    },
+    "./graphql-upload-koa": {
+      "types": "./dist/graphql-upload-koa.d.ts",
+      "import": "./dist/graphql-upload-koa.js",
+      "require": "./dist/graphql-upload-koa.js",
+      "default": "./dist/graphql-upload-koa.js"
+    },
+    "./ignore-stream": {
+      "types": "./dist/ignore-stream.d.ts",
+      "import": "./dist/ignore-stream.js",
+      "require": "./dist/ignore-stream.js",
+      "default": "./dist/ignore-stream.js"
+    },
+    "./process-request": {
+      "types": "./dist/process-request.d.ts",
+      "import": "./dist/process-request.js",
+      "require": "./dist/process-request.js",
+      "default": "./dist/process-request.js"
+    },
+    "./upload": {
+      "types": "./dist/upload.d.ts",
+      "import": "./dist/upload.js",
+      "require": "./dist/upload.js",
+      "default": "./dist/upload.js"
+    },
+    "./upload-errors": {
+      "types": "./dist/upload-errors.d.ts",
+      "import": "./dist/upload-errors.js",
+      "require": "./dist/upload-errors.js",
+      "default": "./dist/upload-errors.js"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation.js",
+      "require": "./dist/validation.js",
+      "default": "./dist/validation.js"
     },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
