@@ -2,7 +2,7 @@ import { deepStrictEqual, notStrictEqual, ok, rejects, strictEqual, throws } fro
 import { createServer } from 'node:http';
 import { text } from 'node:stream/consumers';
 import { type GraphQLOperation, processRequest, ReadStream, Upload } from '../src';
-import { abortingMultipartRequest } from './utils/abortingMultipartRequest';
+import { abortingMultipartRequest } from './utils/aborting-multipart-request';
 import { Deferred } from './utils/defered';
 import { listen } from './utils/listen';
 

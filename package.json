@@ -132,7 +132,7 @@
     "dev": "rolldown -c rolldown.config.mjs --watch",
     "example:apollo": "cd examples/apollo && npm start",
     "example:express": "cd examples/express && npm start",
-    "format": "biome format --write no-error-on-unmatched-pattern",
+    "format": "biome format --write --no-errors-on-unmatched",
     "format:check": "biome format",
     "lint": "biome check",
     "lint:fix": "biome check --write",

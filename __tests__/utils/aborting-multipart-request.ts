@@ -17,7 +17,7 @@ const textDecoder = new TextDecoder();
  * @returns {Promise<void>} Resolves once the request aborts.
  */
 export async function abortingMultipartRequest(
-  url: RequestInfo | URL,
+  url: string,
   formData: FormDataLike | FormData,
   abortMarker: string,
   requestReceived: Promise<unknown>
@@ -55,7 +55,6 @@ export async function abortingMultipartRequest(
           controller.close();
         },
       }),
-      // @ts-expect-error https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1483
       duplex: 'half',
       signal: abortController.signal,
     });
