@@ -1,7 +1,6 @@
 {
-  "extends": "./.nitro/types/tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -10,6 +9,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": ".",
     "types": ["node"]
-  }
+  },
+  "include": ["index.ts"],
+  "exclude": ["node_modules", "dist"]
 }

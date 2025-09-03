@@ -1,150 +1,68 @@
-# GraphQL Upload with H3 Example
+## H3 Server GraphQL Upload Example
 
-This example demonstrates how to use `graphql-upload-ts` with H3, the minimal HTTP framework that powers Nuxt 3.
+This example shows how to use `graphql-upload-ts` with [H3](https://h3.unjs.io/) - the minimal HTTP framework that powers Nuxt 3.
 
-## Features
+### Usage
 
-- ✅ File upload support with H3
-- ✅ Apollo Server integration
-- ✅ Single and multiple file uploads
-- ✅ File uploads with additional form data
-- ✅ TypeScript support
-- ✅ Nitro for development and production builds
-
-## Setup
-
-1. Install dependencies:
 ```bash
-npm install
+# Install dependencies
+yarn install
+
+# Start the server
+yarn start
+
+# Or run in development mode with auto-reload
+yarn dev
+
+# Test upload with cURL (successful upload as server accepts only mime type image/png)
+./upload.sh http://localhost:4000/graphql test.png
+
+# Test upload with cURL (failed upload / throw exception as server rejects mime type image/jpeg)
+./upload.sh http://localhost:4000/graphql test.jpg
+
 ```
 
-2. Run the development server:
-```bash
-npm run dev
-```
+### OR Open http://localhost:4000/graphql in a browser to use GraphQL Playground
+#### and run the `uploadFile` mutation with the `test.png` file
 
-3. Open GraphQL Playground at http://localhost:4000/api/graphql
+### Key Features
 
-## GraphQL Operations
+- ✅ File upload validation (only accepts PNG images like other examples)
+- ✅ Apollo Server integration with H3
+- ✅ Minimal setup with TypeScript support
+- ✅ Consistent with other example implementations
 
-### Single File Upload
+### GraphQL Operations
 
+#### Upload File Mutation
 ```graphql
 mutation UploadFile($file: Upload!) {
   uploadFile(file: $file) {
+    uri
     filename
     mimetype
     encoding
-    url
+    fileSize
   }
 }
 ```
 
-### Multiple File Upload
-
+#### Test Query
 ```graphql
-mutation UploadFiles($files: [Upload!]!) {
-  uploadFiles(files: $files) {
-    filename
-    mimetype
-    encoding
-    url
-  }
+query {
+  hello
 }
 ```
 
-### Upload with Additional Data
-
-```graphql
-mutation CreatePost($title: String!, $content: String!, $image: Upload!) {
-  createPost(title: $title, content: $content, image: $image)
-}
+### Project Structure
 ```
-
-## Testing with cURL
-
-### Single File Upload
-
-```bash
-curl -X POST http://localhost:4000/api/graphql \
-  -F operations='{"query":"mutation UploadFile($file: Upload!) { uploadFile(file: $file) { filename mimetype url } }","variables":{"file":null}}' \
-  -F map='{"0":["variables.file"]}' \
-  -F 0=@./test.jpg
-```
-
-### Multiple Files Upload
-
-```bash
-curl -X POST http://localhost:4000/api/graphql \
-  -F operations='{"query":"mutation UploadFiles($files: [Upload!]!) { uploadFiles(files: $files) { filename url } }","variables":{"files":[null,null]}}' \
-  -F map='{"0":["variables.files.0"],"1":["variables.files.1"]}' \
-  -F 0=@./test1.jpg \
-  -F 1=@./test2.jpg
-```
-
-### Upload with Additional Data
-
-```bash
-curl -X POST http://localhost:4000/api/graphql \
-  -F operations='{"query":"mutation CreatePost($title: String!, $content: String!, $image: Upload!) { createPost(title: $title, content: $content, image: $image) }","variables":{"title":"My Post","content":"Post content","image":null}}' \
-  -F map='{"0":["variables.image"]}' \
-  -F 0=@./image.jpg
-```
-
-## Project Structure
-
-```
-h3-example/
-├── server/
-│   ├── api/
-│   │   └── graphql.ts      # GraphQL endpoint with upload handling
-│   └── middleware/
-│       └── graphql-upload.ts # Upload middleware (optional)
-├── uploads/                 # Uploaded files directory
-├── nitro.config.ts          # Nitro configuration
+h3/
+├── index.ts         # Main server file
+├── upload.sh        # Test script for file uploads
+├── test.png         # Test PNG image (valid)
+├── test.jpg         # Test JPEG image (invalid - for testing rejection)
+├── uploads/         # Directory for uploaded files
 ├── package.json
+├── tsconfig.json
 └── README.md
 ```
-
-## Key Implementation Details
-
-1. **H3 Event Handler**: The GraphQL endpoint is implemented as an H3 event handler that processes multipart requests.
-
-2. **Upload Processing**: The `processRequest` function from `graphql-upload-ts` handles the multipart form data parsing.
-
-3. **Apollo Server Integration**: Uses `@as-integrations/h3` to integrate Apollo Server with H3.
-
-4. **File Storage**: Files are saved to the `uploads` directory. In production, you'd typically upload to cloud storage (S3, etc.).
-
-## Production Deployment
-
-Build for production:
-
-```bash
-npm run build
-```
-
-Preview production build:
-
-```bash
-npm run preview
-```
-
-The built application can be deployed to any Node.js hosting platform that supports H3/Nitro applications, including:
-- Vercel
-- Netlify
-- Cloudflare Workers
-- AWS Lambda
-- Traditional Node.js servers
-
-## Notes
-
-- The `uploads` directory is created automatically if it doesn't exist
-- Maximum file size is set to 10 MB (configurable)
-- Maximum number of files per request is 10 (configurable)
-- In production, consider adding:
-  - File type validation
-  - Virus scanning
-  - Cloud storage integration
-  - Rate limiting
-  - Authentication/authorization

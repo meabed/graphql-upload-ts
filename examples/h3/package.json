@@ -4,19 +4,20 @@
   "description": "Example of using graphql-upload-ts with H3 server",
   "type": "module",
   "scripts": {
-    "dev": "nitropack dev",
-    "build": "nitropack build",
-    "preview": "node .output/server/index.mjs"
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "h3": "^1.8.2",
     "graphql": "^16.8.1",
     "graphql-upload-ts": "file:../../",
     "@apollo/server": "^4.9.5",
-    "nitropack": "^2.8.1"
+    "@as-integrations/h3": "^1.1.5"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "tsx": "^4.6.2"
   }
 }
