@@ -78,7 +78,7 @@
     "dev": "tsc --watch -p tsconfig.cjs.json",
     "example:apollo": "cd examples/apollo && npm start",
     "example:express": "cd examples/express && npm start",
-    "format": "biome format --write",
+    "format": "biome format --write no-error-on-unmatched-pattern",
     "format:check": "biome format",
     "lint": "biome check",
     "lint:fix": "biome check --write",

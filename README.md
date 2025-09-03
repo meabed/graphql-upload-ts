@@ -117,6 +117,9 @@ app.listen(4000, () => {
 
 ### Manual Schema Construction with GraphQL.js
 
+<details>
+<summary>Click to expand example</summary>
+
 When building schemas manually using GraphQL.js (without schema-first approach), you need to use the GraphQLUpload scalar directly:
 
 ```typescript
@@ -220,7 +223,12 @@ const schema = new GraphQLSchema({
 });
 ```
 
+</details>
+
 ### Express + Apollo Server v4
+
+<details>
+<summary>Click to expand example</summary>
 
 Complete setup with Apollo Server v4 and Express:
 
@@ -340,7 +348,12 @@ async function startServer() {
 startServer();
 ```
 
+</details>
+
 ### Koa + Apollo Server
+
+<details>
+<summary>Click to expand example</summary>
 
 Complete Koa setup with Apollo Server:
 
@@ -452,7 +465,12 @@ async function startServer() {
 startServer();
 ```
 
+</details>
+
 ### Express + GraphQL Yoga
+
+<details>
+<summary>Click to expand example</summary>
 
 Setup with GraphQL Yoga for a modern GraphQL server:
 
@@ -576,7 +594,12 @@ app.listen(4000, () => {
 });
 ```
 
+</details>
+
 ### NestJS Integration
+
+<details>
+<summary>Click to expand example</summary>
 
 For NestJS applications, you need special configuration:
 
@@ -636,7 +659,12 @@ export class UploadResolver {
 }
 ```
 
+</details>
+
 ### Image Upload with Validation
+
+<details>
+<summary>Click to expand example</summary>
 
 Complete example with image validation, resizing, and cloud storage:
 
@@ -820,6 +848,8 @@ app.listen(4000, () => {
   console.log('Image upload server running on http://localhost:4000/graphql');
 });
 ```
+
+</details>
 
 ## 📖 API Documentation
 
