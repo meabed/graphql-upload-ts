@@ -1,11 +1,10 @@
 import { createWriteStream } from 'node:fs';
-import { createApp, createRouter, defineEventHandler, toNodeListener } from 'h3';
 import { createServer } from 'node:http';
 import { ApolloServer, type ApolloServerOptions, type BaseContext } from '@apollo/server';
 import { startServerAndCreateH3Handler } from '@as-integrations/h3';
 import { type FileUpload, GraphQLUpload, processRequest } from 'graphql-upload-ts';
+import { createApp, createRouter, defineEventHandler, toNodeListener } from 'h3';
 
-// Same schema pattern as Apollo and Express examples
 const apolloSchema: ApolloServerOptions<BaseContext> = {
   typeDefs: `#graphql
   scalar Upload
@@ -26,7 +25,7 @@ const apolloSchema: ApolloServerOptions<BaseContext> = {
   resolvers: {
     Upload: GraphQLUpload,
     Query: {
-      hello: () => 'Hello from H3 + GraphQL Upload!',
+      hello: () => 'Hello World',
     },
     Mutation: {
       uploadFile: async (ctx, args) => {
@@ -82,7 +81,7 @@ router.use(
   '/graphql',
   defineEventHandler(async (event) => {
     const contentType = event.node.req.headers['content-type'] || '';
-    
+
     // Handle multipart/form-data uploads
     if (contentType.includes('multipart/form-data')) {
       try {
@@ -91,7 +90,7 @@ router.use(
           maxFileSize: 10 * 1024 * 1024, // 10 MB
           maxFiles: 10,
         });
-        
+
         // Set the processed body on the request for Apollo to use
         event.node.req.body = body;
       } catch (error) {
@@ -100,14 +99,14 @@ router.use(
         return { errors: [{ message: 'Failed to process upload' }] };
       }
     }
-    
+
     // Create and execute the GraphQL handler
     const handler = startServerAndCreateH3Handler(apolloServer, {
       context: async ({ event }) => ({
         headers: event.node.req.headers,
       }),
     });
-    
+
     return handler(event);
   })
 );

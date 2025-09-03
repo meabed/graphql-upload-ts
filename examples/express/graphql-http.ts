@@ -131,9 +131,7 @@ app.use(
     schema: gqlSchema,
     context: contextFnInjections,
     parseRequestParams: async (req) => {
-      const params = await processRequest(req.raw, req.context.res, {
-        overrideSendResponse: false,
-      });
+      const params = await processRequest(req.raw, req.context.res);
       if (Array.isArray(params)) {
         throw new Error('Batching is not supported');
       }

@@ -19,10 +19,10 @@ export interface GraphqlUploadExpressOptions extends UploadOptions {
    * Whether to override the response.send method to ensure the request stream
    * is fully consumed before sending the response. This prevents potential issues
    * with some GraphQL server implementations.
-   * 
+   *
    * Set to `false` when using with NestJS or when you want to handle the response
    * timing yourself.
-   * 
+   *
    * @default true if processRequest is provided, false otherwise
    */
   overrideSendResponse?: boolean;
@@ -55,10 +55,10 @@ export interface GraphqlUploadExpressOptions extends UploadOptions {
 export function graphqlUploadExpress(
   options: GraphqlUploadExpressOptions = {}
 ): (req: Request, res: Response, next: NextFunction) => void {
-  const { 
-    processRequest = defaultProcessRequest, 
-    overrideSendResponse = processRequest !== defaultProcessRequest ? true : false,
-    ...uploadOptions 
+  const {
+    processRequest = defaultProcessRequest,
+    overrideSendResponse = processRequest !== defaultProcessRequest,
+    ...uploadOptions
   } = options;
 
   return function graphqlUploadExpressMiddleware(

@@ -225,7 +225,7 @@ describe('graphqlUploadExpress', () => {
 
         next();
       })
-      .use(graphqlUploadExpress())
+      .use(graphqlUploadExpress({ overrideSendResponse: true }))
       .use(() => {
         throw error;
       })
