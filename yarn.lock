@@ -3060,10 +3060,10 @@ koa-compose@^4.1.0:
   resolved "https://registry.npmjs.org/koa-compose/-/koa-compose-4.1.0.tgz"
   integrity sha512-8ODW8TrDuMYvXRwra/Kh7/rJo9BtOfPc6qO8eAfC80CnCvSjSl0bkRM24X6/XBBEyj0v1nRUQ1LyOy3dbqOWXw==
 
-koa@3.0.1:
-  version "3.0.1"
-  resolved "https://registry.npmjs.org/koa/-/koa-3.0.1.tgz"
-  integrity sha512-oDxVkRwPOHhGlxKIDiDB2h+/l05QPtefD7nSqRgDfZt8P+QVYFWjfeK8jANf5O2YXjk8egd7KntvXKYx82wOag==
+koa@3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/koa/-/koa-3.0.2.tgz#6e86602f1136e52ed0098e89fc2e6e1dc1e3f9e7"
+  integrity sha512-dlbFxTswxHFKSkPOlt1Qt7v1WumZ7ENY5r0W77YkSMyOltQL14gbLwtZswErISGQp5D/VBXFHyFYY/17Wppj7g==
   dependencies:
     accepts "^1.3.8"
     content-disposition "~0.5.4"
