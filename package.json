@@ -163,7 +163,7 @@
     "@rollup/plugin-typescript": "^12.1.4",
     "@size-limit/preset-small-lib": "^11.2.0",
     "@types/busboy": "1.5.4",
-    "@types/express": "5.0.4",
+    "@types/express": "5.0.5",
     "@types/jest": "30.0.0",
     "@types/koa": "3.0.1",
     "@types/node": "^24.3.1",
