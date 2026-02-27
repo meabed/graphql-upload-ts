@@ -6,7 +6,7 @@
     "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png"
   },
   "dependencies": {
-    "@apollo/server": "^5.0.0",
+    "@apollo/server": "^5.4.0",
     "@as-integrations/express5": "^1.1.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
