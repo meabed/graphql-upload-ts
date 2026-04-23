@@ -19,7 +19,8 @@
     "graphql-yoga",
     "nestjs",
     "esm",
-    "commonjs"
+    "commonjs",
+    "bun"
   ],
   "homepage": "https://github.com/meabed/graphql-upload-ts#readme",
   "bugs": {
@@ -125,25 +126,29 @@
   ],
   "scripts": {
     "analyze": "size-limit --why",
-    "build": "npm run clean && npm run build:rollup && npm run build:types",
+    "build": "rm -rf dist coverage *.tsbuildinfo && rollup -c rollup.config.js && tsc",
     "build:rollup": "rollup -c rollup.config.js",
     "build:types": "tsc",
     "clean": "rm -rf dist coverage *.tsbuildinfo",
     "dev": "rollup -c rollup.config.js --watch",
-    "example:apollo": "cd examples/apollo && npm start",
-    "example:express": "cd examples/express && npm start",
+    "example:apollo": "cd examples/apollo && tsc -p . && node ./dist/examples/apollo/index.js",
+    "example:express": "cd examples/express && tsc -p . && node ./dist/examples/express/graphql-http.js",
     "format": "biome format --write --no-errors-on-unmatched",
     "format:check": "biome format",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "prepare": "husky",
-    "prepublishOnly": "npm run validate && npm run build",
+    "prepublishOnly": "biome format && biome check && tsc --noEmit && jest --coverage && rm -rf dist coverage *.tsbuildinfo && rollup -c rollup.config.js && tsc",
     "size": "size-limit",
     "test": "jest --coverage",
+    "test:bun": "bun test --timeout 30000",
+    "test:bun:coverage": "bun test --coverage --timeout 30000",
     "test:coverage": "jest --coverage --coverageReporters=html",
+    "test:jest": "jest --coverage",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test"
+    "validate": "biome format && biome check && tsc --noEmit && jest --coverage",
+    "validate:bun": "biome format && biome check && tsc --noEmit && bun test --timeout 30000"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md}": [

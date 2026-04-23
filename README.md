@@ -23,6 +23,7 @@
 - 🔒 **Type-Safe** - Strict TypeScript mode enabled with comprehensive type coverage
 - 🎯 **Production Ready** - Battle-tested with 91%+ test coverage
 - ⚡ **High Performance** - Efficient file streaming with configurable limits
+- 🥟 **Bun Ready** - Verified with Bun for install, test, and build workflows
 - 🛡️ **Security First** - Built-in file validation and sanitization
 - 📝 **Well Documented** - Extensive documentation and real-world examples
 - 🔄 **Dual Module Support** - CommonJS and ESM modules included
@@ -53,11 +54,13 @@ npm install graphql-upload-ts graphql
 yarn add graphql-upload-ts graphql
 # or
 pnpm add graphql-upload-ts graphql
+# or
+bun add graphql-upload-ts graphql
 ```
 
 ### Requirements
 
-- Node.js >= 16
+- Node.js >= 16 or Bun >= 1.3.13
 - GraphQL >= 0.13.1
 
 ### Build System
@@ -1373,11 +1376,16 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ```bash
 # Install dependencies
 npm install
+# or
+bun install
 
-# Run tests
+# Run the Jest suite with coverage
 npm test
 
-# Run tests with coverage
+# Run the Bun suite
+bun run test:bun
+
+# Run tests with HTML coverage
 npm run test:coverage
 
 # Build the library (using Rollup)
@@ -1398,7 +1406,8 @@ npm run typecheck
 The project uses:
 - **Rollup** - For bundling the TypeScript source into CommonJS format
 - **Biome** - For linting and formatting (replacing ESLint and Prettier)
-- **Jest** - For testing with comprehensive coverage
+- **Jest** - For coverage-focused Node.js test runs
+- **Bun test** - For native Bun runtime verification
 - **TypeScript** - With strict mode enabled for type safety
 
 ## 📄 License

@@ -4,7 +4,11 @@ on:
   workflow_call:
   push:
     paths:
+      - '.github/workflows/**'
       - 'src/**'
+      - '__tests__/**'
+      - 'bun.lock'
+      - 'package.json'
       - 'yarn.lock'
     branches:
       - 'master'

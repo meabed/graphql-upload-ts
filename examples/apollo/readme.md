@@ -7,9 +7,13 @@ This example shows how to use `graphql-upload-ts` with [Apollo Server](https://w
 ```bash
 # Install dependencies
 yarn
+# or
+bun install
 
 # Start the server
 yarn start
+# or
+bun run start
 
 # Test upload with cURL (successful upload as server accepts only mime type image/png)
 ./upload.sh http://localhost:4000/graphql test.png

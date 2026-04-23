@@ -203,6 +203,10 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
                 );
 
               try {
+                if (operationsPath?.get(path) !== null) {
+                  throw new Error('Invalid object path');
+                }
+
                 operationsPath?.set(path, map.get(fieldName));
               } catch (_error) {
                 return exit(

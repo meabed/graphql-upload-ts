@@ -1,7 +1,7 @@
 {
   "scripts": {
     "compile": "tsc -p .",
-    "start": "npm run compile && node ./dist/examples/apollo/index.js",
+    "start": "tsc -p . && node ./dist/examples/apollo/index.js",
     "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg",
     "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png"
   },

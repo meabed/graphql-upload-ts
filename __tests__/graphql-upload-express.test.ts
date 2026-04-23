@@ -276,8 +276,8 @@ describe('graphqlUploadExpress', () => {
 
     const app = express()
       .use(graphqlUploadExpress())
-      // @ts-expect-error - Unused parameter
       .use((request, response) => {
+        void request;
         requestProcessed = true;
         // Simulate async operation that sends response after request is complete
         setTimeout(() => {
@@ -561,7 +561,7 @@ describe('graphqlUploadExpress', () => {
     }
   });
 
-  it('`graphqlUploadExpress` with overrideSendResponse true and response.send called after request ends (lines 94-95).', async () => {
+  it('`graphqlUploadExpress` with overrideSendResponse true and response.send called after request completion.', async () => {
     let requestBody: CtxRequestBody;
     let sendWasOverridden = false;
     let sendCalledAfterEnd = false;
@@ -576,18 +576,20 @@ describe('graphqlUploadExpress', () => {
         const overriddenSend = response.send;
         sendWasOverridden = typeof overriddenSend === 'function' && overriddenSend.name !== 'send';
 
-        // Wait for the request to fully end
-        request.on('end', () => {
-          // Now call response.send after request has ended
-          // This specifically triggers lines 94-95 where it restores the original send
+        const sendResponseAfterRequestEnd = () => {
           setTimeout(() => {
-            sendCalledAfterEnd = true;
-            // Call response.send/json which should trigger the restoration
+            sendCalledAfterEnd = request.readableEnded || request.complete;
             response.json({ requestEnded: true });
-            // The send should have been called successfully
             sendRestoredAndCalled = true;
           }, 10);
-        });
+        };
+
+        if (request.readableEnded || request.complete) {
+          sendResponseAfterRequestEnd();
+          return;
+        }
+
+        request.once('end', sendResponseAfterRequestEnd);
       });
 
     const { port, close } = await listen(createServer(app));
@@ -617,7 +619,7 @@ describe('graphqlUploadExpress', () => {
       ok(requestBody, 'Request body should be processed');
       ok(sendWasOverridden, 'Send should be overridden by middleware');
       ok(sendCalledAfterEnd, 'Send should be called after request ended');
-      ok(sendRestoredAndCalled, 'Send should be restored and called successfully (lines 94-95)');
+      ok(sendRestoredAndCalled, 'Send should be restored and called successfully');
       deepStrictEqual(responseData, { requestEnded: true });
     } finally {
       close();
