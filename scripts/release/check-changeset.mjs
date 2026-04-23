@@ -28,7 +28,12 @@ function getChangedFiles() {
       .filter(Boolean);
   }
 
-  const diff = capture('git', ['diff', '--name-only', '--diff-filter=ACMR', `origin/${baseRef}...HEAD`]);
+  const diff = capture('git', [
+    'diff',
+    '--name-only',
+    '--diff-filter=ACMR',
+    `origin/${baseRef}...HEAD`,
+  ]);
 
   return diff
     .split('\n')
@@ -43,8 +48,8 @@ if (headRef.startsWith(releaseBranchPrefix)) {
 
 const changedFiles = getChangedFiles();
 const releaseRelevantFiles = changedFiles.filter(isReleaseRelevantFile);
-const hasChangeset = changedFiles.some(
-  (file) => /^\.changeset\/(?!README\.md$|config\.json$).+\.md$/.test(file)
+const hasChangeset = changedFiles.some((file) =>
+  /^\.changeset\/(?!README\.md$|config\.json$).+\.md$/.test(file)
 );
 
 if (releaseRelevantFiles.length === 0) {

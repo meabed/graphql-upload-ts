@@ -1,15 +1,17 @@
 name: Release
 on:
+  workflow_dispatch:
   workflow_call:
   push:
     paths:
-      - 'src/**'
+      - '.github/workflows/**'
       - '.changeset/**'
+      - 'scripts/release/**'
+      - 'src/**'
+      - '__tests__/**'
       - 'package.json'
       - 'yarn.lock'
       - 'bun.lock'
-      - 'scripts/release/**'
-      - '.github/workflows/release.yml'
     branches:
       - master
       - develop
@@ -33,8 +35,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-
       - name: Checkout
         uses: actions/checkout@v6
         with:

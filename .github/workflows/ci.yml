@@ -7,6 +7,9 @@ on:
       - master
       - develop
     paths:
+      - '.github/workflows/**'
+      - '.changeset/**'
+      - 'scripts/release/**'
       - 'src/**'
       - '__tests__/**'
       - 'package.json'
@@ -16,9 +19,11 @@ on:
       - 'jest.config.js'
       - 'rollup.config.js'
       - 'biome.json'
-      - '.github/workflows/ci.yml'
   push:
     paths:
+      - '.github/workflows/**'
+      - '.changeset/**'
+      - 'scripts/release/**'
       - 'src/**'
       - '__tests__/**'
       - 'package.json'
@@ -28,7 +33,6 @@ on:
       - 'jest.config.js'
       - 'rollup.config.js'
       - 'biome.json'
-      - '.github/workflows/ci.yml'
     branches:
       - '*'
       - '**'
@@ -52,8 +56,6 @@ jobs:
       contents: read
 
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -63,7 +65,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: yarn
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
@@ -89,8 +91,6 @@ jobs:
       contents: read
 
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -104,8 +104,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Test
-        run: bun run test:bun
+      - name: Validate
+        run: bun run validate:bun
 
       - name: Build
         run: bun run build

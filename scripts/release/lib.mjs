@@ -75,7 +75,8 @@ export function getReleaseChannel() {
     return validateReleaseChannel(explicitChannel);
   }
 
-  const branchName = process.env.GITHUB_REF_NAME || process.env.CI_REF_NAME || process.env.BRANCH || '';
+  const branchName =
+    process.env.GITHUB_REF_NAME || process.env.CI_REF_NAME || process.env.BRANCH || '';
 
   return branchName === 'develop' ? 'beta' : 'latest';
 }
