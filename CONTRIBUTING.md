@@ -64,3 +64,9 @@ bun run start:graphql-http
 - Open pull requests against `develop`.
 - Avoid opening pull requests directly against `master`.
 - Use a descriptive branch name such as `feature/file-upload-validation` or `42-fix-bun-tests`.
+
+## Releases
+
+- Run `yarn changeset` for release-relevant changes to `src/` or published package metadata.
+- `develop` produces beta prerelease version PRs and publishes to the `beta` dist-tag.
+- `master` produces stable version PRs and publishes to the `latest` dist-tag.

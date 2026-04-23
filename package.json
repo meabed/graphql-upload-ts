@@ -129,6 +129,7 @@
     "build": "rm -rf dist coverage *.tsbuildinfo && rollup -c rollup.config.js && tsc",
     "build:rollup": "rollup -c rollup.config.js",
     "build:types": "tsc",
+    "changeset": "changeset",
     "clean": "rm -rf dist coverage *.tsbuildinfo",
     "dev": "rollup -c rollup.config.js --watch",
     "example:apollo": "cd examples/apollo && tsc -p . && node ./dist/examples/apollo/index.js",
@@ -139,6 +140,11 @@
     "lint:fix": "biome check --write",
     "prepare": "if [ -z \"$CI\" ] && [ -e .git ] && [ -x ./node_modules/.bin/husky ]; then ./node_modules/.bin/husky; fi",
     "prepublishOnly": "biome format && biome check && tsc --noEmit && jest --coverage && rm -rf dist coverage *.tsbuildinfo && rollup -c rollup.config.js && tsc",
+    "release:check": "node ./scripts/release/check-changeset.mjs",
+    "release:publish": "node ./scripts/release/publish.mjs",
+    "release:verify": "yarn typecheck && yarn build && yarn test",
+    "release:version:beta": "node ./scripts/release/version-beta.mjs",
+    "release:version:stable": "node ./scripts/release/version-stable.mjs",
     "size": "size-limit",
     "test": "jest --coverage",
     "test:bun": "bun test --timeout 30000",
@@ -162,6 +168,7 @@
     "object-path": "^0.11.8"
   },
   "devDependencies": {
+    "@changesets/cli": "2.31.0",
     "@biomejs/biome": "^2.4.12",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-node-resolve": "^16.0.3",
