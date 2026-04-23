@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "start:graphql-yoga": "bun ./graphql-yoga.ts",
+    "upload:success": "./upload.sh http://localhost:4000/graphql test.png",
+    "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg"
+  },
+  "dependencies": {
+    "@graphql-tools/schema": "^10.0.33",
+    "bunway": "^1.0.7",
+    "graphql": "^16.13.2",
+    "graphql-upload-ts": "file:../../",
+    "graphql-yoga": "^5.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "bun-types": "^1.3.13",
+    "typescript": "^6.0.3"
+  }
+}
