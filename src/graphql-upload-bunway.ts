@@ -29,7 +29,7 @@ import {
 
 /**
  * Minimal shape of a Bunway `BunRequest` that `graphqlUploadBunway` reads.
- * Only the surface area actually used is required so consumers aren't locked
+ * Only the surface area actually used is required, so consumers aren't locked
  * into a specific bunway version or even a specific framework.
  */
 export interface BunRequestLike {
