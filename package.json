@@ -137,7 +137,7 @@
     "format:check": "biome format",
     "lint": "biome check",
     "lint:fix": "biome check --write",
-    "prepare": "husky",
+    "prepare": "if [ -z \"$CI\" ] && [ -e .git ] && [ -x ./node_modules/.bin/husky ]; then ./node_modules/.bin/husky; fi",
     "prepublishOnly": "biome format && biome check && tsc --noEmit && jest --coverage && rm -rf dist coverage *.tsbuildinfo && rollup -c rollup.config.js && tsc",
     "size": "size-limit",
     "test": "jest --coverage",
