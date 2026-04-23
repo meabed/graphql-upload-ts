@@ -1,8 +1,8 @@
 {
   "scripts": {
     "compile": "tsc -p .",
-    "start:graphql-http": "npm run compile && node ./dist/examples/express/graphql-http.js",
-    "start:graphql-yoga": "npm run compile && node ./dist/examples/express/graphql-yoga.js",
+    "start:graphql-http": "tsc -p . && node ./dist/examples/express/graphql-http.js",
+    "start:graphql-yoga": "tsc -p . && node ./dist/examples/express/graphql-yoga.js",
     "upload:error": "./upload.sh http://localhost:4000/graphql test.jpg",
     "upload:sucess": "./upload.sh http://localhost:4000/graphql test.png"
   },

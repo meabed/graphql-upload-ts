@@ -1,58 +1,66 @@
 # Contributing
 
-Pull requests are always welcome as long as an accompanying test case is
-associated.
+Pull requests are welcome. Please include tests with behavior changes whenever possible.
 
-This project is configured to use [git
-flow](https://github.com/nvie/gitflow/) and the following conventions
-are used:
+## Development Setup
 
-- `develop` - represents current active development and can possibly be
-  unstable.
-- `master` - pristine copy of repository, represents the currently
-  stable release found in the npm index.
-- `feature/**` - represents a new feature being worked on
+### Requirements
 
-If you wish to contribute, the only requirement is to:
+- Node.js >= 16 or Bun >= 1.3.13
+- npm 7+, Yarn 1.x, or Bun
 
-- branch a new feature branch from develop (if you're working on an
-  issue, prefix it with the issue number)
-- make the changes, with accompanying test cases
-- issue a pull request against develop branch
+### Install Dependencies
 
-Although I use git flow and prefix feature branches with "feature/" I
-don't require this for pull requests... all I care is that the feature
-branch name makes sense.
+```bash
+npm install
+# or
+yarn install
+# or
+bun install
+```
 
-Pulls requests against master or pull requests branched from master will
-be rejected.
+## Local Checks
+
+### Jest and Node.js
+
+```bash
+npm test
+npm run build
+npm run lint
+npm run format
+npm run typecheck
+npm run validate
+```
+
+### Bun
+
+```bash
+bun run test:bun
+bun run build
+bun run lint
+bun run format
+bun run typecheck
+bun run validate:bun
+```
 
 ## Examples
 
-Someone picks up issue #39 on selective indexing.
+The example apps have their own package manifests under `examples/apollo` and `examples/express`.
 
-Good branch names:
+```bash
+cd examples/apollo
+bun install
+bun run start
+```
 
-- 39-selective-indexing
-- feature/39-selective-indexing
+```bash
+cd examples/express
+bun install
+bun run start:graphql-http
+```
 
-Someone submits a new feature that allows shard configuration:
+## Branching
 
-Good branch names:
-
-- feature/shard-configuration
-- shard-configuration
-- or file an issue, then create a feature branch
-
-Feel free to ping me if you need help! :)
-
-## Running Tests
-
-In order to run the tests you will need:
-
-- An elasticsearch server running on port 9200
-- A mongodb server
-- [mocha](http://visionmedia.github.com/mocha/)
-
-With those installed, running ''npm test'' will run the tests with the
-preferred timeout (which is extended for integration tests.
+- Open pull requests against `develop`.
+- Avoid opening pull requests directly against `master`.
+- Use a descriptive branch name such as `feature/file-upload-validation` or `42-fix-bun-tests`.

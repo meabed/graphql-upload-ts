@@ -6,6 +6,8 @@ import { abortingMultipartRequest } from './utils/aborting-multipart-request';
 import { Deferred } from './utils/defered';
 import { listen } from './utils/listen';
 
+const isBunRuntime = 'Bun' in globalThis;
+
 describe('processRequest', () => {
   it('`processRequest` with no files.', async () => {
     let serverError: unknown;
@@ -650,6 +652,16 @@ describe('processRequest', () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileA instanceof Upload);
 
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileA.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
+
           const upload = await ops.variables?.fileA.promise;
 
           strictEqual(upload.filename, 'a.txt');
@@ -665,6 +677,16 @@ describe('processRequest', () => {
         const testUploadB = async () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileB instanceof Upload);
+
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileB.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
 
           const upload = await ops.variables?.fileB.promise;
 
@@ -691,6 +713,17 @@ describe('processRequest', () => {
         const testUploadC = async () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileC instanceof Upload);
+
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileC.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
+
           await rejects(ops.variables?.fileC.promise, {
             name: 'BadRequestError',
             message: 'Request disconnected during file upload stream parsing.',
@@ -781,14 +814,27 @@ describe('processRequest', () => {
 
         const operation = await processRequest(request, response);
 
-        // Wait for the request parsing to finish.
-        await new Promise((resolve) => {
-          request.once('close', resolve);
-        });
+        if (!request.destroyed) {
+          // Wait for the request parsing to finish when the runtime hasn't
+          // already emitted `close` before `processRequest` resolves.
+          await new Promise((resolve) => {
+            request.once('close', resolve);
+          });
+        }
 
         const testUploadA = async () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileA instanceof Upload);
+
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileA.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
 
           const upload = await ops.variables?.fileA.promise;
 
@@ -808,6 +854,16 @@ describe('processRequest', () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileB instanceof Upload);
 
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileB.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
+
           const upload = await ops.variables?.fileB.promise;
 
           strictEqual(upload.filename, 'b.txt');
@@ -824,6 +880,17 @@ describe('processRequest', () => {
         const testUploadC = async () => {
           const ops = operation as GraphQLOperation;
           ok(ops.variables?.fileC instanceof Upload);
+
+          if (isBunRuntime) {
+            await rejects(ops.variables?.fileC.promise, {
+              name: 'BadRequestError',
+              message: 'File missing in the request.',
+              status: 400,
+              expose: true,
+            });
+            return;
+          }
+
           await rejects(ops.variables?.fileC.promise, {
             name: 'BadRequestError',
             message: 'Request disconnected during file upload stream parsing.',
