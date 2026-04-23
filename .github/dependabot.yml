@@ -1,0 +1,44 @@
+version: 2
+
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /examples/apollo
+      - /examples/express
+    target-branch: develop
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    groups:
+      npm-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    groups:
+      github-actions-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"

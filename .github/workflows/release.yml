@@ -5,13 +5,16 @@ on:
   push:
     paths:
       - '.github/workflows/**'
+      - '.changeset/**'
+      - 'scripts/release/**'
       - 'src/**'
       - '__tests__/**'
-      - 'bun.lock'
       - 'package.json'
       - 'yarn.lock'
+      - 'bun.lock'
     branches:
-      - 'master'
+      - master
+      - develop
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,7 +22,6 @@ concurrency:
 
 env:
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CI: true
 
 jobs:
@@ -30,95 +32,41 @@ jobs:
 
     permissions:
       contents: write
-      issues: write
       pull-requests: write
-      id-token: write
-      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: yarn
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --ignore-scripts
 
-      - name: Verify dependency integrity
-        run: yarn audit || true
+      - name: Verify release inputs
+        run: yarn release:verify
 
-      - name: Lint
-        run: yarn lint
+      - name: Ensure verification did not modify tracked files
+        run: git diff --exit-code
 
-      - name: Test
-        run: yarn test
-
-      - name: Build
-        run: yarn build
-
-      - name: Release
-        id: semantic_release
+      - name: Create Release Pull Request or Publish Package
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          branch: changeset-release/${{ github.ref_name }}
+          commit: "chore(release): version package (${{ github.ref_name }})"
+          title: "Version Package (${{ github.ref_name }})"
+          version: "${{ github.ref_name == 'develop' && 'yarn release:version:beta' || 'yarn release:version:stable' }}"
+          publish: "yarn release:publish"
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GIT_AUTHOR_NAME: DEV.ME Team
-          GIT_AUTHOR_EMAIL: support@dev.me
-          GIT_COMMITTER_NAME: DEV.ME Team
-          GIT_COMMITTER_EMAIL: support@dev.me
-        run: |
-          # Install semantic-release and required plugins
-          npm i -g semantic-release @semantic-release/git @semantic-release/github @semantic-release/changelog @semantic-release/npm @semantic-release/commit-analyzer
-
-          # Run semantic-release
-          npx semantic-release --debug 2>&1 | tee release-output.txt
-
-          # Extract version and tag info from release output
-          if grep -q "Published release" release-output.txt; then
-            echo "release_published=true" >> $GITHUB_OUTPUT
-            VERSION=$(grep -oP 'Published release \K[0-9]+\.[0-9]+\.[0-9]+' release-output.txt | head -1)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "release_published=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Add Release Summary
-        if: always()
-        run: |
-          echo "## 📦 Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [[ "${{ steps.semantic_release.outputs.release_published }}" == "true" ]]; then
-            echo "### ✅ Release Published Successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version:** \`${{ steps.semantic_release.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag:** \`${{ steps.semantic_release.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
-            echo "- [NPM Package](https://www.npmjs.com/package/graphql-upload-ts/v/${{ steps.semantic_release.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-            echo "- [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.semantic_release.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ℹ️ No Release Published" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "No release was created. This could be because:" >> $GITHUB_STEP_SUMMARY
-            echo "- No relevant commits found for release" >> $GITHUB_STEP_SUMMARY
-            echo "- Commits don't follow conventional commit format" >> $GITHUB_STEP_SUMMARY
-            echo "- Release conditions not met" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Workflow:** \`${{ github.workflow }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run ID:** \`${{ github.run_id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Run Number:** \`${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Actor:** \`${{ github.actor }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Event:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          RELEASE_CHANNEL: ${{ github.ref_name == 'develop' && 'beta' || 'latest' }}
