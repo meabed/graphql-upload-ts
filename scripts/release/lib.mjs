@@ -5,6 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const npmRegistry = 'https://registry.npmjs.org/';
 
 export const repoRoot = path.resolve(scriptDir, '..', '..');
 
@@ -82,12 +83,16 @@ export function getReleaseChannel() {
 }
 
 export function isVersionPublished(packageName, version) {
-  const result = spawnSync('npm', ['view', `${packageName}@${version}`, 'version', '--json'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: process.env,
-  });
+  const result = spawnSync(
+    'npm',
+    ['view', `${packageName}@${version}`, 'version', '--json', '--registry', npmRegistry],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    }
+  );
 
   if (result.status !== 0) {
     return false;
@@ -109,7 +114,7 @@ export function isVersionPublished(packageName, version) {
 }
 
 export function publishPackage(packageInfo, channel) {
-  const args = ['publish', '--access', 'public'];
+  const args = ['publish', '--access', 'public', '--registry', npmRegistry];
 
   if (channel) {
     args.push('--tag', channel);
@@ -119,16 +124,27 @@ export function publishPackage(packageInfo, channel) {
 }
 
 export function addDistTag(packageInfo, channel) {
-  run('npm', ['dist-tag', 'add', `${packageInfo.name}@${packageInfo.version}`, channel]);
+  run('npm', [
+    'dist-tag',
+    'add',
+    `${packageInfo.name}@${packageInfo.version}`,
+    channel,
+    '--registry',
+    npmRegistry,
+  ]);
 }
 
 export function removeDistTag(packageInfo, channel) {
-  const result = spawnSync('npm', ['dist-tag', 'rm', packageInfo.name, channel], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: process.env,
-  });
+  const result = spawnSync(
+    'npm',
+    ['dist-tag', 'rm', packageInfo.name, channel, '--registry', npmRegistry],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    }
+  );
 
   if (result.status === 0) {
     process.stdout.write(result.stdout);
