@@ -1,0 +1,8 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "graphql-upload-ts": "2.2.0"
+  },
+  "changesets": []
+}
