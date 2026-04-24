@@ -27,18 +27,36 @@ env:
 jobs:
   release:
     name: Release
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Resolve release track
+        id: release_track
+        shell: bash
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            develop)
+              echo "channel=beta" >> "$GITHUB_OUTPUT"
+              ;;
+            master)
+              echo "channel=latest" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported release branch: ${GITHUB_REF_NAME}" >&2
+              echo "Allowed release branches are develop -> beta and master -> latest." >&2
+              exit 1
+              ;;
+          esac
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -56,18 +74,31 @@ jobs:
       - name: Ensure verification did not modify tracked files
         run: git diff --exit-code
 
-      - name: Create Release Pull Request or Publish Package
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          branch: changeset-release/${{ github.ref_name }}
-          commit: "chore(release): version package (${{ github.ref_name }})"
-          title: "Version Package (${{ github.ref_name }})"
-          version: "${{ github.ref_name == 'develop' && 'yarn release:version:beta' || 'yarn release:version:stable' }}"
-          publish: "yarn release:publish"
-          createGithubReleases: false
+      - name: Version package for release track
+        run: yarn release:version
+
+      - name: Commit release version changes
+        id: release_commit
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(release): publish ${GITHUB_REF_NAME} [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publish package
+        run: yarn release:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          RELEASE_CHANNEL: ${{ github.ref_name == 'develop' && 'beta' || 'latest' }}
+          RELEASE_CHANNEL: ${{ steps.release_track.outputs.channel }}
+          RELEASE_TAG_REPAIR: "1"
+          RELEASE_CLEANUP_LEGACY_TAGS: "1"
