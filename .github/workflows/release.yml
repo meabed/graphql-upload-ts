@@ -64,7 +64,7 @@ jobs:
           commit: "chore(release): version package (${{ github.ref_name }})"
           title: "Version Package (${{ github.ref_name }})"
           version: "${{ github.ref_name == 'develop' && 'yarn release:version:beta' || 'yarn release:version:stable' }}"
-          publish: "yarn release:publish"
+          publish: "env RELEASE_TAG_REPAIR=1 yarn release:publish"
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
