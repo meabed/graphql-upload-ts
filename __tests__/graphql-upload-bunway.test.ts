@@ -1,13 +1,8 @@
+import { describe, it } from 'bun:test';
 import { deepStrictEqual, ok, strictEqual } from 'node:assert';
 import FormData from 'form-data';
 import createHttpError from 'http-errors';
-import {
-  type BunRequestLike,
-  type BunResponseLike,
-  graphqlUploadBunway,
-  processRequest,
-  Upload,
-} from '../src';
+import { type BunRequestLike, type BunResponseLike, graphqlUploadBunway, processRequest, Upload } from '../src';
 
 // ---------------------------------------------------------------------------
 // Minimal Bunway-shaped mocks
@@ -76,8 +71,7 @@ describe('graphqlUploadBunway', () => {
         url: 'http://localhost/graphql',
         method: 'POST',
         headers: {
-          get: (name: string) =>
-            name.toLowerCase() === 'content-type' ? 'application/json' : null,
+          get: (name: string) => (name.toLowerCase() === 'content-type' ? 'application/json' : null),
           forEach: () => undefined,
         },
       },

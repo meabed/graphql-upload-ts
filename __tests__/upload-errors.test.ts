@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { GraphQLError } from 'graphql';
 import {
   FieldTooLargeError,
@@ -107,9 +108,7 @@ describe('Errors', () => {
       const error = new FieldTooLargeError('operations', 1000000);
 
       expect(error.name).toBe('UploadError');
-      expect(error.message).toBe(
-        "The 'operations' multipart field value exceeds the 1000000 byte size limit."
-      );
+      expect(error.message).toBe("The 'operations' multipart field value exceeds the 1000000 byte size limit.");
       expect(error.code).toBe(UploadErrorCode.FIELD_TOO_LARGE);
       expect(error.status).toBe(413);
     });
@@ -118,12 +117,8 @@ describe('Errors', () => {
       const error1 = new FieldTooLargeError('map', 500);
       const error2 = new FieldTooLargeError('custom-field', 2000000);
 
-      expect(error1.message).toBe(
-        "The 'map' multipart field value exceeds the 500 byte size limit."
-      );
-      expect(error2.message).toBe(
-        "The 'custom-field' multipart field value exceeds the 2000000 byte size limit."
-      );
+      expect(error1.message).toBe("The 'map' multipart field value exceeds the 500 byte size limit.");
+      expect(error2.message).toBe("The 'custom-field' multipart field value exceeds the 2000000 byte size limit.");
     });
   });
 
@@ -253,22 +248,20 @@ describe('Errors', () => {
 
   describe('UploadErrorCode enum', () => {
     it('should have all expected error codes', () => {
-      expect(UploadErrorCode.FILE_TOO_LARGE).toBe('FILE_TOO_LARGE');
-      expect(UploadErrorCode.TOO_MANY_FILES).toBe('TOO_MANY_FILES');
-      expect(UploadErrorCode.FIELD_TOO_LARGE).toBe('FIELD_TOO_LARGE');
-      expect(UploadErrorCode.INVALID_MULTIPART).toBe('INVALID_MULTIPART');
-      expect(UploadErrorCode.MISSING_OPERATIONS).toBe('MISSING_OPERATIONS');
-      expect(UploadErrorCode.MISSING_MAP).toBe('MISSING_MAP');
-      expect(UploadErrorCode.INVALID_JSON).toBe('INVALID_JSON');
-      expect(UploadErrorCode.INVALID_MAP).toBe('INVALID_MAP');
-      expect(UploadErrorCode.FILE_MISSING).toBe('FILE_MISSING');
-      expect(UploadErrorCode.STREAM_ERROR).toBe('STREAM_ERROR');
-      expect(UploadErrorCode.REQUEST_DISCONNECTED).toBe('REQUEST_DISCONNECTED');
-      expect(UploadErrorCode.INVALID_UPLOAD_VALUE).toBe('INVALID_UPLOAD_VALUE');
-      expect(UploadErrorCode.UPLOAD_LITERAL_UNSUPPORTED).toBe('UPLOAD_LITERAL_UNSUPPORTED');
-      expect(UploadErrorCode.UPLOAD_SERIALIZATION_UNSUPPORTED).toBe(
-        'UPLOAD_SERIALIZATION_UNSUPPORTED'
-      );
+      expect<string>(UploadErrorCode.FILE_TOO_LARGE).toBe('FILE_TOO_LARGE');
+      expect<string>(UploadErrorCode.TOO_MANY_FILES).toBe('TOO_MANY_FILES');
+      expect<string>(UploadErrorCode.FIELD_TOO_LARGE).toBe('FIELD_TOO_LARGE');
+      expect<string>(UploadErrorCode.INVALID_MULTIPART).toBe('INVALID_MULTIPART');
+      expect<string>(UploadErrorCode.MISSING_OPERATIONS).toBe('MISSING_OPERATIONS');
+      expect<string>(UploadErrorCode.MISSING_MAP).toBe('MISSING_MAP');
+      expect<string>(UploadErrorCode.INVALID_JSON).toBe('INVALID_JSON');
+      expect<string>(UploadErrorCode.INVALID_MAP).toBe('INVALID_MAP');
+      expect<string>(UploadErrorCode.FILE_MISSING).toBe('FILE_MISSING');
+      expect<string>(UploadErrorCode.STREAM_ERROR).toBe('STREAM_ERROR');
+      expect<string>(UploadErrorCode.REQUEST_DISCONNECTED).toBe('REQUEST_DISCONNECTED');
+      expect<string>(UploadErrorCode.INVALID_UPLOAD_VALUE).toBe('INVALID_UPLOAD_VALUE');
+      expect<string>(UploadErrorCode.UPLOAD_LITERAL_UNSUPPORTED).toBe('UPLOAD_LITERAL_UNSUPPORTED');
+      expect<string>(UploadErrorCode.UPLOAD_SERIALIZATION_UNSUPPORTED).toBe('UPLOAD_SERIALIZATION_UNSUPPORTED');
     });
   });
 
@@ -288,7 +281,6 @@ describe('Errors', () => {
         new RequestDisconnectedError(),
       ];
 
-      // biome-ignore lint/complexity/noForEach: this is a test
       errors.forEach((error) => {
         expect(error instanceof Error).toBe(true);
         expect(error instanceof UploadError).toBe(true);

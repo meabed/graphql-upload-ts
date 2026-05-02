@@ -1,3 +1,4 @@
+import { describe, it } from 'bun:test';
 import { deepStrictEqual, ok, strictEqual } from 'node:assert';
 // Node.js 18+ has native fetch
 import { createServer, type IncomingMessage } from 'node:http';
