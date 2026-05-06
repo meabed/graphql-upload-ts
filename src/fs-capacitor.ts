@@ -64,10 +64,7 @@ export class ReadStream extends Readable {
 
         // If there were no more bytes to read and the write stream is finished,
         // then this stream has reached the end.
-        if (
-          (this._writeStream as unknown as { _writableState: { finished: boolean } })._writableState
-            .finished
-        ) {
+        if ((this._writeStream as unknown as { _writableState: { finished: boolean } })._writableState.finished) {
           // Check if we have consumed the whole file up to where
           // the write stream has written before ending the stream
           if (this._pos < (this._writeStream as unknown as { _pos: number })._pos) this._read(n);
@@ -246,14 +243,9 @@ export class WriteStream extends Writable {
 
   createReadStream(options?: ReadStreamOptions): ReadStream {
     if (this.destroyed)
-      throw new ReadAfterDestroyedError(
-        'A ReadStream cannot be created from a destroyed WriteStream.'
-      );
+      throw new ReadAfterDestroyedError('A ReadStream cannot be created from a destroyed WriteStream.');
 
-    if (this._released)
-      throw new ReadAfterReleasedError(
-        'A ReadStream cannot be created from a released WriteStream.'
-      );
+    if (this._released) throw new ReadAfterReleasedError('A ReadStream cannot be created from a released WriteStream.');
 
     const readStream = new ReadStream(this, options);
     this._readStreams.add(readStream);
