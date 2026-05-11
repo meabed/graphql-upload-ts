@@ -132,6 +132,7 @@
     "prepublishOnly": "bun run build",
     "release": "semantic-release",
     "release:dry": "semantic-release --dry-run",
+    "release:local": "bun run scripts/release-local.mjs",
     "test": "bun test --timeout 30000",
     "test:coverage": "bun test --coverage --timeout 30000",
     "test:watch": "bun test --watch --timeout 30000",
