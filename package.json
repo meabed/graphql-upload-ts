@@ -177,7 +177,7 @@
     "graphql": "16.14.0",
     "husky": "9.1.7",
     "koa": "3.2.0",
-    "lint-staged": "16.4.0",
+    "lint-staged": "17.0.5",
     "node-fetch": "^3.3.2",
     "rollup": "^4.60.2",
     "rollup-plugin-esbuild": "^6.2.1",
