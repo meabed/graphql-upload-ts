@@ -176,7 +176,7 @@
     "form-data-encoder": "^4.1.0",
     "graphql": "16.14.0",
     "husky": "9.1.7",
-    "koa": "3.2.0",
+    "koa": "3.2.1",
     "lint-staged": "17.0.5",
     "node-fetch": "^3.3.2",
     "rollup": "^4.60.2",
