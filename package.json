@@ -188,7 +188,7 @@
   "peerDependencies": {
     "graphql": ">=0.13.1"
   },
-  "packageManager": "bun@1.4.0",
+  "packageManager": "bun@1.4.1",
   "engines": {
     "bun": ">= 1.3",
     "node": ">= 22.0"
