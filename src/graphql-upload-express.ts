@@ -61,11 +61,7 @@ export function graphqlUploadExpress(
     ...uploadOptions
   } = options;
 
-  return function graphqlUploadExpressMiddleware(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ): void {
+  return function graphqlUploadExpressMiddleware(request: Request, response: Response, next: NextFunction): void {
     if (!request.is('multipart/form-data')) {
       return next();
     }

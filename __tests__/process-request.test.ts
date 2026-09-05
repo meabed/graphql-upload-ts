@@ -1,3 +1,4 @@
+import { describe, it } from 'bun:test';
 import { deepStrictEqual, notStrictEqual, ok, rejects, strictEqual, throws } from 'node:assert';
 import { createServer } from 'node:http';
 import { text } from 'node:stream/consumers';
@@ -226,10 +227,7 @@ describe('processRequest', () => {
     try {
       const body = new FormData();
 
-      body.append(
-        'operations',
-        JSON.stringify([{ variables: { file: null } }, { variables: { file: null } }])
-      );
+      body.append('operations', JSON.stringify([{ variables: { file: null } }, { variables: { file: null } }]));
       body.append('map', JSON.stringify({ 1: ['0.variables.file'], 2: ['1.variables.file'] }));
       body.append('1', new File(['a'], 'a.txt', { type: 'text/plain' }));
       body.append('2', new File(['b'], 'b.txt', { type: 'text/plain' }));
@@ -778,12 +776,7 @@ describe('processRequest', () => {
       formData.append('3', new File(['c'], 'c.txt', { type: 'text/plain' }));
 
       try {
-        await abortingMultipartRequest(
-          `http://localhost:${port}`,
-          formData,
-          abortMarker,
-          requestReceived.promise
-        );
+        await abortingMultipartRequest(`http://localhost:${port}`, formData, abortMarker, requestReceived.promise);
       } catch (_error) {}
 
       await done.promise;
@@ -945,12 +938,7 @@ describe('processRequest', () => {
       formData.append('3', new File(['c'], 'c.txt', { type: 'text/plain' }));
 
       try {
-        await abortingMultipartRequest(
-          `http://localhost:${port}`,
-          formData,
-          abortMarker,
-          requestReceived.promise
-        );
+        await abortingMultipartRequest(`http://localhost:${port}`, formData, abortMarker, requestReceived.promise);
       } catch (_error) {}
 
       await done.promise;
@@ -1040,8 +1028,7 @@ describe('processRequest', () => {
       try {
         await rejects(processRequest(request, response), {
           name: 'BadRequestError',
-          message:
-            'Missing multipart field ‘map’ (https://github.com/jaydenseric/graphql-multipart-request-spec).',
+          message: 'Missing multipart field ‘map’ (https://github.com/jaydenseric/graphql-multipart-request-spec).',
           status: 400,
           expose: true,
         });

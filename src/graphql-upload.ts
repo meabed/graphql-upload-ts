@@ -1,9 +1,4 @@
-import {
-  type ASTNode,
-  GraphQLError,
-  GraphQLScalarType,
-  type GraphQLScalarTypeConfig,
-} from 'graphql';
+import { type ASTNode, GraphQLError, GraphQLScalarType, type GraphQLScalarTypeConfig } from 'graphql';
 import { Upload } from './upload';
 
 /**

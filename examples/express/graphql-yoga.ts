@@ -1,9 +1,9 @@
 import { createWriteStream } from 'node:fs';
+import { createServer } from 'node:http';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import cors from 'cors';
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
-import { createServer } from 'http';
 import { type FileUpload, GraphQLUpload, graphqlUploadExpress } from '../../src';
 
 async function saveFileFromStream(stream: NodeJS.ReadableStream, filename: string) {
