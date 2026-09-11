@@ -1,0 +1,4 @@
+# Bun runtime + test configuration.
+# Tests live in __tests__/**/*.test.ts — run via `bun test`.
+[test]
+timeout = 30000
