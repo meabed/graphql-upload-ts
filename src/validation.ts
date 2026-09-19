@@ -47,10 +47,7 @@ export function validateOptions(options?: UploadOptions): UploadOptions {
     throw new Error('maxFiles must be a positive number');
   }
 
-  if (
-    !Number.isInteger(validatedOptions.maxFiles) &&
-    validatedOptions.maxFiles !== Number.POSITIVE_INFINITY
-  ) {
+  if (!Number.isInteger(validatedOptions.maxFiles) && validatedOptions.maxFiles !== Number.POSITIVE_INFINITY) {
     throw new Error('maxFiles must be an integer');
   }
 
@@ -76,10 +73,7 @@ export function validateMimeType(mimetype: string, allowedTypes?: string[]): Val
   };
 }
 
-export function validateFileExtension(
-  filename: string,
-  allowedExtensions?: string[]
-): ValidationResult {
+export function validateFileExtension(filename: string, allowedExtensions?: string[]): ValidationResult {
   if (!allowedExtensions || allowedExtensions.length === 0) {
     return { isValid: true };
   }

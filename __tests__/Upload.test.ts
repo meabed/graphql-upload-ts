@@ -1,4 +1,5 @@
-import { ok, strictEqual } from 'assert';
+import { describe, expect, it } from 'bun:test';
+import { ok, strictEqual } from 'node:assert';
 import { type FileUpload, Upload, WriteStream } from '../src';
 
 describe('Upload', () => {
