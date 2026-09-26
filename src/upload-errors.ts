@@ -43,11 +43,7 @@ export class UploadError extends Error {
 
 export class FileTooLargeError extends UploadError {
   constructor(maxSize: number) {
-    super(
-      `File truncated as it exceeds the ${maxSize} byte size limit.`,
-      UploadErrorCode.FILE_TOO_LARGE,
-      413
-    );
+    super(`File truncated as it exceeds the ${maxSize} byte size limit.`, UploadErrorCode.FILE_TOO_LARGE, 413);
   }
 }
 
@@ -84,10 +80,7 @@ export class MissingOperationsError extends UploadError {
 
 export class MissingMapError extends UploadError {
   constructor() {
-    super(
-      `Missing multipart field 'map' (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`,
-      UploadErrorCode.MISSING_MAP
-    );
+    super(`Missing multipart field 'map' (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`, UploadErrorCode.MISSING_MAP);
   }
 }
 
@@ -120,13 +113,8 @@ export class StreamError extends UploadError {
 
 export class RequestDisconnectedError extends UploadError {
   constructor() {
-    super(
-      'Request disconnected during file upload stream parsing.',
-      UploadErrorCode.REQUEST_DISCONNECTED,
-      499
-    );
+    super('Request disconnected during file upload stream parsing.', UploadErrorCode.REQUEST_DISCONNECTED, 499);
   }
 }
 
-const GRAPHQL_MULTIPART_REQUEST_SPEC_URL =
-  'https://github.com/jaydenseric/graphql-multipart-request-spec';
+const GRAPHQL_MULTIPART_REQUEST_SPEC_URL = 'https://github.com/jaydenseric/graphql-multipart-request-spec';

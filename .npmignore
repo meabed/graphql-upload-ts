@@ -10,12 +10,11 @@
 config.gypi
 CVS
 npm-debug.log
+src
 __tests__
 scripts
 examples
 docs
 .github
-src
-.nyc_output
 .idea
 .husky
