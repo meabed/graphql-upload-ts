@@ -41,9 +41,7 @@ export interface GraphqlUploadKoaOptions extends UploadOptions {
  * // Apollo Server setup continues...
  * ```
  */
-export function graphqlUploadKoa(
-  options: GraphqlUploadKoaOptions = {}
-): (ctx: Context, next: Next) => Promise<void> {
+export function graphqlUploadKoa(options: GraphqlUploadKoaOptions = {}): (ctx: Context, next: Next) => Promise<void> {
   const { processRequest = defaultProcessRequest, ...uploadOptions } = options;
 
   return async function graphqlUploadKoaMiddleware(ctx: Context, next: Next): Promise<void> {

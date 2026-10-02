@@ -1,13 +1,6 @@
 import { createWriteStream } from 'node:fs';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import bunway, {
-  type BunRequest,
-  type BunResponse,
-  cors,
-  type Handler,
-  json,
-  urlencoded,
-} from 'bunway';
+import bunway, { type BunRequest, type BunResponse, cors, type Handler, json, urlencoded } from 'bunway';
 import { createYoga, type Plugin, type YogaServerInstance } from 'graphql-yoga';
 import { type FileUpload, GraphQLUpload, graphqlUploadBunway } from '../../src';
 
@@ -101,9 +94,9 @@ function useBunwayUploadParser(): Plugin {
   } as unknown as Plugin;
 }
 
-function yogaToBunwayHandler<
-  TServerContext extends Record<string, unknown> = Record<string, unknown>,
->(yoga: YogaServerInstance<TServerContext, Record<string, unknown>>): Handler {
+function yogaToBunwayHandler<TServerContext extends Record<string, unknown> = Record<string, unknown>>(
+  yoga: YogaServerInstance<TServerContext, Record<string, unknown>>
+): Handler {
   return async (req: BunRequest, res: BunResponse, next) => {
     try {
       const method = req.original.method.toUpperCase();
@@ -139,7 +132,6 @@ function yogaToBunwayHandler<
       const response = await yoga.fetch(fetchRequest, { req, res } as unknown as TServerContext);
 
       res.status(response.status);
-      // biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
       response.headers?.forEach((value, key) => res.set(key, value));
 
       if (!response.body) {

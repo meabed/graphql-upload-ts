@@ -64,11 +64,7 @@ export interface BunResponseLike {
 
 export type BunwayNextFunction = (err?: unknown) => void;
 
-export type BunwayHandler = (
-  req: BunRequestLike,
-  res: BunResponseLike,
-  next: BunwayNextFunction
-) => void;
+export type BunwayHandler = (req: BunRequestLike, res: BunResponseLike, next: BunwayNextFunction) => void;
 
 type ProcessRequestFn = <T = GraphQLOperation | GraphQLOperation[]>(
   req: IncomingReq,

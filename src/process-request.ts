@@ -38,10 +38,7 @@ export interface GraphQLOperation {
   variables?: Record<string, unknown> | null;
 }
 
-export type IncomingReq = Pick<
-  IncomingMessage,
-  'headers' | 'pipe' | 'unpipe' | 'once' | 'resume' | 'readableEnded'
-> & {
+export type IncomingReq = Pick<IncomingMessage, 'headers' | 'pipe' | 'unpipe' | 'once' | 'resume' | 'readableEnded'> & {
   body?: string;
   rawBody?: string;
   req?: IncomingMessage;
@@ -112,10 +109,7 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
     parser.on('field', (fieldName, value, { valueTruncated }) => {
       if (valueTruncated)
         return exit(
-          createError(
-            413,
-            `The ‘${fieldName}’ multipart field value exceeds the ${maxFieldSize} byte size limit.`
-          )
+          createError(413, `The ‘${fieldName}’ multipart field value exceeds the ${maxFieldSize} byte size limit.`)
         );
 
       switch (fieldName) {
@@ -158,28 +152,21 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
             parsedMap = JSON.parse(value);
           } catch (_error) {
             return exit(
-              createError(
-                400,
-                `Invalid JSON in the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`
-              )
+              createError(400, `Invalid JSON in the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`)
             );
           }
 
           // `map` should be an object.
           if (typeof parsedMap !== 'object' || !parsedMap || Array.isArray(parsedMap))
             return exit(
-              createError(
-                400,
-                `Invalid type for the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`
-              )
+              createError(400, `Invalid type for the ‘map’ multipart field (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`)
             );
 
           const mapEntries = Object.entries(parsedMap);
 
           // Check max files is not exceeded, even though the number of files
           // to parse might not match the map provided by the client.
-          if (mapEntries.length > maxFiles)
-            return exit(createError(413, `${maxFiles} max file uploads exceeded.`));
+          if (mapEntries.length > maxFiles) return exit(createError(413, `${maxFiles} max file uploads exceeded.`));
 
           map = new Map();
           for (const [fieldName, paths] of mapEntries) {
@@ -254,10 +241,7 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
       });
 
       stream.on('limit', () => {
-        fileError = createError(
-          413,
-          `File truncated as it exceeds the ${maxFileSize} byte size limit.`
-        );
+        fileError = createError(413, `File truncated as it exceeds the ${maxFileSize} byte size limit.`);
         stream.unpipe();
         capacitor.destroy(fileError);
       });
@@ -291,26 +275,16 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
       upload.resolve(file);
     });
 
-    parser.once('filesLimit', () =>
-      exit(createError(413, `${maxFiles} max file uploads exceeded.`))
-    );
+    parser.once('filesLimit', () => exit(createError(413, `${maxFiles} max file uploads exceeded.`)));
 
     parser.once('finish', () => {
       request.unpipe(parser as unknown as NodeJS.ReadWriteStream);
       request.resume();
 
       if (!operations)
-        return exit(
-          createError(
-            400,
-            `Missing multipart field ‘operations’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`
-          )
-        );
+        return exit(createError(400, `Missing multipart field ‘operations’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`));
 
-      if (!map)
-        return exit(
-          createError(400, `Missing multipart field ‘map’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`)
-        );
+      if (!map) return exit(createError(400, `Missing multipart field ‘map’ (${GRAPHQL_MULTIPART_REQUEST_SPEC_URL}).`));
 
       for (const upload of map.values())
         if (!upload.file) upload.reject(createError(400, 'File missing in the request.'));
@@ -338,8 +312,7 @@ export async function processRequest<T = GraphQLOperation | GraphQLOperation[]>(
     });
 
     request.once('close', () => {
-      if (!request.readableEnded)
-        exit(createError(499, 'Request disconnected during file upload stream parsing.'));
+      if (!request.readableEnded) exit(createError(499, 'Request disconnected during file upload stream parsing.'));
     });
 
     request.pipe(parser as unknown as NodeJS.WritableStream);

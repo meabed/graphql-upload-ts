@@ -1,4 +1,5 @@
-import { doesNotThrow, strictEqual } from 'assert';
+import { describe, it } from 'bun:test';
+import { doesNotThrow, strictEqual } from 'node:assert';
 import { ignoreStream } from '../src';
 import { CountReadableStream } from './utils/count-readable-stream';
 
