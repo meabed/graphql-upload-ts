@@ -68,5 +68,9 @@ bun run start:graphql-http
 ## Releases
 
 - Run `yarn changeset` for release-relevant changes to `src/` or published package metadata.
-- `develop` produces beta prerelease version PRs and publishes to the `beta` dist-tag.
-- `master` produces stable version PRs and publishes to the `latest` dist-tag.
+- Releases are only allowed from `develop` and `master`.
+- `develop` versions and publishes directly to the `beta` dist-tag after merges land on `develop`.
+- `master` versions and publishes directly to the `latest` dist-tag after merges land on `master`.
+- npm's `latest` dist-tag is the source of truth for the stable base version before any new release increment is calculated.
+- The release workflow does not open release PRs; it writes the release version commit back to the branch that triggered it.
+- The release workflow repairs the expected dist-tag on every run, so `develop` stays mapped to `beta` and `master` stays mapped to `latest`.

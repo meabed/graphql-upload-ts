@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import type { UploadOptions } from '../src/process-request';
 import {
   DEFAULT_MAX_FIELD_SIZE,
@@ -57,35 +58,21 @@ describe('Validation', () => {
     });
 
     it('should throw error for non-positive maxFieldSize', () => {
-      expect(() => validateOptions({ maxFieldSize: 0 })).toThrow(
-        'maxFieldSize must be a positive number'
-      );
-      expect(() => validateOptions({ maxFieldSize: -1 })).toThrow(
-        'maxFieldSize must be a positive number'
-      );
-      expect(() => validateOptions({ maxFieldSize: -100 })).toThrow(
-        'maxFieldSize must be a positive number'
-      );
+      expect(() => validateOptions({ maxFieldSize: 0 })).toThrow('maxFieldSize must be a positive number');
+      expect(() => validateOptions({ maxFieldSize: -1 })).toThrow('maxFieldSize must be a positive number');
+      expect(() => validateOptions({ maxFieldSize: -100 })).toThrow('maxFieldSize must be a positive number');
     });
 
     it('should throw error for non-positive maxFileSize', () => {
-      expect(() => validateOptions({ maxFileSize: 0 })).toThrow(
-        'maxFileSize must be a positive number'
-      );
-      expect(() => validateOptions({ maxFileSize: -1 })).toThrow(
-        'maxFileSize must be a positive number'
-      );
-      expect(() => validateOptions({ maxFileSize: -1000000 })).toThrow(
-        'maxFileSize must be a positive number'
-      );
+      expect(() => validateOptions({ maxFileSize: 0 })).toThrow('maxFileSize must be a positive number');
+      expect(() => validateOptions({ maxFileSize: -1 })).toThrow('maxFileSize must be a positive number');
+      expect(() => validateOptions({ maxFileSize: -1000000 })).toThrow('maxFileSize must be a positive number');
     });
 
     it('should throw error for non-positive maxFiles', () => {
       expect(() => validateOptions({ maxFiles: 0 })).toThrow('maxFiles must be a positive number');
       expect(() => validateOptions({ maxFiles: -1 })).toThrow('maxFiles must be a positive number');
-      expect(() => validateOptions({ maxFiles: -10 })).toThrow(
-        'maxFiles must be a positive number'
-      );
+      expect(() => validateOptions({ maxFiles: -10 })).toThrow('maxFiles must be a positive number');
     });
 
     it('should throw error for non-integer maxFiles', () => {
@@ -391,12 +378,7 @@ describe('Validation', () => {
     });
 
     it('should handle complex real-world cases', () => {
-      const cases = [
-        'My File (1).pdf',
-        'résumé_2023.docx',
-        'file-name_with+special&chars.txt',
-        'UPPER-case.PDF',
-      ];
+      const cases = ['My File (1).pdf', 'résumé_2023.docx', 'file-name_with+special&chars.txt', 'UPPER-case.PDF'];
 
       const results = cases.map(sanitizeFilename);
 

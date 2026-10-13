@@ -1,3 +1,4 @@
+import { describe, it } from 'bun:test';
 import { doesNotThrow, throws } from 'node:assert';
 import { parseValue } from 'graphql';
 import { GraphQLUpload, Upload } from '../src';

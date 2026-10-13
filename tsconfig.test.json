@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationDir": null,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node", "bun"]
+  },
+  "include": ["__tests__/**/*", "src/**/*"],
+  "exclude": ["dist", "node_modules", "examples"]
+}
